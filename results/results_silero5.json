@@ -1,0 +1,68 @@
+[
+ {
+  "engine": "silero-v5",
+  "voice": "eugene",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1291,
+  "audio_s": 72.33,
+  "wall_s": 2.99,
+  "rtf": 24.2,
+  "file": "jc-024__audio__silero5-eugene.wav"
+ },
+ {
+  "engine": "silero-v5",
+  "voice": "eugene",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 64.71,
+  "wall_s": 2.12,
+  "rtf": 30.5,
+  "file": "db-046__audio__silero5-eugene.wav"
+ },
+ {
+  "engine": "silero-v5",
+  "voice": "eugene",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 71.55,
+  "wall_s": 2.34,
+  "rtf": 30.6,
+  "file": "mb-040__audio__silero5-eugene.wav"
+ },
+ {
+  "engine": "silero-v5",
+  "voice": "kseniya",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1291,
+  "audio_s": 92.36,
+  "wall_s": 3.09,
+  "rtf": 29.9,
+  "file": "jc-024__audio__silero5-kseniya.wav"
+ },
+ {
+  "engine": "silero-v5",
+  "voice": "kseniya",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 82.58,
+  "wall_s": 2.76,
+  "rtf": 30.0,
+  "file": "db-046__audio__silero5-kseniya.wav"
+ },
+ {
+  "engine": "silero-v5",
+  "voice": "kseniya",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 91.64,
+  "wall_s": 3.04,
+  "rtf": 30.2,
+  "file": "mb-040__audio__silero5-kseniya.wav"
+ }
+]

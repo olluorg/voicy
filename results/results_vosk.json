@@ -1,0 +1,101 @@
+[
+ {
+  "engine": "vosk",
+  "voice": "speaker 0",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1293,
+  "audio_s": 110.34,
+  "wall_s": 61.29,
+  "rtf": 1.8,
+  "file": "jc-024__audio__vosk-s0.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 0",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 95.14,
+  "wall_s": 47.4,
+  "rtf": 2.0,
+  "file": "db-046__audio__vosk-s0.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 0",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 103.19,
+  "wall_s": 58.4,
+  "rtf": 1.8,
+  "file": "mb-040__audio__vosk-s0.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 2",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1293,
+  "audio_s": 94.61,
+  "wall_s": 46.83,
+  "rtf": 2.0,
+  "file": "jc-024__audio__vosk-s2.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 2",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 82.26,
+  "wall_s": 35.82,
+  "rtf": 2.3,
+  "file": "db-046__audio__vosk-s2.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 2",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 90.64,
+  "wall_s": 43.05,
+  "rtf": 2.1,
+  "file": "mb-040__audio__vosk-s2.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 4",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1293,
+  "audio_s": 81.13,
+  "wall_s": 34.9,
+  "rtf": 2.3,
+  "file": "jc-024__audio__vosk-s4.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 4",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 72.91,
+  "wall_s": 29.17,
+  "rtf": 2.5,
+  "file": "db-046__audio__vosk-s4.wav"
+ },
+ {
+  "engine": "vosk",
+  "voice": "speaker 4",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 79.56,
+  "wall_s": 34.18,
+  "rtf": 2.3,
+  "file": "mb-040__audio__vosk-s4.wav"
+ }
+]

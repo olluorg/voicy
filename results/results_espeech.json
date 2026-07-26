@@ -1,0 +1,68 @@
+[
+ {
+  "engine": "espeech",
+  "voice": "podcaster",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1293,
+  "audio_s": 62.81,
+  "wall_s": 7.28,
+  "rtf": 8.63,
+  "file": "jc-024__audio__espeech-podcaster.wav"
+ },
+ {
+  "engine": "espeech",
+  "voice": "podcaster",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 56.78,
+  "wall_s": 5.55,
+  "rtf": 10.23,
+  "file": "db-046__audio__espeech-podcaster.wav"
+ },
+ {
+  "engine": "espeech",
+  "voice": "podcaster",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 64.56,
+  "wall_s": 6.2,
+  "rtf": 10.41,
+  "file": "mb-040__audio__espeech-podcaster.wav"
+ },
+ {
+  "engine": "espeech",
+  "voice": "rlv2",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1293,
+  "audio_s": 62.81,
+  "wall_s": 6.24,
+  "rtf": 10.07,
+  "file": "jc-024__audio__espeech-rlv2.wav"
+ },
+ {
+  "engine": "espeech",
+  "voice": "rlv2",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 56.78,
+  "wall_s": 5.45,
+  "rtf": 10.41,
+  "file": "db-046__audio__espeech-rlv2.wav"
+ },
+ {
+  "engine": "espeech",
+  "voice": "rlv2",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 64.56,
+  "wall_s": 6.25,
+  "rtf": 10.33,
+  "file": "mb-040__audio__espeech-rlv2.wav"
+ }
+]
