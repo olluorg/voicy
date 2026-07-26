@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <div class="topbar"><div class="inner">
   <div class="toc">
     <a href="#result">Результат</a><a href="#dvizhki">Движки</a><a href="#metrika">Метрика</a>
-    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#referens">Референс</a><a href="#slitnost">Слитность</a><a href="#itogi">Итоги</a>
+    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#referens">Референс</a><a href="#slitnost">Слитность</a><a href="#tembr">Тембр</a><a href="#itogi">Итоги</a>
   </div>
   <button class="toggle" id="theme">тема</button>
 </div></div>
@@ -118,20 +118,20 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <p class="kicker">Исследование · июль 2026</p>
 <h1>Как озвучивать инженерные тексты</h1>
 <p class="lede">Тексты с кодом, нотацией и терминами не читаются вслух так же, как читаются
-глазами. Десять раундов измерений: что помогло, что не помогло и почему очевидные ходы
+глазами. Одиннадцать раундов измерений: что помогло, что не помогло и почему очевидные ходы
 оказались ловушками.</p>
 
 <h2 id="result">Результат</h2>
 
 <div class="grid g3">
   <div class="stat"><div class="v">1.0<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
-  <div class="stat"><div class="v">102</div><div class="l">слов в минуту — темп чтеца в референсе, без обработки</div><div class="was">было 160</div></div>
+  <div class="stat"><div class="v">103</div><div class="l">слов в минуту — темп чтеца в референсе</div><div class="was">было 160</div></div>
   <div class="stat"><div class="v">0</div><div class="l">вставленных пауз, растяжений и разбивок</div><div class="was">было 34% тишины и ×0.66</div></div>
 </div>
 
 <div class="grid g2">
-  <div class="card player"><b>Стало</b><span class="n">RL-V2, медленный слитный референс, текст без внутренних запятых в ключевых фразах, синтез одним проходом</span>
-    <audio controls preload="none" src="assets/audio/legato__swn-solid-1.00.opus"></audio></div>
+  <div class="card player"><b>Стало</b><span class="n">RL-V2, слитный отрывок выбранного голоса, текст короткими предложениями без внутренней пунктуации</span>
+    <audio controls preload="none" src="assets/audio/v12__t2-solid-0.88.opus"></audio></div>
   <div class="card player"><b>Было</b><span class="n">ESpeech PODCASTER, синтетический референс, плоский текст</span>
     <audio controls preload="none" src="assets/audio/out__jc-024__audio__espeech-podcaster.opus"></audio></div>
 </div>
@@ -707,6 +707,89 @@ LibriVox. Окно попадало в середину фразы, и тран�
 на слух. Осталось правильно написанный текст и правильно выбранные тринадцать секунд
 референса.</p>
 
+<h2 id="tembr">Раунд 11. Тембр и манера — разные уровни</h2>
+
+<div class="quote">«Предыдущий чтец по тембру голоса мне нравился больше. Так же есть ощущение,
+что с пунктуацией надо продолжить работу. И с текстом нужно поработать ещё, чтобы легче
+воспринимался на слух».</div>
+
+<p>Первое замечание вскрыло ошибку в самой процедуре. До сих пор при любой проблеме
+с манерой речи я менял <b>чтеца целиком</b> — вместе с тембром. Тургенев рвал фразы,
+я взял Достоевского, и тембр уехал вместе с манерой.</p>
+
+<h3>Наблюдение</h3>
+<p>Тембр принадлежит голосу и постоянен. Манера принадлежит <b>отрывку</b> и меняется
+по ходу записи: один и тот же человек читает описание слитно, а диалог — рвано.</p>
+
+<p>Скан всей записи — 777 секунд, 255 сегментов, 35 подходящих окон — показал, что
+плотность пауз у одного и того же чтеца гуляет <b>от 6.7 до 20 с лишним в минуту</b>.
+Прежний клип просто попал в рваный участок.</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Отрывок того же чтеца</th><th class="num">пауз/мин у клипа</th><th class="num">разрывов внутри фразы</th></tr></thead>
+<tbody>
+<tr><td>прежний, 51 с</td><td class="num">13.3</td><td class="num">3</td></tr>
+<tr><td>t0 — 51.5 с</td><td class="num">6.7</td><td class="num">1</td></tr>
+<tr><td>t1 — 463 с</td><td class="num">11.4</td><td class="num">3</td></tr>
+<tr class="hi"><td><b>t2 — 193.5 с</b></td><td class="num">12.7</td><td class="num"><b>0</b></td></tr>
+</tbody></table></div>
+
+<p>Отдельно поучительно: плотность пауз в клипе <b>не предсказывает</b> поведение на нашей
+фразе. У t2 этот показатель хуже, чем у t0, а фразу он читает слитно. Косвенный показатель
+не заменяет прямую пробу — контрольную фразу нужно синтезировать каждым кандидатом
+и считать разрывы в ней.</p>
+
+<div class="grid g3">
+  <div class="card player"><b>Прежний отрывок · 3 разрыва</b><span class="n">тот же голос, рваный участок записи</span>
+    <audio controls preload="none" src="assets/audio/phrase2__Тургенев_старый__plain.opus"></audio></div>
+  <div class="card player"><b>Отрывок t0 · 1 разрыв</b><span class="n">самый слитный по показателю клипа</span>
+    <audio controls preload="none" src="assets/audio/phrase2__Тургенев_t0__plain.opus"></audio></div>
+  <div class="card player"><b>Отрывок t2 · 0 разрывов</b><span class="n">выбран по прямой пробе</span>
+    <audio controls preload="none" src="assets/audio/phrase2__Тургенев_t2__plain.opus"></audio></div>
+</div>
+
+<p>Процедура выбора стала двухступенчатой: <b>голос выбирает человек по тембру, отрывок
+выбирает скрипт по пробе</b>.</p>
+
+<h3>Текст</h3>
+<p>Правило «без внутренних запятых» из прошлого раунда касалось только ключевых фраз.
+Распространено на весь текст: одна мысль — одно предложение; вложенные придаточные
+разбиваются; запятая, тире и двоеточие внутри фразы не используются; подлежащее в начале.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Сложность текста на слух</span>
+    <button class="toggle" data-table="t-text">таблица</button></div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>было</span>
+    <span><i style="background:var(--series-3)"></i>стало</span>
+  </div>
+  <div id="c-text"></div>
+  <div class="tblview" id="t-text" hidden></div>
+  <figcaption>Дело не только в паузах. Придаточное требует удерживать начало фразы в голове
+  до её конца: на бумаге это бесплатно, в ухе стоит дорого.</figcaption>
+</figure>
+
+<div class="quote bad-text"><b>Было.</b> Обычно их объясняют через мнемонику из четырёх
+английских слов, но заучивать её бесполезно, если не понимаешь, откуда она берётся.</div>
+
+<div class="quote good-text"><b>Стало.</b> Их обычно объясняют мнемоникой из четырёх
+английских слов. Заучивать её бесполезно. Мы зайдём со стороны смысла.</div>
+
+<h3>Три кандидата на одном голосе</h3>
+<div class="grid g3">
+  <div class="card player"><b>t2, без обработки</b><span class="n">118 слов/мин · медиана паузы 170 мс · <span class="pill good">CER 1.1%</span></span>
+    <audio controls preload="none" src="assets/audio/v12__t2-solid-1.00.opus"></audio></div>
+  <div class="card player"><b>t2, растяжение 0.88</b><span class="n">103 слов/мин · медиана 242 мс · <span class="pill good">CER 1.5%</span></span>
+    <audio controls preload="none" src="assets/audio/v12__t2-solid-0.88.opus"></audio></div>
+  <div class="card player"><b>t0, по репликам</b><span class="n">102 слов/мин · медиана 450 мс · <span class="pill good">CER 0.9%</span></span>
+    <audio controls preload="none" src="assets/audio/v12__t0-joined-1.00.opus"></audio></div>
+</div>
+
+<p>Компромисс сместился, но не исчез: t2 звучит слитнее — медианная пауза вдвое короче, —
+а t0 точнее по метрике и попадает в темп без всякой обработки. Мягкое растяжение 0.88
+вернулось как допустимая доводка: оно внутри безопасной зоны, в отличие от отвергнутого
+0.66. Разница между инструментом и костылём здесь ровно в глубине.</p>
+
 <h2 id="itogi">Что помогло и что не помогло</h2>
 
 <div class="grid g2">
@@ -722,7 +805,9 @@ LibriVox. Окно попадало в середину фразы, и тран�
 <li><b>Затухание и фон комнаты в паузах.</b> Разрыв сигнала в 5.6 раза меньше.</li>
 <li><b>Отбор референса по трём измерениям сразу</b> — темп, плотность собственных пауз, разборчивость. Дал 102 слов/мин и CER 1.0% без единой обработки.</li>
 <li><b>Нарезка референса по границам фраз.</b> Модель получает его транскрипт дословно; чистая нарезка того же клипа дала 7.3% → 1.0%.</li>
-<li><b>Ключевые фразы без внутренних запятых.</b> Запятая читается моделью как указание остановиться.</li>
+<li><b>Весь текст без внутренней пунктуации, короткими предложениями.</b> Запятая читается моделью как повод остановиться, а придаточное заставляет ухо удерживать начало фразы.</li>
+<li><b>Выбор отрывка внутри выбранного голоса.</b> Тембр принадлежит чтецу, манера — отрывку; у одного чтеца плотность пауз гуляет втрое.</li>
+<li><b>Прямая проба на контрольной фразе.</b> Косвенные показатели клипа её не предсказывают.</li>
 
 <li><b>Короткое затухание, 8 мс.</b> Достаточно против щелчка, слишком мало, чтобы задеть фонему.</li>
 <li><b>Разбиение на реплики по смыслу</b> — помогало, пока референс был плохим. С хорошим референсом преимущество исчезло, и сплошной синтез оказался слитнее.</li>
@@ -785,8 +870,13 @@ const DATA = {
     {l:"Раунд 7 · + края и нерегулярность", v:3.4, note:"затухание 8 мс вместо 45, паузы с разбросом"},
     {l:"Раунд 8 · вставленные паузы убраны", v:3.2, note:"тишину ставит только модель, 97 слов/мин"},
     {l:"Раунд 9 · темп из референса", v:1.0, note:"медленный чтец, нарезка по фразам, 91 слов/мин без растяжения"},
-    {l:"Раунд 10 · слитность фразы", v:1.0, note:"референс отобран и по плотности пауз, 102 слов/мин"}
+    {l:"Раунд 10 · слитность фразы", v:1.0, note:"референс отобран и по плотности пауз, 102 слов/мин"},
+    {l:"Раунд 11 · отрывок вместо чтеца", v:0.9, note:"тот же голос, слитный отрывок; текст короткими предложениями"}
   ],
+  textstats: {
+    cats:["слов в предложении","максимум слов","длиннее 12 слов","запятых"],
+    series:[{name:"было",v:[7.6,19,10,26]},{name:"стало",v:[5.2,9,0,0]}]
+  },
   breaks: [
     {l:"Тургенев · Поездка в Полесье", v:0, note:"слитно, но CER 18.8% на полном тексте"},
     {l:"Пушкин · Красавице", v:0, note:"стихи"},
@@ -1013,7 +1103,7 @@ function seriesColors(){ const c = C();
           c.getPropertyValue('--series-3').trim()]; }
 
 function renderAll(){
-  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause','c-refrate','c-breaks'];
+  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause','c-refrate','c-breaks','c-text'];
   ids.forEach(i => document.getElementById(i).innerHTML = '');
   const col = seriesColors();
 
@@ -1053,6 +1143,15 @@ function renderAll(){
   barsH(document.getElementById('c-v3'), DATA.v3, {labelW:190});
   document.getElementById('t-v3').innerHTML =
     tableFor(DATA.v3, ['Растяжение речи','CER'], v => v + '%');
+
+  barsGrouped(document.getElementById('c-text'), DATA.textstats.cats, DATA.textstats.series,
+    [col[0], col[2]]);
+  document.getElementById('t-text').innerHTML =
+    '<div class="tbl-scroll"><table><thead><tr><th>Показатель</th><th class="num">было</th>' +
+    '<th class="num">стало</th></tr></thead><tbody>' +
+    DATA.textstats.cats.map((c,i) => `<tr><td>${esc(c)}</td>` +
+      `<td class="num">${DATA.textstats.series[0].v[i]}</td>` +
+      `<td class="num">${DATA.textstats.series[1].v[i]}</td></tr>`).join('') + '</tbody></table></div>';
 
   barsH(document.getElementById('c-breaks'), DATA.breaks,
     {labelW:250, fmt: v => v === 1 ? '1 разрыв' : (v < 5 ? v + ' разрыва' : v + ' разрывов')});

@@ -1,0 +1,31 @@
+{
+ "total_syllables": 771,
+ "results": [
+  {
+   "tag": "t0-solid-1.00",
+   "mode": "solid",
+   "stretch": 1.0,
+   "audio_s": 188.1,
+   "pauses": 105,
+   "silence_pct": 27.1,
+   "pause_median_ms": 455,
+   "pause_max_ms": 1550,
+   "syl_per_s": 4.1,
+   "wpm": 104,
+   "cer": 1.0
+  },
+  {
+   "tag": "t0-joined-1.00",
+   "mode": "joined",
+   "stretch": 1.0,
+   "audio_s": 191.8,
+   "pauses": 105,
+   "silence_pct": 26.3,
+   "pause_median_ms": 450,
+   "pause_max_ms": 1605,
+   "syl_per_s": 4.02,
+   "wpm": 102,
+   "cer": 0.9
+  }
+ ]
+}
