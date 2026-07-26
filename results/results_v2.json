@@ -1,0 +1,71 @@
+{
+ "total_syllables": 832,
+ "results": [
+  {
+   "tag": "pause-hard",
+   "scale": 1.0,
+   "pause": "hard",
+   "file": "pause-hard.wav",
+   "audio_s": 163.55,
+   "syl_per_s": 5.09,
+   "wpm": 129.0,
+   "wall_s": 50.1,
+   "cer": 6.3
+  },
+  {
+   "tag": "pause-fade",
+   "scale": 1.0,
+   "pause": "fade",
+   "file": "pause-fade.wav",
+   "audio_s": 163.55,
+   "syl_per_s": 5.09,
+   "wpm": 129.0,
+   "wall_s": 49.9,
+   "cer": 4.9
+  },
+  {
+   "tag": "pause-tone",
+   "scale": 1.0,
+   "pause": "tone",
+   "file": "pause-tone.wav",
+   "audio_s": 163.55,
+   "syl_per_s": 5.09,
+   "wpm": 129.0,
+   "wall_s": 50.8,
+   "cer": 4.6
+  },
+  {
+   "tag": "rate-0.85",
+   "scale": 0.85,
+   "pause": "tone",
+   "file": "rate-0.85.wav",
+   "audio_s": 189.09,
+   "syl_per_s": 4.4,
+   "wpm": 111.0,
+   "wall_s": 59.5,
+   "cer": 13.8
+  },
+  {
+   "tag": "rate-0.75",
+   "scale": 0.75,
+   "pause": "tone",
+   "file": "rate-0.75.wav",
+   "audio_s": 211.78,
+   "syl_per_s": 3.93,
+   "wpm": 99.0,
+   "wall_s": 58.8,
+   "cer": 20.1
+  },
+  {
+   "tag": "rate-0.68",
+   "scale": 0.68,
+   "pause": "tone",
+   "file": "rate-0.68.wav",
+   "audio_s": 230.72,
+   "syl_per_s": 3.61,
+   "wpm": 91.0,
+   "wall_s": 60.3,
+   "cer": 24.9
+  }
+ ]
+}

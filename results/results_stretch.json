@@ -1,0 +1,23 @@
+[
+ {
+  "tag": "stretch-0.72",
+  "audio_s": 227.1,
+  "syl_per_s": 3.66,
+  "wpm": 93,
+  "cer": 5.6
+ },
+ {
+  "tag": "stretch-0.80",
+  "audio_s": 204.4,
+  "syl_per_s": 4.07,
+  "wpm": 103,
+  "cer": 7.7
+ },
+ {
+  "tag": "stretch-0.88",
+  "audio_s": 185.8,
+  "syl_per_s": 4.48,
+  "wpm": 113,
+  "cer": 5.3
+ }
+]

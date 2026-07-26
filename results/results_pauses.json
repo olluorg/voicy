@@ -1,0 +1,27 @@
+{
+ "total_syllables": 832,
+ "results": [
+  {
+   "tag": "pauses-x2.0",
+   "scale": 1.0,
+   "pause": "tone",
+   "file": "pauses-x2.0.wav",
+   "audio_s": 183.14,
+   "syl_per_s": 4.54,
+   "wpm": 115.0,
+   "wall_s": 49.8,
+   "cer": 6.3
+  },
+  {
+   "tag": "pauses-x3.0",
+   "scale": 1.0,
+   "pause": "tone",
+   "file": "pauses-x3.0.wav",
+   "audio_s": 202.73,
+   "syl_per_s": 4.1,
+   "wpm": 104.0,
+   "wall_s": 51.3,
+   "cer": 5.3
+  }
+ ]
+}
