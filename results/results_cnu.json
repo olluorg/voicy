@@ -1,0 +1,31 @@
+{
+ "total_syllables": 832,
+ "results": [
+  {
+   "tag": "cnu-solid-1.00",
+   "mode": "solid",
+   "stretch": 1.0,
+   "audio_s": 155.7,
+   "pauses": 7,
+   "silence_pct": 0.4,
+   "pause_median_ms": 75,
+   "pause_max_ms": 145,
+   "syl_per_s": 5.34,
+   "wpm": 135,
+   "cer": 13.4
+  },
+  {
+   "tag": "cnu-joined-1.00",
+   "mode": "joined",
+   "stretch": 1.0,
+   "audio_s": 158.0,
+   "pauses": 27,
+   "silence_pct": 3.5,
+   "pause_median_ms": 215,
+   "pause_max_ms": 305,
+   "syl_per_s": 5.26,
+   "wpm": 133,
+   "cer": 11.2
+  }
+ ]
+}

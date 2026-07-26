@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <div class="topbar"><div class="inner">
   <div class="toc">
     <a href="#result">Результат</a><a href="#dvizhki">Движки</a><a href="#metrika">Метрика</a>
-    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#itogi">Итоги</a>
+    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#referens">Референс</a><a href="#itogi">Итоги</a>
   </div>
   <button class="toggle" id="theme">тема</button>
 </div></div>
@@ -118,20 +118,20 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <p class="kicker">Исследование · июль 2026</p>
 <h1>Как озвучивать инженерные тексты</h1>
 <p class="lede">Тексты с кодом, нотацией и терминами не читаются вслух так же, как читаются
-глазами. Восемь раундов измерений: что помогло, что не помогло и почему очевидные ходы
+глазами. Девять раундов измерений: что помогло, что не помогло и почему очевидные ходы
 оказались ловушками.</p>
 
 <h2 id="result">Результат</h2>
 
 <div class="grid g3">
-  <div class="stat"><div class="v">3.2<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
-  <div class="stat"><div class="v">97</div><div class="l">слов в минуту, внутри учебной нормы</div><div class="was">было 160</div></div>
-  <div class="stat"><div class="v">0</div><div class="l">вставленных пауз — тишину ставит только модель</div><div class="was">было 34% тишины из сэмплов</div></div>
+  <div class="stat"><div class="v">1.0<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
+  <div class="stat"><div class="v">91</div><div class="l">слов в минуту — темп чтеца в референсе, без обработки</div><div class="was">было 160</div></div>
+  <div class="stat"><div class="v">0</div><div class="l">вставленных пауз и нулевое растяжение</div><div class="was">было 34% тишины и ×0.66</div></div>
 </div>
 
 <div class="grid g2">
-  <div class="card player"><b>Стало</b><span class="n">RL-V2, человеческий референс, реплики стык в стык, растяжение 0.66</span>
-    <audio controls preload="none" src="assets/audio/v7__joined-0.66.opus"></audio></div>
+  <div class="card player"><b>Стало</b><span class="n">RL-V2, медленный референс, нарезанный по границам фраз; реплики стык в стык; без обработки</span>
+    <audio controls preload="none" src="assets/audio/ref__cdg-joined-1.00.opus"></audio></div>
   <div class="card player"><b>Было</b><span class="n">ESpeech PODCASTER, синтетический референс, плоский текст</span>
     <audio controls preload="none" src="assets/audio/out__jc-024__audio__espeech-podcaster.opus"></audio></div>
 </div>
@@ -589,6 +589,64 @@ F5 копирует не «чёткость», а манеру конкретн�
 Хочешь паузу — поставь точку и начни новую реплику. Это и проще, и честнее: длина паузы
 становится решением автора текста, а не подобранным числом в конфиге.</p>
 
+<h2 id="referens">Раунд 9. Темп принадлежит референсу</h2>
+
+<div class="quote">«Ты искусственно замедлил звук?»</div>
+
+<p>Да. <code>atempo=0.66</code> — растяжение готового аудио в полтора раза. И это выходило
+далеко за границу осторожности, которую я сам же записал двумя раундами раньше:
+«сильнее 0.8 — осторожно, артефакты слышны, хотя CER их не показывает».</p>
+
+<p>Вопрос вскрыл две ошибки подряд.</p>
+
+<h3>Ошибка первая: референс отбирался только по разборчивости</h3>
+<p>F5 — zero-shot модель. Она копирует из референса не только тембр, но и <b>темп речи</b>.
+Отбирая референс, я смотрел исключительно на CER и ни разу не померил, с какой скоростью
+говорит чтец.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Темп речи в референсных записях</span>
+    <button class="toggle" data-table="t-refrate">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--seq-450)"></i>слов в минуту</span></div>
+  <div id="c-refrate"></div>
+  <div class="tblview" id="t-refrate" hidden></div>
+  <figcaption>Разброс полуторакратный. Я взял одного из самых быстрых — и потом полтора раза
+  растягивал результат, чтобы попасть в учебную норму.</figcaption>
+</figure>
+
+<h3>Ошибка вторая: клипы резались по таймеру</h3>
+<p>Первые референсы вырезались окном в 13 секунд с отметки 45 с, чтобы проскочить дисклеймер
+LibriVox. Окно попадало в середину фразы, и транскрипт получался обрубком:
+«улиц губернского города о дело происходило в 1842 году».</p>
+<p>F5 получает транскрипт референса дословно. Кривой транскрипт портит <b>каждый</b>
+синтезируемый сегмент, а не только начало. Именно поэтому Тургенев в первом отборе
+выглядел плохо и был отвергнут.</p>
+
+<div class="grid g2">
+  <div class="card player"><b>Референс, нарезанный по фразам</b><span class="n">Тургенев, 74 слов/мин — исходный клип</span>
+    <audio controls preload="none" src="assets/audio/refclip__cdg.opus"></audio></div>
+  <div class="card player"><b>Результат · 91 слов/мин</b><span class="n">без растяжения, 142 паузы, все модельные · <span class="pill good">CER 1.0%</span></span>
+    <audio controls preload="none" src="assets/audio/ref__cdg-joined-1.00.opus"></audio></div>
+</div>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Референс</th><th>нарезка</th><th class="num">растяжение</th><th class="num">слов/мин</th><th class="num">пауз</th><th class="num">CER</th></tr></thead>
+<tbody>
+<tr><td>Лесков</td><td>по таймеру</td><td class="num">×0.66</td><td class="num">97</td><td class="num">35</td><td class="num">3.2%</td></tr>
+<tr><td>Тургенев</td><td>по таймеру</td><td class="num">×1.00</td><td class="num">108</td><td class="num">136</td><td class="num">7.3%</td></tr>
+<tr class="hi"><td><b>Тургенев</b></td><td><b>по фразам</b></td><td class="num"><b>×1.00</b></td><td class="num"><b>91</b></td><td class="num"><b>142</b></td><td class="num"><b>1.0%</b></td></tr>
+<tr><td>Достоевский</td><td>по фразам</td><td class="num">×1.00</td><td class="num">133</td><td class="num">27</td><td class="num">11.2%</td></tr>
+</tbody></table></div>
+
+<p>Одна только чистая нарезка того же клипа дала <b>7.3% → 1.0%</b>, семикратное улучшение.</p>
+
+<p><b>Мораль.</b> Четыре раунда подряд я компенсировал следствие вместо причины: паузы правил
+затуханиями, темп — растяжением. Оба свойства принадлежали референсу, и оба чинились
+в постобработке. Признак, который стоило заметить раньше: <b>если параметр приходится
+подкручивать всё сильнее, скорее всего его источник находится выше по конвейеру</b>.
+С 45 мс затухания до 8 мс, с ×0.9 растяжения до ×0.66 — оба раза цифра уползала в крайность,
+и оба раза чинилось не то место.</p>
+
 <h2 id="itogi">Что помогло и что не помогло</h2>
 
 <div class="grid g2">
@@ -602,7 +660,7 @@ F5 копирует не «чёткость», а манеру конкретн�
 <li><b>Модель, дообученная на разборчивость</b> (RL-V2 вместо PODCASTER) — ровно вдвое.</li>
 <li><b>Ритм через типизированные реплики.</b> Улучшил и восприятие, и метрику.</li>
 <li><b>Затухание и фон комнаты в паузах.</b> Разрыв сигнала в 5.6 раза меньше.</li>
-<li><b>Паузы и постобработка для темпа</b> вместо ручки модели.</li>
+<li><b>Медленный референс, нарезанный по границам фраз.</b> Дал нужный темп без обработки и лучший CER исследования — 1.0%. Чистая нарезка того же клипа: 7.3% → 1.0%.</li>
 
 <li><b>Короткое затухание, 8 мс.</b> Достаточно против щелчка, слишком мало, чтобы задеть фонему.</li>
 <li><b>Разбиение на реплики по смыслу</b> — вдвое лучше, чем позволить модели резать текст
@@ -620,6 +678,7 @@ F5 копирует не «чёткость», а манеру конкретн�
 <li><b>Выбор движка «посвежее».</b> Silero v4 объективно хуже v3.1.</li>
 <li><b>Проверка длительности как приёмка.</b> Ловит беззвучные выбросы, слепа к съеденным
 слогам. Вытеснена CER.</li>
+<li><b>Растяжение как основной способ задать темп.</b> Работает лучше ручки модели, но лечит следствие: темп принадлежит референсу.</li>
 <li><b>Вставленные паузы целиком.</b> Механизм прожил три итерации — резкие, длинные,
 одинаковые — и был отвергнут. Симптом менялся, источник был один.</li>
 <li><b>Обрезка тишины по порогу энергии.</b> Глухие щелевые лежат ниже любого разумного
@@ -663,7 +722,16 @@ const DATA = {
     {l:"Раунд 5 · + затухания и темп", v:5.2, note:"фон комнаты, 96 слов/мин, но 34% тишины"},
     {l:"Раунд 6 · + модель пауз", v:3.9, note:"пауза по границе, 98 слов/мин, 12% тишины"},
     {l:"Раунд 7 · + края и нерегулярность", v:3.4, note:"затухание 8 мс вместо 45, паузы с разбросом"},
-    {l:"Раунд 8 · вставленные паузы убраны", v:3.2, note:"тишину ставит только модель, 97 слов/мин"}
+    {l:"Раунд 8 · вставленные паузы убраны", v:3.2, note:"тишину ставит только модель, 97 слов/мин"},
+    {l:"Раунд 9 · темп из референса", v:1.0, note:"медленный чтец, нарезка по фразам, 91 слов/мин без растяжения"}
+  ],
+  refrate: [
+    {l:"Тургенев · Дворянское гнездо", v:93, note:"выбран после перенарезки"},
+    {l:"Пушкин · Красавице", v:99, note:""},
+    {l:"Достоевский · Записки из подполья", v:103, note:""},
+    {l:"Лесков · Святочные рассказы", v:121, note:"был выбран раньше — один из самых быстрых"},
+    {l:"Достоевский · Белые ночи", v:138, note:""},
+    {l:"Тургенев · Поездка в Полесье", v:144, note:""}
   ],
   nopause: {
     cats:["149 / 147 слов/мин","117 / 115","108 / 106","99 / 97"],
@@ -875,7 +943,7 @@ function seriesColors(){ const c = C();
           c.getPropertyValue('--series-3').trim()]; }
 
 function renderAll(){
-  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause'];
+  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause','c-refrate'];
   ids.forEach(i => document.getElementById(i).innerHTML = '');
   const col = seriesColors();
 
@@ -915,6 +983,11 @@ function renderAll(){
   barsH(document.getElementById('c-v3'), DATA.v3, {labelW:190});
   document.getElementById('t-v3').innerHTML =
     tableFor(DATA.v3, ['Растяжение речи','CER'], v => v + '%');
+
+  barsH(document.getElementById('c-refrate'), DATA.refrate,
+    {labelW:250, fmt: v => v + ' слов/мин'});
+  document.getElementById('t-refrate').innerHTML =
+    tableFor(DATA.refrate, ['Референс','Темп чтеца'], v => v + ' слов/мин');
 
   barsGrouped(document.getElementById('c-nopause'), DATA.nopause.cats, DATA.nopause.series, [col[0], col[2]]);
   document.getElementById('t-nopause').innerHTML =

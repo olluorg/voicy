@@ -1,0 +1,57 @@
+{
+ "total_syllables": 832,
+ "results": [
+  {
+   "tag": "dg-solid-1.00",
+   "mode": "solid",
+   "stretch": 1.0,
+   "audio_s": 190.6,
+   "pauses": 120,
+   "silence_pct": 17.3,
+   "pause_median_ms": 192,
+   "pause_max_ms": 1715,
+   "syl_per_s": 4.37,
+   "wpm": 111,
+   "cer": 7.5
+  },
+  {
+   "tag": "dg-solid-0.92",
+   "mode": "solid",
+   "stretch": 0.92,
+   "audio_s": 207.2,
+   "pauses": 133,
+   "silence_pct": 17.8,
+   "pause_median_ms": 155,
+   "pause_max_ms": 1865,
+   "syl_per_s": 4.02,
+   "wpm": 102,
+   "cer": 13.4
+  },
+  {
+   "tag": "dg-joined-1.00",
+   "mode": "joined",
+   "stretch": 1.0,
+   "audio_s": 194.2,
+   "pauses": 136,
+   "silence_pct": 19.0,
+   "pause_median_ms": 205,
+   "pause_max_ms": 915,
+   "syl_per_s": 4.28,
+   "wpm": 108,
+   "cer": 7.3
+  },
+  {
+   "tag": "dg-joined-0.92",
+   "mode": "joined",
+   "stretch": 0.92,
+   "audio_s": 211.1,
+   "pauses": 153,
+   "silence_pct": 19.6,
+   "pause_median_ms": 210,
+   "pause_max_ms": 990,
+   "syl_per_s": 3.94,
+   "wpm": 100,
+   "cer": 7.5
+  }
+ ]
+}
