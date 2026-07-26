@@ -1,0 +1,200 @@
+[
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "jc-024",
+  "variant": "raw",
+  "chars": 552,
+  "audio_s": 43.17,
+  "wall_s": 1.13,
+  "rtf": 38.1,
+  "file": "jc-024__raw__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1291,
+  "audio_s": 106.49,
+  "wall_s": 2.52,
+  "rtf": 42.2,
+  "file": "jc-024__audio__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "db-046",
+  "variant": "raw",
+  "chars": 830,
+  "audio_s": 63.39,
+  "wall_s": 1.5,
+  "rtf": 42.2,
+  "file": "db-046__raw__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 89.91,
+  "wall_s": 2.16,
+  "rtf": 41.7,
+  "file": "db-046__audio__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "mb-040",
+  "variant": "raw",
+  "chars": 756,
+  "audio_s": 56.53,
+  "wall_s": 1.37,
+  "rtf": 41.1,
+  "file": "mb-040__raw__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-irina-medium",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 99.18,
+  "wall_s": 2.41,
+  "rtf": 41.2,
+  "file": "mb-040__audio__piper-irina.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "jc-024",
+  "variant": "raw",
+  "chars": 552,
+  "audio_s": 30.33,
+  "wall_s": 0.82,
+  "rtf": 37.2,
+  "file": "jc-024__raw__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1291,
+  "audio_s": 70.58,
+  "wall_s": 1.8,
+  "rtf": 39.2,
+  "file": "jc-024__audio__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "db-046",
+  "variant": "raw",
+  "chars": 830,
+  "audio_s": 45.08,
+  "wall_s": 1.12,
+  "rtf": 40.1,
+  "file": "db-046__raw__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 64.15,
+  "wall_s": 1.67,
+  "rtf": 38.5,
+  "file": "db-046__audio__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "mb-040",
+  "variant": "raw",
+  "chars": 756,
+  "audio_s": 41.49,
+  "wall_s": 1.05,
+  "rtf": 39.7,
+  "file": "mb-040__raw__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-dmitri-medium",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 70.45,
+  "wall_s": 1.83,
+  "rtf": 38.5,
+  "file": "mb-040__audio__piper-dmitri.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "jc-024",
+  "variant": "raw",
+  "chars": 552,
+  "audio_s": 33.46,
+  "wall_s": 0.89,
+  "rtf": 37.7,
+  "file": "jc-024__raw__piper-ruslan.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "jc-024",
+  "variant": "audio",
+  "chars": 1291,
+  "audio_s": 76.23,
+  "wall_s": 1.91,
+  "rtf": 39.8,
+  "file": "jc-024__audio__piper-ruslan.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "db-046",
+  "variant": "raw",
+  "chars": 830,
+  "audio_s": 50.72,
+  "wall_s": 1.24,
+  "rtf": 40.9,
+  "file": "db-046__raw__piper-ruslan.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "db-046",
+  "variant": "audio",
+  "chars": 1156,
+  "audio_s": 67.85,
+  "wall_s": 1.76,
+  "rtf": 38.6,
+  "file": "db-046__audio__piper-ruslan.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "mb-040",
+  "variant": "raw",
+  "chars": 756,
+  "audio_s": 44.76,
+  "wall_s": 1.13,
+  "rtf": 39.5,
+  "file": "mb-040__raw__piper-ruslan.wav"
+ },
+ {
+  "engine": "piper",
+  "voice": "ru_RU-ruslan-medium",
+  "id": "mb-040",
+  "variant": "audio",
+  "chars": 1312,
+  "audio_s": 77.17,
+  "wall_s": 1.97,
+  "rtf": 39.1,
+  "file": "mb-040__audio__piper-ruslan.wav"
+ }
+]
