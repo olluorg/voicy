@@ -1,0 +1,61 @@
+{
+ "total_syllables": 832,
+ "gap_model": {
+  "breath": 140,
+  "clause": 260,
+  "thought": 480,
+  "section": 700
+ },
+ "results": [
+  {
+   "tag": "v3-1.00",
+   "stretch": 1.0,
+   "audio_s": 153.7,
+   "silence_s": 10.5,
+   "silence_pct": 6.8,
+   "syl_per_s": 5.41,
+   "wpm": 137,
+   "cer": 4.8
+  },
+  {
+   "tag": "v3-0.88",
+   "stretch": 0.88,
+   "audio_s": 172.9,
+   "silence_s": 10.5,
+   "silence_pct": 6.1,
+   "syl_per_s": 4.81,
+   "wpm": 122,
+   "cer": 4.5
+  },
+  {
+   "tag": "v3-0.82",
+   "stretch": 0.82,
+   "audio_s": 184.8,
+   "silence_s": 10.5,
+   "silence_pct": 5.7,
+   "syl_per_s": 4.5,
+   "wpm": 114,
+   "cer": 2.2
+  },
+  {
+   "tag": "v3-0.76",
+   "stretch": 0.76,
+   "audio_s": 198.6,
+   "silence_s": 10.5,
+   "silence_pct": 5.3,
+   "syl_per_s": 4.19,
+   "wpm": 106,
+   "cer": 2.6
+  },
+  {
+   "tag": "v3-0.70",
+   "stretch": 0.7,
+   "audio_s": 214.7,
+   "silence_s": 10.5,
+   "silence_pct": 4.9,
+   "syl_per_s": 3.88,
+   "wpm": 98,
+   "cer": 3.9
+  }
+ ]
+}
