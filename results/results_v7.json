@@ -1,0 +1,109 @@
+{
+ "total_syllables": 832,
+ "results": [
+  {
+   "tag": "solid-1.00",
+   "mode": "solid",
+   "stretch": 1.0,
+   "audio_s": 140.9,
+   "pauses": 13,
+   "silence_pct": 1.3,
+   "pause_median_ms": 115,
+   "pause_max_ms": 310,
+   "syl_per_s": 5.9,
+   "wpm": 149,
+   "cer": 5.9
+  },
+  {
+   "tag": "solid-0.78",
+   "mode": "solid",
+   "stretch": 0.78,
+   "audio_s": 180.7,
+   "pauses": 13,
+   "silence_pct": 1.3,
+   "pause_median_ms": 145,
+   "pause_max_ms": 395,
+   "syl_per_s": 4.61,
+   "wpm": 117,
+   "cer": 5.9
+  },
+  {
+   "tag": "solid-0.72",
+   "mode": "solid",
+   "stretch": 0.72,
+   "audio_s": 195.7,
+   "pauses": 13,
+   "silence_pct": 1.3,
+   "pause_median_ms": 155,
+   "pause_max_ms": 430,
+   "syl_per_s": 4.25,
+   "wpm": 108,
+   "cer": 6.7
+  },
+  {
+   "tag": "solid-0.66",
+   "mode": "solid",
+   "stretch": 0.66,
+   "audio_s": 213.5,
+   "pauses": 16,
+   "silence_pct": 1.3,
+   "pause_median_ms": 127,
+   "pause_max_ms": 465,
+   "syl_per_s": 3.9,
+   "wpm": 99,
+   "cer": 6.4
+  },
+  {
+   "tag": "joined-1.00",
+   "mode": "joined",
+   "stretch": 1.0,
+   "audio_s": 143.2,
+   "pauses": 34,
+   "silence_pct": 7.1,
+   "pause_median_ms": 330,
+   "pause_max_ms": 390,
+   "syl_per_s": 5.81,
+   "wpm": 147,
+   "cer": 2.2
+  },
+  {
+   "tag": "joined-0.78",
+   "mode": "joined",
+   "stretch": 0.78,
+   "audio_s": 183.5,
+   "pauses": 34,
+   "silence_pct": 7.0,
+   "pause_median_ms": 420,
+   "pause_max_ms": 495,
+   "syl_per_s": 4.53,
+   "wpm": 115,
+   "cer": 3.7
+  },
+  {
+   "tag": "joined-0.72",
+   "mode": "joined",
+   "stretch": 0.72,
+   "audio_s": 198.8,
+   "pauses": 35,
+   "silence_pct": 7.1,
+   "pause_median_ms": 455,
+   "pause_max_ms": 540,
+   "syl_per_s": 4.18,
+   "wpm": 106,
+   "cer": 3.2
+  },
+  {
+   "tag": "joined-0.66",
+   "mode": "joined",
+   "stretch": 0.66,
+   "audio_s": 216.9,
+   "pauses": 35,
+   "silence_pct": 7.1,
+   "pause_median_ms": 495,
+   "pause_max_ms": 585,
+   "syl_per_s": 3.84,
+   "wpm": 97,
+   "cer": 3.2
+  }
+ ]
+}
