@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <div class="topbar"><div class="inner">
   <div class="toc">
     <a href="#result">Результат</a><a href="#dvizhki">Движки</a><a href="#metrika">Метрика</a>
-    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#itogi">Итоги</a>
+    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#itogi">Итоги</a>
   </div>
   <button class="toggle" id="theme">тема</button>
 </div></div>
@@ -118,20 +118,20 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <p class="kicker">Исследование · июль 2026</p>
 <h1>Как озвучивать инженерные тексты</h1>
 <p class="lede">Тексты с кодом, нотацией и терминами не читаются вслух так же, как читаются
-глазами. Пять раундов измерений: что помогло, что не помогло и почему очевидные ходы
+глазами. Семь раундов измерений: что помогло, что не помогло и почему очевидные ходы
 оказались ловушками.</p>
 
 <h2 id="result">Результат</h2>
 
 <div class="grid g3">
-  <div class="stat"><div class="v">5.2<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
-  <div class="stat"><div class="v">96</div><div class="l">слов в минуту, внутри учебной нормы</div><div class="was">было 160</div></div>
-  <div class="stat"><div class="v">×10</div><div class="l">к реальному времени, локально на RTX 5080</div><div class="was">корпус за ~100 мин</div></div>
+  <div class="stat"><div class="v">3.4<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
+  <div class="stat"><div class="v">98</div><div class="l">слов в минуту, внутри учебной нормы</div><div class="was">было 160</div></div>
+  <div class="stat"><div class="v">93–2500<small> мс</small></div><div class="l">паузы, разные по длине и не на каждой границе</div><div class="was">было 2155 мс, одинаковые</div></div>
 </div>
 
 <div class="grid g2">
-  <div class="card player"><b>Стало</b><span class="n">RL-V2, человеческий референс, партитура реплик, паузы ×3, растяжение 0.92</span>
-    <audio controls preload="none" src="assets/audio/v2__RECOMMENDED.opus"></audio></div>
+  <div class="card player"><b>Стало</b><span class="n">RL-V2, человеческий референс, партитура реплик, паузы с разбросом, растяжение речи 0.70</span>
+    <audio controls preload="none" src="assets/audio/v6__v6-0.70.opus"></audio></div>
   <div class="card player"><b>Было</b><span class="n">ESpeech PODCASTER, синтетический референс, плоский текст</span>
     <audio controls preload="none" src="assets/audio/out__jc-024__audio__espeech-podcaster.opus"></audio></div>
 </div>
@@ -405,6 +405,140 @@ F5 копирует не «чёткость», а манеру конкретн�
 Растяжение остаётся косметической доводкой до целевой цифры. Ровно так делает живой
 преподаватель: он не растягивает слова, он молчит между мыслями.</p>
 
+<h2 id="pauzy">Раунд 6. Пауза принадлежит границе</h2>
+
+<div class="quote">«Паузы слишком длительные и неестественные, они звучат неестественно,
+появляясь на полуслове».</div>
+
+<p>Замер оказался хуже ожидаемого: <b>34% файла — тишина</b>, медианная пауза
+<b>2.15 секунды</b>, самая длинная — 9.3 секунды. И это при том, что предыдущий раунд
+уже занимался паузами и считал вопрос закрытым.</p>
+
+<h3>Четыре источника тишины перемножились</h3>
+<p>Ошибка была в модели, а не в числах:</p>
+<ul>
+<li>у каждой реплики свои <code>pad_before</code> и <code>pad_after</code>, поэтому промежуток
+между двумя репликами получался <b>суммой двух паддингов</b> — величиной, которую никто
+не задавал осознанно;</li>
+<li>между ними мог стоять ещё и явный <code>beat</code>;</li>
+<li>всё это умножалось на ×3 из эксперимента с темпом;</li>
+<li>и <code>atempo</code> растягивал тишину заодно с речью.</li>
+</ul>
+
+<p>Арифметика сходится в точку: 260 + 250 + 120 = 630 мс, ×3 = 1890, ×1.087 = <b>2055 мс</b> —
+ровно наблюдавшаяся медиана. Пауза на подумать в 2.5 с тем же путём стала 9.3 с.
+А поскольку раздувалось всё одинаково, двухсекундная пауза вставала <b>внутри одной мысли</b> —
+отсюда обрыв на полуслове.</p>
+
+<h3>Длина берётся из границы</h3>
+<div class="tbl-scroll"><table>
+<thead><tr><th>Граница между репликами</th><th class="num">Пауза</th></tr></thead>
+<tbody>
+<tr><td>повествование продолжается</td><td class="num">140 мс — вдох, а не остановка</td></tr>
+<tr><td>после термина идёт его объяснение</td><td class="num">260 мс</td></tr>
+<tr><td>подводка к термину или ключевой фразе</td><td class="num">480 мс</td></tr>
+<tr><td>после ключевой фразы</td><td class="num">700 мс</td></tr>
+<tr class="hi"><td>пауза на устный ответ</td><td class="num">2500 мс — единственная намеренно длинная</td></tr>
+</tbody></table></div>
+
+<p>Плюс два следствия: никаких глобальных множителей, и растяжение применяется к сегментам
+речи <b>до</b> сборки — так пауза длится ровно столько, сколько заявлено, при любом темпе.</p>
+
+<div class="grid g3">
+  <div class="stat"><div class="v">12.3<small>%</small></div><div class="l">доля тишины в файле</div><div class="was">было 33.8%</div></div>
+  <div class="stat"><div class="v">605<small> мс</small></div><div class="l">медианная пауза</div><div class="was">было 2155 мс</div></div>
+  <div class="stat"><div class="v">33</div><div class="l">пауз — столько же, сколько было</div><div class="was">менялись только длительности</div></div>
+</div>
+<p class="n">Расстановка пауз была верной с самого начала. Максимальная пауза
+сократилась с 9.3 с до 2.9 с — и это ровно та единственная, что даётся на устный ответ.</p>
+
+<div class="grid g3">
+  <div class="card player"><b>Было · паузы ×3</b><span class="n">34% тишины · медиана 2.15 с · <span class="pill bad">CER 5.2%</span></span>
+    <audio controls preload="none" src="assets/audio/v2__RECOMMENDED.opus"></audio></div>
+  <div class="card player"><b>Стало · 98 слов/мин</b><span class="n">12.3% тишины · медиана 0.61 с · <span class="pill good">CER 3.9%</span></span>
+    <audio controls preload="none" src="assets/audio/v3__v3-0.70.opus"></audio></div>
+  <div class="card player"><b>Стало · 114 слов/мин</b><span class="n">лучший CER исследования · <span class="pill good">CER 2.2%</span></span>
+    <audio controls preload="none" src="assets/audio/v3__v3-0.82.opus"></audio></div>
+</div>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Лестница темпа с новой моделью пауз</span>
+    <button class="toggle" data-table="t-v3">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--seq-450)"></i>CER, %</span></div>
+  <div id="c-v3"></div>
+  <div class="tblview" id="t-v3" hidden></div>
+  <figcaption>Разборчивость улучшилась и сама по себе: раньше <code>atempo</code> обрабатывал
+  вместе с речью и фон комнаты, добавляя артефакты.</figcaption>
+</figure>
+
+<p><b>Мораль.</b> Симптом «звучит неестественно» почти никогда не лечится подбором числа.
+Подкрутить множитель здесь означало бы получить то же самое, только тише. Настоящая ошибка
+была в том, что длительность промежутка вообще никем не задавалась осознанно — она получалась
+побочным эффектом сложения.</p>
+
+<p>Это третий раз за исследование, когда правильным ходом оказалось поменять модель,
+а не параметр: до этого был текст (транслитерация вместо объяснения) и темп
+(ручка модели вместо пауз и постобработки).</p>
+
+<h2 id="kraya">Раунд 7. Края фраз и нерегулярность</h2>
+
+<div class="quote">«На краях фразы паузы звучат супер неестественно, они съедают буквы.
+Кроме того, человек не делает всегда одинаковые паузы и в одних и тех же местах».</div>
+
+<h3>Затухание съедало согласные</h3>
+<p>Затухание 45 мс из шестого раунда применялось ко <b>всему сегменту</b>, включая речь.
+Замер энергии на краях: у отдельных реплик в первых 45 мс сигнал достигает
+<b>83% от собственного пика</b>. Русский взрывной согласный длится 50–80 мс — то есть
+косинусная кривая просто стирала начальный звук.</p>
+
+<div class="grid g3">
+  <div class="stat"><div class="v">12<small> из 26</small></div><div class="l">реплик с живым сигналом в зоне затухания</div><div class="was">почти половина фраз</div></div>
+  <div class="stat"><div class="v">8<small> мс</small></div><div class="l">новая длина затухания</div><div class="was">было 45 мс</div></div>
+  <div class="stat"><div class="v">23</div><div class="l">паузы, 93–2500 мс, медиана 342</div><div class="was">было 25 одинаковых</div></div>
+</div>
+
+<h3>Тупик по дороге</h3>
+<p>Сначала я сделал «умнее»: находить реальные границы речи по энергии, обрезать лишнее
+и затухать только в тихой зоне. Стало <b>хуже</b>. Причина поучительная: глухие щелевые —
+«с», «ш», «ф», мягкое «ть» — энергетически лежат далеко ниже любого разумного порога.
+Порог срезал ровно те согласные, ради спасения которых всё и затевалось.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Ablation: обрезка по порогу против простого короткого затухания</span>
+    <button class="toggle" data-table="t-abl">таблица</button></div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>с обрезкой по порогу</span>
+    <span><i style="background:var(--series-2)"></i>без обрезки</span>
+    <span><i style="background:var(--series-3)"></i>без обрезки и без разброса темпа</span>
+  </div>
+  <div id="c-abl"></div>
+  <div class="tblview" id="t-abl" hidden></div>
+  <figcaption>Простое короткое затухание оказалось безопаснее пороговой эвристики,
+  особенно на медленном варианте: 7.9% против 3.4%.</figcaption>
+</figure>
+
+<h3>Паузы перестали быть метрономом</h3>
+<p>Базовая длительность теперь умножается на случайное число из 0.62–1.42, а граница
+уровня «вдох» с вероятностью 35% не получает паузы вовсе — фразы сливаются.
+Генератор засевается хешем текста соседних реплик, поэтому одинаковый контент даёт
+одинаковое аудио при любой пересборке.</p>
+
+<div class="grid g2">
+  <div class="card player"><b>Было · затухание 45 мс, паузы по таблице</b><span class="n">25 одинаковых пауз</span>
+    <audio controls preload="none" src="assets/audio/v3__v3-0.70.opus"></audio></div>
+  <div class="card player"><b>Стало · затухание 8 мс, паузы с разбросом</b><span class="n">23 паузы, 93–2500 мс · <span class="pill good">CER 3.4%</span></span>
+    <audio controls preload="none" src="assets/audio/v6__v6-0.70.opus"></audio></div>
+</div>
+
+<h3>Честно про метрику</h3>
+<p>CER после этих правок — 3.4–4.8% против 2.2–4.8% до них. Разброс между конфигурациями
+сопоставим с разбросом самого замера на одном образце, поэтому <b>улучшение разборчивости
+здесь не заявляется</b>.</p>
+<p>Правка краёв обоснована прямым измерением сигнала, а не метрикой. Это тот случай,
+где CER показывает отсутствие вреда, но не способен показать пользу: он меряет, разобрано ли
+слово, а не то, звучит ли начало фразы обрубленным. Три раунда назад метрика поймала дефект,
+которого не слышало ухо; здесь ухо поймало дефект, которого не видит метрика.</p>
+
 <h2 id="itogi">Что помогло и что не помогло</h2>
 
 <div class="grid g2">
@@ -419,6 +553,9 @@ F5 копирует не «чёткость», а манеру конкретн�
 <li><b>Ритм через типизированные реплики.</b> Улучшил и восприятие, и метрику.</li>
 <li><b>Затухание и фон комнаты в паузах.</b> Разрыв сигнала в 5.6 раза меньше.</li>
 <li><b>Паузы и постобработка для темпа</b> вместо ручки модели.</li>
+<li><b>Длина паузы как свойство границы</b>, а не сумма паддингов соседних реплик.</li>
+<li><b>Короткое затухание, 8 мс.</b> Достаточно против щелчка, слишком мало, чтобы задеть фонему.</li>
+<li><b>Разброс длительности пауз и пропуск части из них.</b> Речь перестаёт быть метрономом.</li>
 </ul>
 </div>
 <div class="card">
@@ -432,6 +569,13 @@ F5 копирует не «чёткость», а манеру конкретн�
 <li><b>Выбор движка «посвежее».</b> Silero v4 объективно хуже v3.1.</li>
 <li><b>Проверка длительности как приёмка.</b> Ловит беззвучные выбросы, слепа к съеденным
 слогам. Вытеснена CER.</li>
+<li><b>Обрезка тишины по порогу энергии.</b> Глухие щелевые лежат ниже любого разумного
+порога — обрезка съедала ровно те согласные, ради которых затевалась.</li>
+<li><b>Разброс темпа между репликами.</b> Влияние на метрику непоследовательно,
+в пределах шума. Недоказанное усложнение убрано.</li>
+<li><b>Глобальный множитель пауз.</b> Дал 34% тишины и паузы по 9 секунд.
+Тишина должна задаваться осознанно в одном месте, а не получаться произведением
+четырёх независимых множителей.</li>
 </ul>
 </div>
 </div>
@@ -463,7 +607,25 @@ const DATA = {
     {l:"Раунд 2 · RL-V2", v:10.5, note:"модель, дообученная на разборчивость"},
     {l:"Раунд 3 · + человеческий референс", v:9.2, note:"LibriVox, nfe 48"},
     {l:"Раунд 4 · + текст и ритм", v:6.2, note:"объяснение вместо листинга, партитура реплик"},
-    {l:"Раунд 5 · + паузы и темп", v:5.2, note:"затухания, фон комнаты, 96 слов/мин"}
+    {l:"Раунд 5 · + затухания и темп", v:5.2, note:"фон комнаты, 96 слов/мин, но 34% тишины"},
+    {l:"Раунд 6 · + модель пауз", v:3.9, note:"пауза по границе, 98 слов/мин, 12% тишины"},
+    {l:"Раунд 7 · + края и нерегулярность", v:3.4, note:"затухание 8 мс вместо 45, паузы с разбросом"}
+  ],
+  pauses: {
+    cats:["доля тишины, %","медианная пауза, с","максимальная пауза, с"],
+    series:[{name:"суммарная модель ×3",v:[33.8,2.16,9.31]},{name:"по границам",v:[12.3,0.61,2.92]}]
+  },
+  abl: {
+    cats:["114 слов/мин","106 слов/мин","98 слов/мин"],
+    series:[{name:"с обрезкой",v:[4.7,4.5,7.9]},{name:"без обрезки",v:[4.4,4.2,4.6]},
+            {name:"без обрезки и разброса темпа",v:[4.5,4.8,3.4]}]
+  },
+  v3: [
+    {l:"×1.00 · 137 слов/мин", v:4.8, note:"исходный темп модели"},
+    {l:"×0.88 · 122 слов/мин", v:4.5, note:""},
+    {l:"×0.82 · 114 слов/мин", v:2.2, note:"лучший CER всего исследования"},
+    {l:"×0.76 · 106 слов/мин", v:2.6, note:""},
+    {l:"×0.70 · 98 слов/мин", v:3.9, note:"выбран — внутри учебной нормы"}
   ],
   engines: [
     {l:"Silero v4 · baya", v:2.0, note:"×65 CPU · «робот»"},
@@ -655,7 +817,7 @@ function seriesColors(){ const c = C();
           c.getPropertyValue('--series-3').trim()]; }
 
 function renderAll(){
-  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate'];
+  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl'];
   ids.forEach(i => document.getElementById(i).innerHTML = '');
   const col = seriesColors();
 
@@ -692,6 +854,18 @@ function renderAll(){
   document.getElementById('t-patterns').innerHTML =
     tableFor(DATA.patterns, ['Паттерн','Доля корпуса'], v => v + '%');
 
+  barsH(document.getElementById('c-v3'), DATA.v3, {labelW:190});
+  document.getElementById('t-v3').innerHTML =
+    tableFor(DATA.v3, ['Растяжение речи','CER'], v => v + '%');
+
+  barsGrouped(document.getElementById('c-abl'), DATA.abl.cats, DATA.abl.series, col);
+  document.getElementById('t-abl').innerHTML =
+    '<div class="tbl-scroll"><table><thead><tr><th>Вариант</th>' +
+    DATA.abl.cats.map(c => `<th class="num">${c}</th>`).join('') + '</tr></thead><tbody>' +
+    DATA.abl.series.map(sr => `<tr><td>${esc(sr.name)}</td>` +
+      sr.v.map(v => `<td class="num">${v}%</td>`).join('') + '</tr>').join('') +
+    '</tbody></table></div>';
+
   rateChart(document.getElementById('c-rate'), DATA.rate, col);
   document.getElementById('t-rate').innerHTML =
     '<div class="tbl-scroll"><table><thead><tr><th>Механизм</th><th class="num">слов/мин</th>' +
@@ -702,9 +876,9 @@ function renderAll(){
 }
 
 document.getElementById('appendix').innerHTML =
-  ['journey','engines','utmos','refs','patterns'].map(k => {
+  ['journey','engines','utmos','refs','patterns','v3'].map(k => {
     const titles = {journey:'Путь по раундам', engines:'Движки, CER',
-      utmos:'Лидерборд, UTMOS', refs:'Референсы, CER', patterns:'Нотация в корпусе'};
+      utmos:'Лидерборд, UTMOS', refs:'Референсы, CER', patterns:'Нотация в корпусе', v3:'Лестница темпа, раунд 6'};
     const fmt = k === 'utmos' ? (v => v.toFixed(2)) : (v => v + '%');
     return `<h3>${titles[k]}</h3>` + tableFor(DATA[k], ['—','значение'], fmt);
   }).join('') +

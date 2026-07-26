@@ -1,0 +1,52 @@
+{
+ "total_syllables": 832,
+ "fade_ms": 8,
+ "margin_ms": 22,
+ "jitter": [
+  0.62,
+  1.42
+ ],
+ "skip_breath": 0.35,
+ "segments_with_live_edges": 12,
+ "results": [
+  {
+   "tag": "v5-0.82",
+   "stretch": 0.82,
+   "audio_s": 184.7,
+   "gaps": 23,
+   "gap_median_ms": 342,
+   "gap_min_ms": 93,
+   "gap_max_ms": 2500,
+   "silence_pct": 5.9,
+   "syl_per_s": 4.5,
+   "wpm": 114,
+   "cer": 4.4
+  },
+  {
+   "tag": "v5-0.76",
+   "stretch": 0.76,
+   "audio_s": 198.4,
+   "gaps": 23,
+   "gap_median_ms": 342,
+   "gap_min_ms": 93,
+   "gap_max_ms": 2500,
+   "silence_pct": 5.5,
+   "syl_per_s": 4.19,
+   "wpm": 106,
+   "cer": 4.2
+  },
+  {
+   "tag": "v5-0.70",
+   "stretch": 0.7,
+   "audio_s": 214.6,
+   "gaps": 23,
+   "gap_median_ms": 342,
+   "gap_min_ms": 93,
+   "gap_max_ms": 2500,
+   "silence_pct": 5.1,
+   "syl_per_s": 3.88,
+   "wpm": 98,
+   "cer": 4.6
+  }
+ ]
+}
