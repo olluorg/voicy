@@ -1,0 +1,137 @@
+[
+ {
+  "ref": "cdg (текущий)",
+  "variant": "с запятой",
+  "sec": 4.6,
+  "breaks": 3,
+  "durs": [
+   105,
+   355,
+   295
+  ],
+  "file": "cdg_(текущий)__comma.wav"
+ },
+ {
+  "ref": "cdg (текущий)",
+  "variant": "без запятой",
+  "sec": 4.6,
+  "breaks": 2,
+  "durs": [
+   300,
+   135
+  ],
+  "file": "cdg_(текущий)__plain.wav"
+ },
+ {
+  "ref": "sdg",
+  "variant": "с запятой",
+  "sec": 4.1,
+  "breaks": 3,
+  "durs": [
+   100,
+   340,
+   270
+  ],
+  "file": "sdg__comma.wav"
+ },
+ {
+  "ref": "sdg",
+  "variant": "без запятой",
+  "sec": 4.1,
+  "breaks": 1,
+  "durs": [
+   110
+  ],
+  "file": "sdg__plain.wav"
+ },
+ {
+  "ref": "skr",
+  "variant": "с запятой",
+  "sec": 3.6,
+  "breaks": 0,
+  "durs": [],
+  "file": "skr__comma.wav"
+ },
+ {
+  "ref": "skr",
+  "variant": "без запятой",
+  "sec": 3.5,
+  "breaks": 0,
+  "durs": [],
+  "file": "skr__plain.wav"
+ },
+ {
+  "ref": "snu",
+  "variant": "с запятой",
+  "sec": 3.1,
+  "breaks": 1,
+  "durs": [
+   105
+  ],
+  "file": "snu__comma.wav"
+ },
+ {
+  "ref": "snu",
+  "variant": "без запятой",
+  "sec": 3.1,
+  "breaks": 0,
+  "durs": [],
+  "file": "snu__plain.wav"
+ },
+ {
+  "ref": "spp",
+  "variant": "с запятой",
+  "sec": 3.9,
+  "breaks": 0,
+  "durs": [],
+  "file": "spp__comma.wav"
+ },
+ {
+  "ref": "spp",
+  "variant": "без запятой",
+  "sec": 3.8,
+  "breaks": 0,
+  "durs": [],
+  "file": "spp__plain.wav"
+ },
+ {
+  "ref": "swn",
+  "variant": "с запятой",
+  "sec": 4.2,
+  "breaks": 2,
+  "durs": [
+   175,
+   145
+  ],
+  "file": "swn__comma.wav"
+ },
+ {
+  "ref": "swn",
+  "variant": "без запятой",
+  "sec": 4.2,
+  "breaks": 0,
+  "durs": [],
+  "file": "swn__plain.wav"
+ },
+ {
+  "ref": "sys",
+  "variant": "с запятой",
+  "sec": 4.2,
+  "breaks": 2,
+  "durs": [
+   270,
+   100
+  ],
+  "file": "sys__comma.wav"
+ },
+ {
+  "ref": "sys",
+  "variant": "без запятой",
+  "sec": 4.2,
+  "breaks": 1,
+  "durs": [
+   185
+  ],
+  "file": "sys__plain.wav"
+ }
+]
