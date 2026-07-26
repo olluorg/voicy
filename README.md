@@ -68,8 +68,9 @@ uv pip install f5-tts ruaccent soundfile huggingface_hub faster-whisper jiwer
 # при медленной загрузке с HF помогает зеркало
 export HF_ENDPOINT=https://hf-mirror.com
 
-python scripts/render_v2.py      # синтез
-python scripts/cer_v2.py         # приёмка по CER
+python scripts/cutrefs.py        # нарезка референса по границам фраз
+python scripts/render_v8.py      # синтез (REF=cdg FACTORS=1.0)
+python scripts/cer_v7.py         # приёмка по CER
 ```
 
 Все модели — с открытыми лицензиями, генерация полностью офлайн после первой
