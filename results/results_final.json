@@ -1,0 +1,56 @@
+[
+ {
+  "id": "jc-024",
+  "speed": 1.0,
+  "nfe": 48,
+  "file": "jc-024__final__rlv2-ys-sp1.0.wav",
+  "audio_s": 73.64,
+  "wall_s": 17.0,
+  "rtf": 4.33
+ },
+ {
+  "id": "jc-024",
+  "speed": 0.9,
+  "nfe": 48,
+  "file": "jc-024__final__rlv2-ys-sp0.9.wav",
+  "audio_s": 81.95,
+  "wall_s": 18.64,
+  "rtf": 4.4
+ },
+ {
+  "id": "db-046",
+  "speed": 1.0,
+  "nfe": 48,
+  "file": "db-046__final__rlv2-ys-sp1.0.wav",
+  "audio_s": 66.69,
+  "wall_s": 15.59,
+  "rtf": 4.28
+ },
+ {
+  "id": "db-046",
+  "speed": 0.9,
+  "nfe": 48,
+  "file": "db-046__final__rlv2-ys-sp0.9.wav",
+  "audio_s": 74.03,
+  "wall_s": 17.74,
+  "rtf": 4.17
+ },
+ {
+  "id": "mb-040",
+  "speed": 1.0,
+  "nfe": 48,
+  "file": "mb-040__final__rlv2-ys-sp1.0.wav",
+  "audio_s": 75.69,
+  "wall_s": 16.39,
+  "rtf": 4.62
+ },
+ {
+  "id": "mb-040",
+  "speed": 0.9,
+  "nfe": 48,
+  "file": "mb-040__final__rlv2-ys-sp0.9.wav",
+  "audio_s": 84.24,
+  "wall_s": 18.87,
+  "rtf": 4.47
+ }
+]
