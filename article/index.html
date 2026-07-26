@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как озвучивать инженерные тексты</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface-1:#fcfcfb; --plane:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+  --good:#0ca30c; --critical:#d03b3b; --warning:#fab219;
+  --seq-200:#9ec5f4; --seq-350:#5598e7; --seq-450:#2a78d6; --seq-600:#184f95;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --surface-1:#1a1a19; --plane:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+    --seq-200:#184f95; --seq-350:#256abf; --seq-450:#3987e5; --seq-600:#9ec5f4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --surface-1:#1a1a19; --plane:#0d0d0d;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+  --seq-200:#184f95; --seq-350:#256abf; --seq-450:#3987e5; --seq-600:#9ec5f4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--text-primary);
+  font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:32px 20px 96px}
+h1{font-size:clamp(26px,4.5vw,38px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}
+h2{font-size:clamp(20px,3vw,25px);margin:64px 0 6px;letter-spacing:-.01em;scroll-margin-top:20px}
+h3{font-size:17px;margin:34px 0 6px}
+p{margin:12px 0}
+.lede{font-size:18px;color:var(--text-secondary);margin-bottom:28px}
+.kicker{text-transform:uppercase;letter-spacing:.09em;font-size:12px;font-weight:650;color:var(--muted);margin:0}
+small,.n{color:var(--muted);font-size:13px}
+a{color:var(--series-1)}
+code{background:var(--surface-1);border:1px solid var(--border);border-radius:4px;
+  padding:1px 5px;font-size:.88em;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:18px;margin:18px 0}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+.stat{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.stat .v{font-size:32px;font-weight:680;letter-spacing:-.02em;line-height:1.1}
+.stat .l{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.stat .was{font-size:12px;color:var(--muted);margin-top:2px}
+
+audio{width:100%;height:36px;margin-top:8px}
+.player b{font-size:14px;display:block}
+.player .n{display:block;margin-top:2px}
+
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+th{color:var(--text-secondary);font-weight:620;font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tbl-scroll{overflow-x:auto}
+tr.hi td{background:color-mix(in srgb,var(--series-3) 10%,transparent)}
+
+.pill{display:inline-block;font-size:12px;font-weight:640;padding:2px 9px;border-radius:99px;
+  border:1px solid var(--border)}
+.pill.good{color:var(--good)} .pill.bad{color:var(--critical)}
+
+figure{margin:22px 0}
+figcaption{font-size:13px;color:var(--text-secondary);margin-top:8px}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.chart-title{font-size:15px;font-weight:640}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--text-secondary);margin:6px 0 2px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.tt{position:fixed;pointer-events:none;background:var(--surface-1);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;font-size:13px;box-shadow:0 6px 22px rgba(0,0,0,.16);
+  opacity:0;transition:opacity .1s;z-index:50;max-width:260px}
+.tt b{display:block;margin-bottom:2px}
+button.toggle{background:var(--surface-1);color:var(--text-secondary);border:1px solid var(--border);
+  border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+button.toggle:hover{color:var(--text-primary)}
+.tblview[hidden]{display:none}
+
+.quote{border-left:3px solid var(--series-2);padding:10px 16px;margin:18px 0;
+  background:var(--surface-1);border-radius:0 8px 8px 0;color:var(--text-secondary);font-size:15px}
+.bad-text{border-left:3px solid var(--critical)}
+.good-text{border-left:3px solid var(--good)}
+.topbar{position:sticky;top:0;background:color-mix(in srgb,var(--plane) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
+.topbar .inner{max-width:860px;margin:0 auto;padding:9px 20px;display:flex;justify-content:space-between;
+  align-items:center;gap:12px;font-size:13px}
+.toc{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-secondary)}
+.toc a{color:var(--text-secondary);text-decoration:none}
+.toc a:hover{color:var(--text-primary)}
+ul{padding-left:20px} li{margin:5px 0}
+hr{border:0;border-top:1px solid var(--border);margin:40px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="inner">
+  <div class="toc">
+    <a href="#result">Результат</a><a href="#dvizhki">Движки</a><a href="#metrika">Метрика</a>
+    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#itogi">Итоги</a>
+  </div>
+  <button class="toggle" id="theme">тема</button>
+</div></div>
+
+<div class="wrap">
+
+<p class="kicker">Исследование · июль 2026</p>
+<h1>Как озвучивать инженерные тексты</h1>
+<p class="lede">Тексты с кодом, нотацией и терминами не читаются вслух так же, как читаются
+глазами. Пять раундов измерений: что помогло, что не помогло и почему очевидные ходы
+оказались ловушками.</p>
+
+<h2 id="result">Результат</h2>
+
+<div class="grid g3">
+  <div class="stat"><div class="v">5.2<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
+  <div class="stat"><div class="v">96</div><div class="l">слов в минуту, внутри учебной нормы</div><div class="was">было 160</div></div>
+  <div class="stat"><div class="v">×10</div><div class="l">к реальному времени, локально на RTX 5080</div><div class="was">корпус за ~100 мин</div></div>
+</div>
+
+<div class="grid g2">
+  <div class="card player"><b>Стало</b><span class="n">RL-V2, человеческий референс, партитура реплик, паузы ×3, растяжение 0.92</span>
+    <audio controls preload="none" src="assets/audio/v2__RECOMMENDED.opus"></audio></div>
+  <div class="card player"><b>Было</b><span class="n">ESpeech PODCASTER, синтетический референс, плоский текст</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__audio__espeech-podcaster.opus"></audio></div>
+</div>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Путь по раундам, CER одного образца</span>
+    <button class="toggle" data-table="t-journey">таблица</button></div>
+  <div id="c-journey"></div>
+  <div class="tblview" id="t-journey" hidden></div>
+  <figcaption>Каждый раунд менял одну вещь. Ни одно улучшение не было получено сменой движка на «более новый».</figcaption>
+</figure>
+
+<h2 id="zadacha">Задача</h2>
+<p>Тренажёру подготовки к бэкенд-собеседованиям нужен аудиорежим — заниматься на прогулке,
+как слушают подкаст. Контент есть: 602 вопроса, у каждого разбор с эталонным ответом,
+ловушками и следующими вопросами. Итого <b>473 тысячи символов</b>, около 9.5 часов речи.</p>
+<p>Ограничения: генерация полностью локальная и офлайн, без провайдерских ключей на сервере.
+Язык — русский. Материал — инженерный: код, SQL, аннотации, аббревиатуры.</p>
+
+<h2 id="dvizhki">Раунд 1–2. Движки</h2>
+
+<p>Проверено семь вариантов, все локальные. Скорость проблемой не оказалась ни у одного:
+даже самый медленный проходит корпус за ночь, а быстрые — за четверть часа.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Разборчивость по движкам, CER на подготовленном тексте</span>
+    <button class="toggle" data-table="t-engines">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--seq-450)"></i>среднее по трём образцам</span></div>
+  <div id="c-engines"></div>
+  <div class="tblview" id="t-engines" hidden></div>
+  <figcaption>Меньше — лучше. Но эта шкала описывает только чёткость: три самых чистых движка
+  были отвергнуты на слух как механические.</figcaption>
+</figure>
+
+<div class="grid g2">
+  <div class="card player"><b>Piper · dmitri</b><span class="n">×40 CPU · «очень плохо»</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__audio__piper-dmitri.opus"></audio></div>
+  <div class="card player"><b>Silero v4 · baya</b><span class="n">×65 CPU · «робот»</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__audio__silero-baya.opus"></audio></div>
+  <div class="card player"><b>Silero v5 · kseniya</b><span class="n">×30 CPU · «чётко, но сухо»</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__audio__silero5-kseniya.opus"></audio></div>
+  <div class="card player"><b>Vosk-TTS 0.9</b><span class="n">×2 CPU · «очень чётко, но роботично»</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__audio__vosk-s4.opus"></audio></div>
+</div>
+
+<h3>Почему первый выбор был худшим</h3>
+<p>Открытый лидерборд русского TTS показал, что Silero v4 стоит на последнем месте
+из 34 записей по натуральности — и объективно хуже собственной версии 3.1.
+То есть новее не значит лучше.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">UTMOS — предсказанная натуральность, больше лучше</span>
+    <button class="toggle" data-table="t-utmos">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--series-1)"></i>локальные</span><span><i style="background:var(--series-2)"></i>облачные</span></div>
+  <div id="c-utmos"></div>
+  <div class="tblview" id="t-utmos" hidden></div>
+  <figcaption>Оговорка: UTMOS обучен в основном на английском. Piper Irina получил 3.67 — почти уровень
+  облачных сервисов — и был отвергнут ухом первым. Метрика указывает направление, но не решает.</figcaption>
+</figure>
+
+<h2 id="metrika">Раунд 3. Метрика важнее слуха</h2>
+
+<div class="quote">«ESpeech понравился больше всего по темпу и стилю, но съедает часть букв:
+"Слушай вопрос" звучит как "Слушай вапас"».</div>
+
+<p>Пока дефект оставался впечатлением, чинить его было нечем. Решение: прогонять синтез
+обратно через распознавание и считать <b>CER</b> — долю потерянных символов.</p>
+
+<p>Это оказалось не только измерением, но и защитой. Silero <b>молча выбрасывает латиницу</b>:</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Фраза</th><th class="num">Ожидаемо</th><th class="num">Silero выдал</th></tr></thead>
+<tbody>
+<tr><td><code>List&lt;? extends Number&gt; удобно читать как Number</code></td><td class="num">~3.4 с</td><td class="num">1.1 с</td></tr>
+<tr><td><code>Более безопасные варианты — ON DELETE RESTRICT</code></td><td class="num">~3.3 с</td><td class="num">1.7 с</td></tr>
+</tbody></table></div>
+
+<div class="grid g2">
+  <div class="card player"><b>Сырой текст, Silero</b><span class="n">половина содержания исчезла беззвучно</span>
+    <audio controls preload="none" src="assets/audio/out__jc-024__raw__silero-xenia.opus"></audio></div>
+  <div class="card player"><b>Референсный голос</b><span class="n">LibriVox, общественное достояние — 13 секунд, задающие голос всего курса</span>
+    <audio controls preload="none" src="assets/audio/lv__ref_ys.opus"></audio></div>
+</div>
+
+<p>Три движка ведут себя на латинице по-разному, и это влияет на дизайн сборки:
+Silero выбрасывает молча, Vosk падает с <code>KeyError</code>, Piper читает с русской фонетикой.
+Худшее поведение — именно молчаливое.</p>
+
+<h3>Что помогло</h3>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">PODCASTER против RL-V2 на трёх образцах</span>
+    <button class="toggle" data-table="t-models">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--series-1)"></i>PODCASTER</span><span><i style="background:var(--series-2)"></i>RL-V2</span></div>
+  <div id="c-models"></div>
+  <div class="tblview" id="t-models" hidden></div>
+  <figcaption>RL-V2 дообучен через RL именно на разборчивость. Ровно вдвое лучше, ценой смены файла весов.</figcaption>
+</figure>
+
+<p>Второй рычаг оказался неожиданно сильным. ESpeech клонирует голос по образцу
+на 10–13 секунд, и первые прогоны использовали образец, <b>сгенерированный Silero</b> —
+то есть модель просили копировать артикуляцию у робота, которого сама же работа и забраковала.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Один и тот же текст, шесть человеческих референсов</span>
+    <button class="toggle" data-table="t-refs">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--seq-450)"></i>CER, %</span></div>
+  <div id="c-refs"></div>
+  <div class="tblview" id="t-refs" hidden></div>
+  <figcaption>Восьмикратный разброс при прочих равных. Референс — не косметика, а главная настройка
+  zero-shot модели, и подбирается замером, а не на слух.</figcaption>
+</figure>
+
+<h3>Что не помогло</h3>
+<ul>
+<li><b>Больше шагов диффузии.</b> nfe 32 → 64: по CER эффекта нет, время вдвое. Остановились на 48.</li>
+<li><b>Vosk как донор артикуляции.</b> Изящная идея — взять самый чёткий движок референсом
+для самого живого. Не сработало: 10–12% CER, хуже синтетического Silero-референса.
+F5 копирует не «чёткость», а манеру конкретного голоса, и роботичность копируется тоже.</li>
+<li><b>Подозрение на ударения.</b> На фразе, где модель съела гласную, <code>ruaccent</code> поставил
+ударение правильно (<code>вопр+ос</code>). Значит виноват был не текст — отрицательный результат,
+сэкономивший время.</li>
+</ul>
+
+<h2 id="tekst">Раунд 4. Текст, который нельзя читать вслух</h2>
+
+<div class="quote">«Текст подготовлен плохо. "Мнемоника называется ПЕКС: продюсер экстендс,
+консьюмер супер" — это просто перечисление терминов. Преподаватель никогда не читает
+листинг кода, как и подкастеры».</div>
+
+<p>Здесь чинилась не та проблема. Я считал, что беда в <b>непроизносимости</b> нотации,
+и написал слой нормализации: развернуть, кириллизовать, произнести. Замерил распространённость —
+паттерны есть у 72% вопросов корпуса:</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Доля вопросов с непроизносимой нотацией</span>
+    <button class="toggle" data-table="t-patterns">таблица</button></div>
+  <div class="legend"><span><i style="background:var(--seq-450)"></i>доля корпуса, %</span></div>
+  <div id="c-patterns"></div>
+  <div class="tblview" id="t-patterns" hidden></div>
+  <figcaption>Большинство — словарные случаи. Структурной переписки требуют единицы процентов,
+  но именно они ломают восприятие сильнее всего.</figcaption>
+</figure>
+
+<p>Текст стал произносимым — и остался плохим, потому что это был <b>тот же листинг,
+просто озвученный</b>. Нотацию нужно переводить не в звук, а в смысл.</p>
+
+<div class="quote bad-text"><b>Было.</b> Лист, вайлдкард экстендс Намбер. Из такого списка удобно
+читать, каждый элемент точно является Намбером. А вот добавить туда Интеджер нельзя.
+Мнемоника называется ПЕКС: продюсер экстендс, консьюмер супер.</div>
+
+<div class="quote good-text"><b>Стало.</b> Случай первый. Коллекция для тебя — источник.
+Ты из неё только читаешь. Тогда ты объявляешь верхнюю границу. Читать отсюда безопасно:
+что ни достанешь — это точно число. А вот положить внутрь нельзя ничего. И вот причина,
+ради которой этот вопрос и задают: компилятор не знает, чей это список на самом деле.
+Может, целых чисел, а может, дробных.</div>
+
+<p>Появилось и то, чего в исходном тексте не было вообще: <b>возврат к отложенной мысли</b>.
+В начале — «запомни оговорку, вернёмся к ней», в конце про ловушку со стиранием типов —
+«вот здесь и срабатывает та самая оговорка». На бумаге избыточно: глаз вернётся абзацем выше.
+В ухе возврата нет, и это единственный способ связать части объяснения.</p>
+
+<p class="n">Полный свод правил — <a href="../docs/adr/0002-audio-text-explains-rather-than-transliterates.md">ADR 0002</a>.
+Побочный эффект: аудио-версия примерно в <b>1.8 раза длиннее</b> экранной, объём корпуса вырос с 9.5 до 16.5 часов.</p>
+
+<h2 id="ritm">Раунд 4. Скрипт становится партитурой</h2>
+
+<p>Второе замечание того же раунда — монотонность. Плоская строка не умеет замедляться,
+поэтому единицей скрипта стала <b>реплика с типом</b>, несущая свой темп и паузы.</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Тип реплики</th><th class="num">Скорость</th><th class="num">Пауза до</th><th class="num">Пауза после</th></tr></thead>
+<tbody>
+<tr><td>повествование, связки</td><td class="num">×1.02</td><td class="num">120 мс</td><td class="num">120 мс</td></tr>
+<tr><td>термин, новый случай</td><td class="num">×0.88</td><td class="num">420 мс</td><td class="num">260 мс</td></tr>
+<tr><td>ключевая фраза</td><td class="num">×0.86</td><td class="num">480 мс</td><td class="num">420 мс</td></tr>
+<tr><td>вопрос</td><td class="num">×0.92</td><td class="num">300 мс</td><td class="num">250 мс</td></tr>
+</tbody></table></div>
+
+<p>Таблица живёт в коде одним объектом: правка в одном месте меняет дикцию всего курса.
+Паузы вставляются реальными сэмплами при склейке, а не выпрашиваются у модели.</p>
+
+<div class="grid g2">
+  <div class="card player"><b>С ритмом</b><span class="n">163 с · CER 6.2% · замедления на терминах</span>
+    <audio controls preload="none" src="assets/audio/cued__jc-024__cued.opus"></audio></div>
+  <div class="card player"><b>Ровным потоком</b><span class="n">141 с · CER 7.3% · тот же текст, одна скорость</span>
+    <audio controls preload="none" src="assets/audio/cued__jc-024__flat.opus"></audio></div>
+</div>
+
+<p>23 секунды осмысленной медлительности — и разборчивость не просела, а <b>выросла</b>.
+Замедление на терминах помогает не только человеку, но и распознавалке.</p>
+
+<h2 id="temp">Раунд 5. Паузы и темп</h2>
+
+<div class="quote">«Паузы слишком резкие, будто обрезается голос. Кроме того, скорость слишком
+высокая, сложно воспринимать такую скорость для инженерных текстов».</div>
+
+<h3>Почему паузы резали</h3>
+<p>Замер огибающей на стыках показал механизм: перед паузой сигнал держится около
+<b>0.013</b> — это собственный шумовой фон референсной записи, примерно −30 dB от пика.
+В паузе — ровно <b>0.0000</b>. Переход занимает один сэмпл.</p>
+<p>Ухо слышит здесь не «говорящий замолчал», а «запись выключилась»: пропадает не только
+голос, но и воздух помещения.</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Вариант паузы</th><th class="num">Скачок между сэмплами</th><th class="num">Перепад громкости</th><th class="num">CER</th></tr></thead>
+<tbody>
+<tr><td>цифровой ноль</td><td class="num">0.00208</td><td class="num">×25</td><td class="num">6.3%</td></tr>
+<tr><td>+ затухание 45 мс</td><td class="num">0.00037</td><td class="num">×23</td><td class="num">4.9%</td></tr>
+<tr class="hi"><td>+ фон комнаты</td><td class="num">0.00058</td><td class="num">×12</td><td class="num">4.6%</td></tr>
+</tbody></table></div>
+
+<div class="grid g3">
+  <div class="card player"><b>Цифровой ноль</b><span class="n">исходная проблема</span>
+    <audio controls preload="none" src="assets/audio/v2__pause-hard.opus"></audio></div>
+  <div class="card player"><b>Затухание</b><span class="n">разрыв в 5.6 раза меньше</span>
+    <audio controls preload="none" src="assets/audio/v2__pause-fade.opus"></audio></div>
+  <div class="card player"><b>Фон комнаты</b><span class="n">в паузе остаётся воздух записи</span>
+    <audio controls preload="none" src="assets/audio/v2__pause-tone.opus"></audio></div>
+</div>
+
+<h3>Насколько быстро мы говорили</h3>
+<p>Темп меряется в слогах в секунду — для русского это просто количество гласных.
+В нашем корпусе 2.37 слога на слово, что даёт перевод в привычные слова в минуту.</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Что</th><th class="num">слог/с</th><th class="num">слов/мин</th></tr></thead>
+<tbody>
+<tr><td>Наша озвучка на ×1.0</td><td class="num">5.6–6.3</td><td class="num">142–160</td></tr>
+<tr><td>Средний темп русской речи</td><td class="num">4.73</td><td class="num">120</td></tr>
+<tr><td>Технические презентации (англ. источники)</td><td class="num">2.5–3.25</td><td class="num">100–130</td></tr>
+<tr class="hi"><td>Учебное объяснение</td><td class="num">2.4–3.9</td><td class="num">60–100</td></tr>
+</tbody></table></div>
+
+<p>Инженерный текст озвучивался на скорости развлекательного подкаста. Две традиции
+меряют в разных единицах, но в слогах в секунду сходятся: <b>2.5–4.0</b> для материала,
+который нужно усвоить, а не прослушать.</p>
+
+<h3>Главный отрицательный результат</h3>
+<p>Очевидный ход — покрутить ручку <code>speed</code> у модели. Она масштабирует предсказанные
+длительности и выводит модель за пределы обучающего распределения: речь плывёт.</p>
+
+<figure>
+  <div class="chart-head"><span class="chart-title">Три способа снизить темп: цена в разборчивости</span>
+    <button class="toggle" data-table="t-rate">таблица</button></div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>ручка <code>speed</code> модели</span>
+    <span><i style="background:var(--series-2)"></i>растяжение <code>atempo</code></span>
+    <span><i style="background:var(--series-3)"></i>больше пауз</span>
+  </div>
+  <div id="c-rate"></div>
+  <div class="tblview" id="t-rate" hidden></div>
+  <figcaption>Влево — медленнее, вниз — разборчивее. Ручка модели уходит вверх: замедление
+  до целевого темпа роняет разборчивость впятеро. Два других механизма держат линию.</figcaption>
+</figure>
+
+<div class="grid g3">
+  <div class="card player"><b>Ручка модели, 111 слов/мин</b><span class="n"><span class="pill bad">CER 13.8%</span></span>
+    <audio controls preload="none" src="assets/audio/v2__rate-0.85.opus"></audio></div>
+  <div class="card player"><b>Растяжение, 113 слов/мин</b><span class="n"><span class="pill good">CER 5.3%</span></span>
+    <audio controls preload="none" src="assets/audio/v2__stretch-0.88.opus"></audio></div>
+  <div class="card player"><b>Паузы ×3, 104 слов/мин</b><span class="n"><span class="pill good">CER 5.3%</span></span>
+    <audio controls preload="none" src="assets/audio/v2__pauses-x3.0.opus"></audio></div>
+</div>
+
+<p>При одном и том же темпе паузы и растяжение дают разборчивость <b>в 2.6–4.4 раза лучше</b>,
+чем ручка модели. Финальная комбинация — паузы ×3, затем растяжение 0.92: <b>96 слов/мин
+при CER 5.2%</b>.</p>
+
+<p>Порядок важен: паузы даются первыми, потому что они несут смысл — границу мысли.
+Растяжение остаётся косметической доводкой до целевой цифры. Ровно так делает живой
+преподаватель: он не растягивает слова, он молчит между мыслями.</p>
+
+<h2 id="itogi">Что помогло и что не помогло</h2>
+
+<div class="grid g2">
+<div class="card">
+<h3 style="margin-top:0">Помогло</h3>
+<ul>
+<li><b>Round-trip через ASR как метрика.</b> Превратил спор о впечатлениях в число
+и заодно стал приёмкой в сборке.</li>
+<li><b>Переписывание текста в объяснение.</b> Дало больше, чем любая смена движка.</li>
+<li><b>Подбор человеческого референса замером.</b> Восьмикратный разброс между чтецами.</li>
+<li><b>Модель, дообученная на разборчивость</b> (RL-V2 вместо PODCASTER) — ровно вдвое.</li>
+<li><b>Ритм через типизированные реплики.</b> Улучшил и восприятие, и метрику.</li>
+<li><b>Затухание и фон комнаты в паузах.</b> Разрыв сигнала в 5.6 раза меньше.</li>
+<li><b>Паузы и постобработка для темпа</b> вместо ручки модели.</li>
+</ul>
+</div>
+<div class="card">
+<h3 style="margin-top:0">Не помогло</h3>
+<ul>
+<li><b>Ручка <code>speed</code> у диффузионной модели.</b> Роняет разборчивость впятеро.
+Главный отрицательный результат.</li>
+<li><b>Больше шагов диффузии.</b> nfe 64 против 32 — эффекта нет, время вдвое.</li>
+<li><b>Чёткий движок как донор артикуляции.</b> Копируется манера, а не разборчивость.</li>
+<li><b>Транслитерация нотации.</b> Делает текст произносимым, но не воспринимаемым.</li>
+<li><b>Выбор движка «посвежее».</b> Silero v4 объективно хуже v3.1.</li>
+<li><b>Проверка длительности как приёмка.</b> Ловит беззвучные выбросы, слепа к съеденным
+слогам. Вытеснена CER.</li>
+</ul>
+</div>
+</div>
+
+<h3>Что осталось нерешённым</h3>
+<p>ESpeech даже вылеченный не догоняет Vosk и Silero по чистоте — 5–7% против 1–3%.
+Это осознанная плата: диффузионная модель звучит естественнее и рискует сильнее.</p>
+<p>Сама метрика тоже небезупречна. Whisper плохо разбирает транслитерированные термины,
+поэтому образец про дженерики показывает завышенный CER <b>у всех</b> движков одинаково.
+Метрика достоверна для сравнения вариантов на одном тексте и обманчива между разными.</p>
+
+<h2 id="prilozhenie">Приложение: все замеры</h2>
+<p class="n">Сырые json — в каталоге <code>results/</code>, скрипты — в <code>scripts/</code>,
+по одному описанию на итерацию — в <code>experiments/</code>.</p>
+<div id="appendix"></div>
+
+<hr>
+<p class="n">Всё локально: ESpeech-TTS-1 (Apache-2.0), Piper (MIT), Vosk-TTS (Apache-2.0),
+faster-whisper (MIT), референсы — общественное достояние (LibriVox).
+У Silero бесплатная лицензия ограничена образовательными целями.</p>
+
+</div>
+<div class="tt" id="tt"></div>
+
+<script>
+const DATA = {
+  journey: [
+    {l:"Раунд 1 · PODCASTER", v:25.3, note:"синтетический референс, плоский текст"},
+    {l:"Раунд 2 · RL-V2", v:10.5, note:"модель, дообученная на разборчивость"},
+    {l:"Раунд 3 · + человеческий референс", v:9.2, note:"LibriVox, nfe 48"},
+    {l:"Раунд 4 · + текст и ритм", v:6.2, note:"объяснение вместо листинга, партитура реплик"},
+    {l:"Раунд 5 · + паузы и темп", v:5.2, note:"затухания, фон комнаты, 96 слов/мин"}
+  ],
+  engines: [
+    {l:"Silero v4 · baya", v:2.0, note:"×65 CPU · «робот»"},
+    {l:"Vosk-TTS 0.9 · s4", v:3.1, note:"×2 CPU · «очень чётко, но роботично»"},
+    {l:"Piper · ruslan", v:2.9, note:"×40 CPU · «очень плохо»"},
+    {l:"Silero v5 · kseniya", v:3.0, note:"×30 CPU · «чётко, но сухо»"},
+    {l:"Piper · dmitri", v:5.2, note:"×40 CPU"},
+    {l:"ESpeech RL-V2", v:9.2, note:"×10 GPU · живая подача"},
+    {l:"ESpeech PODCASTER", v:19.9, note:"×9 GPU · «лучший стиль, ест буквы»"}
+  ],
+  utmos: [
+    {l:"Sber Boris", v:3.75, cloud:1},{l:"Piper Irina", v:3.67, cloud:0},
+    {l:"EdgeTTS Dmitry", v:3.56, cloud:1},{l:"Yandex Marina", v:3.48, cloud:1},
+    {l:"Vosk-TTS GPT", v:3.38, cloud:0},{l:"ElevenLabs Multi", v:3.31, cloud:1},
+    {l:"ESpeech PODCASTER", v:3.29, cloud:0},{l:"Vosk-TTS 0.9", v:3.29, cloud:0},
+    {l:"ESpeech RL-V2", v:3.27, cloud:0},{l:"XTTS-2", v:3.04, cloud:0},
+    {l:"Silero v3.1 Baya", v:2.98, cloud:0},{l:"Silero v4 Baya", v:2.14, cloud:0},
+    {l:"Silero v4 Aidar", v:1.75, cloud:0}
+  ],
+  models: {
+    cats:["jc-024 · дженерики","db-046 · внешние ключи","mb-040 · log compaction"],
+    series:[{name:"PODCASTER",v:[25.3,16.8,17.5]},{name:"RL-V2",v:[10.5,7.1,10.0]}]
+  },
+  refs: [
+    {l:"Лесков · Святочные рассказы", v:2.8, note:"выбран"},
+    {l:"Тургенев · Дворянское гнездо", v:8.4, note:""},
+    {l:"Пушкин · Красавице", v:15.2, note:"стихи — плохо подходят"},
+    {l:"Достоевский · Записки из подполья", v:15.7, note:""},
+    {l:"Тургенев · Поездка в Полесье", v:14.6, note:""},
+    {l:"Достоевский · Белые ночи", v:21.9, note:""}
+  ],
+  patterns: [
+    {l:"КАПС ≥3 букв (ACID, JVM, ON DELETE)", v:50},
+    {l:"camelCase", v:22},{l:"вызовы method()", v:19},
+    {l:"точечные цепочки a.b", v:16},{l:"аннотации @", v:11},
+    {l:"обобщения <>", v:5},{l:"стрелки ↔ →", v:3},{l:"O(n)", v:1}
+  ],
+  rate: [
+    {name:"ручка speed модели", pts:[{x:129,y:4.6},{x:111,y:13.8},{x:99,y:20.1},{x:91,y:24.9}]},
+    {name:"растяжение atempo", pts:[{x:113,y:5.3},{x:103,y:7.7},{x:93,y:5.6}]},
+    {name:"больше пауз", pts:[{x:129,y:4.6},{x:115,y:6.3},{x:104,y:5.3}]}
+  ]
+};
+
+const tt = document.getElementById('tt');
+function showTT(e, html){ tt.innerHTML = html; tt.style.opacity = 1;
+  const p = 14, w = tt.offsetWidth, h = tt.offsetHeight;
+  let x = e.clientX + p, y = e.clientY + p;
+  if (x + w > innerWidth - 8) x = e.clientX - w - p;
+  if (y + h > innerHeight - 8) y = e.clientY - h - p;
+  tt.style.left = x + 'px'; tt.style.top = y + 'px'; }
+function hideTT(){ tt.style.opacity = 0; }
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const NS = 'http://www.w3.org/2000/svg';
+const el = (n, a = {}) => { const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+/* Horizontal bars: label at left, value direct-labeled at the end of the bar. */
+function barsH(mount, rows, opt = {}){
+  const fmt = opt.fmt || (v => v + '%');
+  const LW = opt.labelW || 240, RH = 30, PAD = 6, top = 4;
+  const H = rows.length * RH + top + 8, W = 780;
+  const plotW = W - LW - 62;
+  const max = Math.max(...rows.map(r => r.v)) * 1.02;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
+  rows.forEach((r, i) => {
+    const y = top + i * RH;
+    const t = el('text', {x:LW - 10, y:y + RH/2 + 4, 'text-anchor':'end',
+      fill:'var(--text-secondary)', 'font-size':13});
+    t.textContent = r.l; svg.appendChild(t);
+    const w = Math.max(2, r.v / max * plotW);
+    const bar = el('rect', {x:LW, y:y + 6, width:w, height:RH - 14, rx:4,
+      fill: r.color || opt.color || 'var(--seq-450)'});
+    svg.appendChild(bar);
+    const vt = el('text', {x:LW + w + 8, y:y + RH/2 + 4, fill:'var(--text-primary)',
+      'font-size':12.5, 'font-weight':600});
+    vt.textContent = fmt(r.v); svg.appendChild(vt);
+    const hit = el('rect', {x:0, y:y, width:W, height:RH, fill:'transparent'});
+    hit.style.cursor = 'default';
+    hit.addEventListener('mousemove', e => showTT(e,
+      `<b>${esc(r.l)}</b>${fmt(r.v)}${r.note ? '<br><span style="color:var(--muted)">' + esc(r.note) + '</span>' : ''}`));
+    hit.addEventListener('mouseleave', hideTT);
+    svg.appendChild(hit);
+  });
+  mount.appendChild(svg);
+}
+
+/* Grouped vertical bars with a 2px surface gap between adjacent fills. */
+function barsGrouped(mount, cats, series, colors){
+  const W = 780, H = 260, L = 44, R = 12, T = 16, B = 54;
+  const plotW = W - L - R, plotH = H - T - B;
+  const max = Math.max(...series.flatMap(s => s.v)) * 1.15;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
+  for (let i = 0; i <= 4; i++){
+    const y = T + plotH - plotH * i / 4;
+    svg.appendChild(el('line', {x1:L, x2:W - R, y1:y, y2:y,
+      stroke: i ? 'var(--grid)' : 'var(--axis)', 'stroke-width':1}));
+    const t = el('text', {x:L - 8, y:y + 4, 'text-anchor':'end', fill:'var(--muted)', 'font-size':11.5});
+    t.textContent = Math.round(max * i / 4) + '%'; svg.appendChild(t);
+  }
+  const gw = plotW / cats.length, bw = Math.min(56, (gw - 28) / series.length);
+  cats.forEach((c, ci) => {
+    const gx = L + gw * ci + gw / 2;
+    series.forEach((s, si) => {
+      const v = s.v[ci], h = v / max * plotH;
+      const x = gx - (series.length * bw + 2 * (series.length - 1)) / 2 + si * (bw + 2);
+      const rect = el('rect', {x, y:T + plotH - h, width:bw, height:h, rx:4, fill:colors[si]});
+      rect.addEventListener('mousemove', e => showTT(e, `<b>${esc(c)}</b>${esc(s.name)}: ${v}%`));
+      rect.addEventListener('mouseleave', hideTT);
+      svg.appendChild(rect);
+      const vt = el('text', {x:x + bw/2, y:T + plotH - h - 6, 'text-anchor':'middle',
+        fill:'var(--text-primary)', 'font-size':12, 'font-weight':600});
+      vt.textContent = v; svg.appendChild(vt);
+    });
+    const lt = el('text', {x:gx, y:H - 30, 'text-anchor':'middle', fill:'var(--text-secondary)', 'font-size':12});
+    lt.textContent = c; svg.appendChild(lt);
+  });
+  mount.appendChild(svg);
+}
+
+/* Rate vs CER: three mechanisms, x = words per minute (reversed: slower to the left). */
+function rateChart(mount, series, colors){
+  const W = 780, H = 320, L = 46, R = 96, T = 18, B = 52;
+  const plotW = W - L - R, plotH = H - T - B;
+  const xs = series.flatMap(s => s.pts.map(p => p.x));
+  const x0 = Math.min(...xs) - 4, x1 = Math.max(...xs) + 4;
+  const ymax = 28;
+  const X = v => L + (v - x0) / (x1 - x0) * plotW;
+  const Y = v => T + plotH - v / ymax * plotH;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
+
+  for (let i = 0; i <= 4; i++){
+    const y = T + plotH - plotH * i / 4;
+    svg.appendChild(el('line', {x1:L, x2:W - R, y1:y, y2:y,
+      stroke: i ? 'var(--grid)' : 'var(--axis)', 'stroke-width':1}));
+    const t = el('text', {x:L - 8, y:y + 4, 'text-anchor':'end', fill:'var(--muted)', 'font-size':11.5});
+    t.textContent = Math.round(ymax * i / 4) + '%'; svg.appendChild(t);
+  }
+  [90,100,110,120,130].forEach(v => {
+    const t = el('text', {x:X(v), y:H - 30, 'text-anchor':'middle', fill:'var(--muted)', 'font-size':11.5});
+    t.textContent = v; svg.appendChild(t);
+  });
+  const ax = el('text', {x:L + plotW/2, y:H - 10, 'text-anchor':'middle',
+    fill:'var(--text-secondary)', 'font-size':12});
+  ax.textContent = 'слов в минуту  ←  медленнее'; svg.appendChild(ax);
+
+  // teaching-norm band: 60-100 wpm, the target zone
+  const bx1 = X(x0), bx2 = X(100);
+  svg.appendChild(el('rect', {x:bx1, y:T, width:Math.max(0, bx2 - bx1), height:plotH,
+    fill:'var(--series-3)', opacity:.07}));
+  const bt = el('text', {x:bx2 - 6, y:T + plotH - 8, 'text-anchor':'end', fill:'var(--muted)', 'font-size':11.5});
+  bt.textContent = 'учебная норма'; svg.appendChild(bt);
+
+  series.forEach((s, si) => {
+    const pts = [...s.pts].sort((a, b) => b.x - a.x);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + X(p.x) + ' ' + Y(p.y)).join(' ');
+    svg.appendChild(el('path', {d, fill:'none', stroke:colors[si], 'stroke-width':2,
+      'stroke-linejoin':'round', 'stroke-linecap':'round'}));
+    pts.forEach(p => {
+      svg.appendChild(el('circle', {cx:X(p.x), cy:Y(p.y), r:6.5,
+        fill:colors[si], stroke:'var(--surface-1)', 'stroke-width':2}));
+      const hit = el('circle', {cx:X(p.x), cy:Y(p.y), r:14, fill:'transparent'});
+      hit.addEventListener('mousemove', e => showTT(e,
+        `<b>${esc(s.name)}</b>${p.x} слов/мин · CER ${p.y}%`));
+      hit.addEventListener('mouseleave', hideTT);
+      svg.appendChild(hit);
+    });
+    // Direct label at the slow end of each line, staggered so the three never collide.
+    const anchor = pts[pts.length - 1];
+    const dy = [-14, 18, -14][si];
+    const lt = el('text', {x:X(anchor.x) + 11, y:Y(anchor.y) + dy,
+      fill:'var(--text-secondary)', 'font-size':12});
+    lt.textContent = s.name; svg.appendChild(lt);
+  });
+  mount.appendChild(svg);
+}
+
+function tableFor(rows, head, fmt){
+  const t = ['<div class="tbl-scroll"><table><thead><tr><th>' + head[0] +
+    '</th><th class="num">' + head[1] + '</th></tr></thead><tbody>'];
+  rows.forEach(r => t.push(`<tr><td>${esc(r.l)}</td><td class="num">${fmt(r.v)}</td></tr>`));
+  return t.join('') + '</tbody></table></div>';
+}
+
+const C = () => getComputedStyle(document.documentElement);
+function seriesColors(){ const c = C();
+  return [c.getPropertyValue('--series-1').trim(), c.getPropertyValue('--series-2').trim(),
+          c.getPropertyValue('--series-3').trim()]; }
+
+function renderAll(){
+  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate'];
+  ids.forEach(i => document.getElementById(i).innerHTML = '');
+  const col = seriesColors();
+
+  barsH(document.getElementById('c-journey'), DATA.journey, {labelW:250});
+  document.getElementById('t-journey').innerHTML =
+    tableFor(DATA.journey, ['Раунд','CER'], v => v + '%');
+
+  barsH(document.getElementById('c-engines'),
+    [...DATA.engines].sort((a,b) => a.v - b.v), {labelW:190});
+  document.getElementById('t-engines').innerHTML =
+    tableFor(DATA.engines, ['Движок','CER'], v => v + '%');
+
+  barsH(document.getElementById('c-utmos'),
+    DATA.utmos.map(r => ({...r, color: r.cloud ? col[1] : col[0],
+      note: r.cloud ? 'облачный сервис' : 'локальный'})),
+    {labelW:190, fmt: v => v.toFixed(2)});
+  document.getElementById('t-utmos').innerHTML =
+    tableFor(DATA.utmos, ['Движок','UTMOS'], v => v.toFixed(2));
+
+  barsGrouped(document.getElementById('c-models'),
+    DATA.models.cats, DATA.models.series, [col[0], col[1]]);
+  document.getElementById('t-models').innerHTML =
+    '<div class="tbl-scroll"><table><thead><tr><th>Образец</th><th class="num">PODCASTER</th>' +
+    '<th class="num">RL-V2</th></tr></thead><tbody>' +
+    DATA.models.cats.map((c,i) => `<tr><td>${esc(c)}</td><td class="num">${DATA.models.series[0].v[i]}%</td>` +
+      `<td class="num">${DATA.models.series[1].v[i]}%</td></tr>`).join('') + '</tbody></table></div>';
+
+  barsH(document.getElementById('c-refs'),
+    [...DATA.refs].sort((a,b) => a.v - b.v), {labelW:270});
+  document.getElementById('t-refs').innerHTML =
+    tableFor(DATA.refs, ['Референс','CER'], v => v + '%');
+
+  barsH(document.getElementById('c-patterns'), DATA.patterns, {labelW:270});
+  document.getElementById('t-patterns').innerHTML =
+    tableFor(DATA.patterns, ['Паттерн','Доля корпуса'], v => v + '%');
+
+  rateChart(document.getElementById('c-rate'), DATA.rate, col);
+  document.getElementById('t-rate').innerHTML =
+    '<div class="tbl-scroll"><table><thead><tr><th>Механизм</th><th class="num">слов/мин</th>' +
+    '<th class="num">CER</th></tr></thead><tbody>' +
+    DATA.rate.flatMap(s => s.pts.map(p =>
+      `<tr><td>${esc(s.name)}</td><td class="num">${p.x}</td><td class="num">${p.y}%</td></tr>`)).join('') +
+    '</tbody></table></div>';
+}
+
+document.getElementById('appendix').innerHTML =
+  ['journey','engines','utmos','refs','patterns'].map(k => {
+    const titles = {journey:'Путь по раундам', engines:'Движки, CER',
+      utmos:'Лидерборд, UTMOS', refs:'Референсы, CER', patterns:'Нотация в корпусе'};
+    const fmt = k === 'utmos' ? (v => v.toFixed(2)) : (v => v + '%');
+    return `<h3>${titles[k]}</h3>` + tableFor(DATA[k], ['—','значение'], fmt);
+  }).join('') +
+  '<h3>Форма паузы</h3><div class="tbl-scroll"><table><thead><tr><th>Вариант</th>' +
+  '<th class="num">скачок</th><th class="num">перепад</th><th class="num">CER</th></tr></thead><tbody>' +
+  '<tr><td>цифровой ноль</td><td class="num">0.00208</td><td class="num">×25</td><td class="num">6.3%</td></tr>' +
+  '<tr><td>+ затухание</td><td class="num">0.00037</td><td class="num">×23</td><td class="num">4.9%</td></tr>' +
+  '<tr><td>+ фон комнаты</td><td class="num">0.00058</td><td class="num">×12</td><td class="num">4.6%</td></tr>' +
+  '</tbody></table></div>';
+
+document.querySelectorAll('button.toggle[data-table]').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = document.getElementById(b.dataset.table);
+    t.hidden = !t.hidden;
+    b.textContent = t.hidden ? 'таблица' : 'график';
+    b.previousElementSibling;
+    const fig = b.closest('figure');
+    fig.querySelector('div[id^="c-"]').style.display = t.hidden ? '' : 'none';
+    fig.querySelector('.legend') && (fig.querySelector('.legend').style.display = t.hidden ? '' : 'none');
+  });
+});
+
+const themeBtn = document.getElementById('theme');
+themeBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', next);
+  renderAll();
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+
+renderAll();
+</script>
+</body>
+</html>
