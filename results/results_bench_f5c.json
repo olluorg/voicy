@@ -1,0 +1,38 @@
+{
+ "total_syllables": 771,
+ "results": [
+  {
+   "tag": "espeech-rlv2",
+   "repo": "ESpeech/ESpeech-TTS-1_RL-V2",
+   "audio_s": 166.1,
+   "rtf": 4.11,
+   "pauses": 123,
+   "silence_pct": 20.1,
+   "pause_median_ms": 180,
+   "wpm": 118,
+   "phrase_breaks": 0
+  },
+  {
+   "tag": "espeech-rlv1",
+   "repo": "ESpeech/ESpeech-TTS-1_RL-V1",
+   "audio_s": 166.1,
+   "rtf": 4.13,
+   "pauses": 118,
+   "silence_pct": 20.3,
+   "pause_median_ms": 225,
+   "wpm": 118,
+   "phrase_breaks": 0
+  },
+  {
+   "tag": "espeech-podcast",
+   "repo": "ESpeech/ESpeech-TTS-1_podcaster",
+   "audio_s": 166.1,
+   "rtf": 4.11,
+   "pauses": 118,
+   "silence_pct": 22.3,
+   "pause_median_ms": 250,
+   "wpm": 118,
+   "phrase_breaks": 0
+  }
+ ]
+}

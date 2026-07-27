@@ -108,7 +108,7 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <div class="topbar"><div class="inner">
   <div class="toc">
     <a href="#result">Результат</a><a href="#dvizhki">Движки</a><a href="#metrika">Метрика</a>
-    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#referens">Референс</a><a href="#slitnost">Слитность</a><a href="#tembr">Тембр</a><a href="#itogi">Итоги</a>
+    <a href="#tekst">Текст</a><a href="#ritm">Ритм</a><a href="#temp">Темп</a><a href="#pauzy">Паузы</a><a href="#kraya">Края</a><a href="#bez-pauz">Без пауз</a><a href="#referens">Референс</a><a href="#slitnost">Слитность</a><a href="#tembr">Тембр</a><a href="#obzor">Обзор</a><a href="#itogi">Итоги</a>
   </div>
   <button class="toggle" id="theme">тема</button>
 </div></div>
@@ -118,20 +118,20 @@ hr{border:0;border-top:1px solid var(--border);margin:40px 0}
 <p class="kicker">Исследование · июль 2026</p>
 <h1>Как озвучивать инженерные тексты</h1>
 <p class="lede">Тексты с кодом, нотацией и терминами не читаются вслух так же, как читаются
-глазами. Одиннадцать раундов измерений: что помогло, что не помогло и почему очевидные ходы
+глазами. Двенадцать раундов измерений: что помогло, что не помогло и почему очевидные ходы
 оказались ловушками.</p>
 
 <h2 id="result">Результат</h2>
 
 <div class="grid g3">
-  <div class="stat"><div class="v">1.0<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
-  <div class="stat"><div class="v">103</div><div class="l">слов в минуту — темп чтеца в референсе</div><div class="was">было 160</div></div>
-  <div class="stat"><div class="v">0</div><div class="l">вставленных пауз, растяжений и разбивок</div><div class="was">было 34% тишины и ×0.66</div></div>
+  <div class="stat"><div class="v">0.8<small>%</small></div><div class="l">CER — потеря символов при обратном распознавании</div><div class="was">было 25.3%</div></div>
+  <div class="stat"><div class="v">114</div><div class="l">слов в минуту — темп чтеца в референсе</div><div class="was">было 160</div></div>
+  <div class="stat"><div class="v">1.8<small>%</small></div><div class="l">тишины — речь не рвётся на куски</div><div class="was">было 20% у прежнего движка</div></div>
 </div>
 
 <div class="grid g2">
-  <div class="card player"><b>Стало</b><span class="n">RL-V2, слитный отрывок выбранного голоса, текст короткими предложениями без внутренней пунктуации</span>
-    <audio controls preload="none" src="assets/audio/v12__t2-solid-0.88.opus"></audio></div>
+  <div class="card player"><b>Стало</b><span class="n">Qwen3-TTS, тот же референсный клип, текст короткими предложениями, синтез одним проходом</span>
+    <audio controls preload="none" src="assets/audio/survey__qwen_qwen-solid.opus"></audio></div>
   <div class="card player"><b>Было</b><span class="n">ESpeech PODCASTER, синтетический референс, плоский текст</span>
     <audio controls preload="none" src="assets/audio/out__jc-024__audio__espeech-podcaster.opus"></audio></div>
 </div>
@@ -790,6 +790,93 @@ LibriVox. Окно попадало в середину фразы, и тран�
 вернулось как допустимая доводка: оно внутри безопасной зоны, в отличие от отвергнутого
 0.66. Разница между инструментом и костылём здесь ровно в глубине.</p>
 
+<h2 id="obzor">Раунд 12. Обзор, который надо было пересмотреть раньше</h2>
+
+<div class="quote">«Мне кажется, мы провели недостаточно хорошее исследование.
+Нужно попробовать и другие русские и новые модели».</div>
+
+<p>Справедливо, и хуже, чем кажется на первый взгляд.</p>
+
+<h3>Две ошибки</h3>
+<p><b>Первая.</b> Отбор проверил семь движков и остановился, как только один заработал
+приемлемо. Дальше <b>десять раундов</b> улучшали выбранный движок, ни разу не спросив,
+не решает ли задачу другой лучше.</p>
+
+<p><b>Вторая.</b> Отбор опирался на открытый лидерборд русского TTS. При повторной проверке
+оказалось, что <b>он не обновлялся с августа 2025 года</b>. Всё, что вышло позже,
+отсутствует в нём по построению — а вышло немало:</p>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Модель</th><th>Дата</th><th>Лицензия</th></tr></thead>
+<tbody>
+<tr class="hi"><td><b>Qwen3-TTS</b> (Alibaba)</td><td>январь 2026</td><td>Apache-2.0</td></tr>
+<tr><td>VibeVoice (Microsoft)</td><td>январь 2026</td><td>MIT</td></tr>
+<tr><td>IndexTTS-2</td><td>январь 2026</td><td>—</td></tr>
+<tr><td>Higgs Audio v3 (Boson AI)</td><td>2026</td><td>открытая</td></tr>
+<tr><td>CosyVoice 3</td><td>2026</td><td>открытая</td></tr>
+</tbody></table></div>
+
+<h3>Замер на одном материале</h3>
+<figure>
+  <div class="chart-head"><span class="chart-title">Рваность речи: F5/DiT против LM-архитектуры</span>
+    <button class="toggle" data-table="t-survey">таблица</button></div>
+  <div class="legend">
+    <span><i style="background:var(--series-2)"></i>ESpeech RL-V2 · F5/DiT</span>
+    <span><i style="background:var(--series-1)"></i>Qwen3-TTS · LM</span>
+  </div>
+  <div id="c-survey"></div>
+  <div class="tblview" id="t-survey" hidden></div>
+  <figcaption>Один и тот же референсный клип, один и тот же текст. Медиана паузы показана
+  в сотых долях секунды, чтобы уместиться на одну шкалу с остальными величинами.</figcaption>
+</figure>
+
+<div class="tbl-scroll"><table>
+<thead><tr><th>Движок</th><th class="num">слов/мин</th><th class="num">пауз</th><th class="num">тишины</th><th class="num">медиана</th><th class="num">CER</th><th class="num">скорость</th></tr></thead>
+<tbody>
+<tr class="hi"><td><b>Qwen3-TTS, одним проходом</b></td><td class="num">114</td><td class="num"><b>38</b></td><td class="num"><b>1.8%</b></td><td class="num"><b>72 мс</b></td><td class="num"><b>0.8%</b></td><td class="num">×0.4</td></tr>
+<tr><td>Qwen3-TTS, по репликам</td><td class="num">109</td><td class="num">80</td><td class="num">4.2%</td><td class="num">75 мс</td><td class="num">1.2%</td><td class="num">×0.4</td></tr>
+<tr><td>ESpeech RL-V2</td><td class="num">118</td><td class="num">123</td><td class="num">20.1%</td><td class="num">180 мс</td><td class="num">1.0%</td><td class="num">×4.1</td></tr>
+<tr><td>ESpeech RL-V1</td><td class="num">118</td><td class="num">118</td><td class="num">20.3%</td><td class="num">225 мс</td><td class="num">—</td><td class="num">×4.1</td></tr>
+<tr><td>ESpeech PODCASTER</td><td class="num">118</td><td class="num">118</td><td class="num">22.3%</td><td class="num">250 мс</td><td class="num">2.3%</td><td class="num">×4.1</td></tr>
+</tbody></table></div>
+
+<div class="grid g2">
+  <div class="card player"><b>ESpeech RL-V2 · F5/DiT</b><span class="n">123 паузы · 20.1% тишины · медиана 180 мс</span>
+    <audio controls preload="none" src="assets/audio/survey__bench_espeech-rlv2.opus"></audio></div>
+  <div class="card player"><b>Qwen3-TTS · LM</b><span class="n">38 пауз · 1.8% тишины · медиана 72 мс · <span class="pill good">CER 0.8%</span></span>
+    <audio controls preload="none" src="assets/audio/survey__qwen_qwen-solid.opus"></audio></div>
+</div>
+
+<h3>Главное, и оно неприятное</h3>
+<p>Три разных чекпойнта ESpeech — RL-V2, RL-V1, PODCASTER — дают практически одинаковые
+числа. Разница между ними в пределах погрешности.</p>
+
+<p>Qwen на том же референсе и том же тексте: <b>38 пауз вместо 120, 1.8% тишины вместо 20%,
+медианная пауза 72 мс вместо 180–250</b>.</p>
+
+<p>Значит рваность, с которой шла борьба четыре раунда подряд — вставленными паузами,
+подбором затуханий, перебором отрывков записи, переписыванием пунктуации, — была свойством
+<b>архитектуры F5/DiT</b>. Не настроек. Не референса. Не текста. Qwen3-TTS построен иначе:
+дискретная многокодбуковая языковая модель без DiT, и этой проблемы у него просто нет.</p>
+
+<p>Четыре раунда лечили симптом чужого инструмента.</p>
+
+<h3>Цена и оговорки</h3>
+<p>×0.4 к реальному времени против ×4.1 — вдесятеро медленнее. Корпус в 16.5 часов:
+около 41 часа генерации вместо четырёх. Разово это две ночи. Замер сделан без flash-attn,
+который рекомендует документация Qwen; с ним разрыв должен сократиться, насколько — не проверено.</p>
+
+<p>Непроверенным осталось многое: VibeVoice, IndexTTS-2, Higgs Audio v3, CosyVoice 3,
+Chatterbox, XTTS-v2, а также веса ESpeech SFT-95K и SFT-256K и русский F5 от Misha24-10
+(последние три не скачались из-за таймаутов зеркала). По этим архитектурам вывода нет.</p>
+
+<p><b>Урок.</b> Ошибка не в том, что первый выбор оказался неоптимальным — это нормально
+и неизбежно. Ошибка в том, что после выбора обзор <b>ни разу не пересматривался</b>, хотя
+работа шла десять раундов и раз за разом упиралась в одну и ту же проблему. Признак тот же,
+что и в девятом раунде, только на уровень выше: если несколько итераций подряд борются
+с одним симптомом и каждая помогает лишь частично, источник, скорее всего, вне конвейера
+вообще. И отдельно: внешний рейтинг — снимок на дату, и дату надо смотреть раньше, чем цифры.</p>
+
 <h2 id="itogi">Что помогло и что не помогло</h2>
 
 <div class="grid g2">
@@ -808,6 +895,7 @@ LibriVox. Окно попадало в середину фразы, и тран�
 <li><b>Весь текст без внутренней пунктуации, короткими предложениями.</b> Запятая читается моделью как повод остановиться, а придаточное заставляет ухо удерживать начало фразы.</li>
 <li><b>Выбор отрывка внутри выбранного голоса.</b> Тембр принадлежит чтецу, манера — отрывку; у одного чтеца плотность пауз гуляет втрое.</li>
 <li><b>Прямая проба на контрольной фразе.</b> Косвенные показатели клипа её не предсказывают.</li>
+<li><b>Пересмотр обзора движков.</b> Смена архитектуры дала больше, чем десять раундов настройки выбранной: 38 пауз вместо 120 и 1.8% тишины вместо 20%.</li>
 
 <li><b>Короткое затухание, 8 мс.</b> Достаточно против щелчка, слишком мало, чтобы задеть фонему.</li>
 <li><b>Разбиение на реплики по смыслу</b> — помогало, пока референс был плохим. С хорошим референсом преимущество исчезло, и сплошной синтез оказался слитнее.</li>
@@ -824,6 +912,8 @@ LibriVox. Окно попадало в середину фразы, и тран�
 <li><b>Выбор движка «посвежее».</b> Silero v4 объективно хуже v3.1.</li>
 <li><b>Проверка длительности как приёмка.</b> Ловит беззвучные выбросы, слепа к съеденным
 слогам. Вытеснена CER.</li>
+<li><b>Борьба с рваностью настройками.</b> Четыре раунда правили паузы, затухания, отрывки и пунктуацию — а свойство принадлежало архитектуре движка.</li>
+<li><b>Доверие к внешнему рейтингу без проверки даты.</b> Лидерборд, на который опирался отбор, не обновлялся год.</li>
 <li><b>Растяжение как основной способ задать темп.</b> Работает лучше ручки модели, но лечит следствие: темп принадлежит референсу.</li>
 <li><b>Вставленные паузы целиком.</b> Механизм прожил три итерации — резкие, длинные,
 одинаковые — и был отвергнут. Симптом менялся, источник был один.</li>
@@ -871,8 +961,14 @@ const DATA = {
     {l:"Раунд 8 · вставленные паузы убраны", v:3.2, note:"тишину ставит только модель, 97 слов/мин"},
     {l:"Раунд 9 · темп из референса", v:1.0, note:"медленный чтец, нарезка по фразам, 91 слов/мин без растяжения"},
     {l:"Раунд 10 · слитность фразы", v:1.0, note:"референс отобран и по плотности пауз, 102 слов/мин"},
-    {l:"Раунд 11 · отрывок вместо чтеца", v:0.9, note:"тот же голос, слитный отрывок; текст короткими предложениями"}
+    {l:"Раунд 11 · отрывок вместо чтеца", v:0.9, note:"тот же голос, слитный отрывок; текст короткими предложениями"},
+    {l:"Раунд 12 · другой движок", v:0.8, note:"Qwen3-TTS: 38 пауз вместо 120, 1.8% тишины вместо 20%"}
   ],
+  survey: {
+    cats:["пауз в записи","тишины, %","медиана паузы, сотые сек"],
+    series:[{name:"ESpeech RL-V2 (F5/DiT)",v:[123,20.1,18]},
+            {name:"Qwen3-TTS (LM)",v:[38,1.8,7.2]}]
+  },
   textstats: {
     cats:["слов в предложении","максимум слов","длиннее 12 слов","запятых"],
     series:[{name:"было",v:[7.6,19,10,26]},{name:"стало",v:[5.2,9,0,0]}]
@@ -1103,7 +1199,7 @@ function seriesColors(){ const c = C();
           c.getPropertyValue('--series-3').trim()]; }
 
 function renderAll(){
-  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause','c-refrate','c-breaks','c-text'];
+  const ids = ['c-journey','c-engines','c-utmos','c-models','c-refs','c-patterns','c-rate','c-v3','c-abl','c-nopause','c-refrate','c-breaks','c-text','c-survey'];
   ids.forEach(i => document.getElementById(i).innerHTML = '');
   const col = seriesColors();
 
@@ -1143,6 +1239,16 @@ function renderAll(){
   barsH(document.getElementById('c-v3'), DATA.v3, {labelW:190});
   document.getElementById('t-v3').innerHTML =
     tableFor(DATA.v3, ['Растяжение речи','CER'], v => v + '%');
+
+  barsGrouped(document.getElementById('c-survey'), DATA.survey.cats, DATA.survey.series,
+    [col[1], col[0]]);
+  document.getElementById('t-survey').innerHTML =
+    '<div class="tbl-scroll"><table><thead><tr><th>Показатель</th>' +
+    DATA.survey.series.map(sr => `<th class="num">${esc(sr.name)}</th>`).join('') +
+    '</tr></thead><tbody>' +
+    DATA.survey.cats.map((c,i) => `<tr><td>${esc(c)}</td>` +
+      DATA.survey.series.map(sr => `<td class="num">${sr.v[i]}</td>`).join('') + '</tr>').join('') +
+    '</tbody></table></div>';
 
   barsGrouped(document.getElementById('c-text'), DATA.textstats.cats, DATA.textstats.series,
     [col[0], col[2]]);
