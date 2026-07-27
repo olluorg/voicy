@@ -1,0 +1,2524 @@
+[
+ {
+  "term": "API",
+  "proposed": "апи",
+  "chosen": "аапи",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "апи",
+    "heard": "Здесь важно понять, что такое API.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "аапи",
+    "heard": "Здесь важно понять, что такое ААПИ.",
+    "sim": 0.86,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JVM",
+  "proposed": "джей-ви-эм",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "джей-ви-эм",
+    "heard": "Здесь важно понять, что такое JVM.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеей-ви-эм",
+    "heard": "Здесь важно понять, что такое JVM.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-вии-эм",
+    "heard": "Здесь важно понять, что такое J, V, M.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-ви -эм",
+    "heard": "Здесь важно понять, что такое JV, M.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JDK",
+  "proposed": "джей-ди-кей",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "джей-ди-кей",
+    "heard": "Здесь важно понять, что такое J, D, K.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеей-ди-кей",
+    "heard": "Здесь важно понять, что такое JDK.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-дии-кей",
+    "heard": "Здесь важно понять, что такое JDK.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-ди -кей",
+    "heard": "Здесь важно понять, что такое J, D, K.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "SQL",
+  "proposed": "эс-ку-эль",
+  "chosen": "ээс-ку-эль",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "эс-ку-эль",
+    "heard": "Здесь важно понять, что такое SQL.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ээс-ку-эль",
+    "heard": "Здесь важно понять, что такое ЭСКУЛ.",
+    "sim": 0.83,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "DTO",
+  "proposed": "ди-ти-о",
+  "chosen": "дии-ти-о",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "ди-ти-о",
+    "heard": "Здесь важно понять, что такое DTO.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "дии-ти-о",
+    "heard": "Здесь важно понять, что такое ДИИ, ТИ, О",
+    "sim": 0.91,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "DLQ",
+  "proposed": "ди-эль-кью",
+  "chosen": "ди-э ль-кью",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "ди-эль-кью",
+    "heard": "Здесь важно понять, что такое DLQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "дии-эль-кью",
+    "heard": "Здесь важно понять, что такое DLQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ди-ээль-кью",
+    "heard": "Здесь важно понять, что такое DLQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ди-э ль-кью",
+    "heard": "Здесь важно понять, что такое Ди, Э, Ль, Кью",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "HTTP",
+  "proposed": "эйч-ти-ти-пи",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "эйч-ти-ти-пи",
+    "heard": "Здесь важно понять, что такое HTTP.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ээйч-ти-ти-пи",
+    "heard": "Здесь важно понять, что такое H-T-T-P.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "эйч-тии-ти-пи",
+    "heard": "Здесь важно понять, что такое HTTP.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "эйч-ти -ти-пи",
+    "heard": "Здесь важно понять, что такое HTTP.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "ISR",
+  "proposed": "ай-эс-эр",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "ай-эс-эр",
+    "heard": "Здесь важно понять, что такое ISR.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "аай-эс-эр",
+    "heard": "Здесь важно понять, что такое AISR.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ай-ээс-эр",
+    "heard": "Здесь важно понять, что такое IESR.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ай-э с-эр",
+    "heard": "Здесь важно понять, что такое ISR.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CSRF",
+  "proposed": "си-эс-эр-эф",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "си-эс-эр-эф",
+    "heard": "Здесь важно понять, что такое CSRF.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "сии-эс-эр-эф",
+    "heard": "Здесь важно понять, что такое CESRF.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-ээс-эр-эф",
+    "heard": "Здесь важно понять, что такое CSRF.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-э с-эр-эф",
+    "heard": "Здесь важно понять, что такое CSRF.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "TTL",
+  "proposed": "ти-ти-эль",
+  "chosen": "ти-ти-эль",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "ти-ти-эль",
+    "heard": "Здесь важно понять, что такое Ти, Ти-Эль.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CQRS",
+  "proposed": "си-кью-эр-эс",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "си-кью-эр-эс",
+    "heard": "Здесь важно понять, что такое CQRS.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "сии-кью-эр-эс",
+    "heard": "Здесь важно понять, что такое CEQRS.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-кьюю-эр-эс",
+    "heard": "Здесь важно понять, что такое CQU-RS.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-кью -эр-эс",
+    "heard": "Здесь важно понять, что такое CQRS.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JPA",
+  "proposed": "джей-пи-эй",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "джей-пи-эй",
+    "heard": "Здесь важно понять, что такое JPA.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеей-пи-эй",
+    "heard": "Здесь важно понять, что такое JPA.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-пии-эй",
+    "heard": "Здесь важно понять, что такое JPA.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-пи -эй",
+    "heard": "Здесь важно понять, что такое JPA.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JDBC",
+  "proposed": "джей-ди-би-си",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "джей-ди-би-си",
+    "heard": "Здесь важно понять, что такое JDBC.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеей-ди-би-си",
+    "heard": "Здесь важно понять, что такое J, D, B, C.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-дии-би-си",
+    "heard": "Здесь важно понять, что такое JDBC.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-ди -би-си",
+    "heard": "Здесь важно понять, что такое JDBC.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JSON",
+  "proposed": "джейсон",
+  "chosen": "джейсоон",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "джейсон",
+    "heard": "Здесь важно понять, что такое JSON.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеейсон",
+    "heard": "Здесь важно понять, что такое JSON.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джейсоон",
+    "heard": "Здесь важно понять, что такое Джей Саон.",
+    "sim": 0.93,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "MVC",
+  "proposed": "эм-ви-си",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "эм-ви-си",
+    "heard": "Здесь важно понять, что такое MVC.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ээм-ви-си",
+    "heard": "Здесь важно понять, что такое MVC.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "эм-вии-си",
+    "heard": "Здесь важно понять, что такое MVC.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "эм-ви -си",
+    "heard": "Здесь важно понять, что такое MVC.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JWT",
+  "proposed": "джей-ви-ти",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "джей-ви-ти",
+    "heard": "Здесь важно понять, что такое JVT",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джеей-ви-ти",
+    "heard": "Здесь важно понять, что такое J-AVT.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-вии-ти",
+    "heard": "Здесь важно понять, что такое JVT.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "джей-ви -ти",
+    "heard": "Здесь важно понять, что такое JV, T.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CPU",
+  "proposed": "си-пи-ю",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "си-пи-ю",
+    "heard": "Здесь важно понять, что такое CPU.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "сии-пи-ю",
+    "heard": "Здесь важно понять, что такое CEPU.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-пии-ю",
+    "heard": "Здесь важно понять, что такое CPU.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-пи -ю",
+    "heard": "Здесь важно понять, что такое CPU.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "REST",
+  "proposed": "рест",
+  "chosen": "рест",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "рест",
+    "heard": "Здесь важно понять, что такое арест.",
+    "sim": 0.89,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CAP",
+  "proposed": "кап",
+  "chosen": "кап",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "кап",
+    "heard": "Здесь важно понять, что такое кап.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "AOP",
+  "proposed": "а-о-пи",
+  "chosen": "а-о-пи",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "а-о-пи",
+    "heard": "Здесь важно понять, что такое АОП.",
+    "sim": 0.86,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "NPE",
+  "proposed": "эн-пи-и",
+  "chosen": "ээн-пи-и",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "эн-пи-и",
+    "heard": "Здесь важно понять, что такое NPE.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ээн-пи-и",
+    "heard": "Здесь важно понять, что такое ЭНПИ.",
+    "sim": 0.89,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CGLIB",
+  "proposed": "си-джи-либ",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "си-джи-либ",
+    "heard": "Здесь важно понять, что такое C, G, Leap.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "сии-джи-либ",
+    "heard": "Здесь важно понять, что такое CEGLib.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-джии-либ",
+    "heard": "Здесь важно понять, что такое CGLib.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-джи -либ",
+    "heard": "Здесь важно понять, что такое CG, лип.",
+    "sim": 0.31,
+    "stress_expected": 2,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CAS",
+  "proposed": "кас",
+  "chosen": "кас",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "кас",
+    "heard": "Здесь важно понять, что такое КАС.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "SLO",
+  "proposed": "эс-эль-о",
+  "chosen": "эс-эль-о",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "эс-эль-о",
+    "heard": "Здесь важно понять, что такое СЛО.",
+    "sim": 0.67,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "JIT",
+  "proposed": "джит",
+  "chosen": "джит",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "джит",
+    "heard": "Здесь важно понять, что такое джит.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "FIFO",
+  "proposed": "фифо",
+  "chosen": "фифо",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "фифо",
+    "heard": "Здесь важно понять, что такое ФИФО.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "URL",
+  "proposed": "юар-эль",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "юар-эль",
+    "heard": "Здесь важно понять, что такое URL.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ююар-эль",
+    "heard": "Здесь важно понять, что такое URL.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "юаар-эль",
+    "heard": "Здесь важно понять, что такое URL.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "юа р-эль",
+    "heard": "Здесь важно понять, что такое UARL.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CDN",
+  "proposed": "си-ди-эн",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "си-ди-эн",
+    "heard": "Здесь важно понять, что такое CDN.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "сии-ди-эн",
+    "heard": "Здесь важно понять, что такое C, D, N.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-дии-эн",
+    "heard": "Здесь важно понять, что такое CDN.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "си-ди -эн",
+    "heard": "Здесь важно понять, что такое CDN.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "HashMap",
+  "proposed": "ХэшМэп",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "ХэшМэп",
+    "heard": "Здесь важно понять, что такое хэшмэп.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "ХээшМэп",
+    "heard": "Здесь важно понять, что такое хэш-мэп",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "ХэшМээп",
+    "heard": "Здесь важно понять, что такое хэшмэп.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "hashCode",
+  "proposed": "хэшкод",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "хэшкод",
+    "heard": "Здесь важно понять, что такое хэшкод.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "хээшкод",
+    "heard": "Здесь важно понять, что такое хэшкод.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "хэшкоод",
+    "heard": "Здесь важно понять, что такое хэшкаот.",
+    "sim": 0.77,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "ConcurrentHashMap",
+  "proposed": "Конкаррент ХэшМэп",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Конкаррент ХэшМэп",
+    "heard": "Здесь важно понять, что такое конкурент HashMap.",
+    "sim": 0.5,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Коонкаррент ХэшМэп",
+    "heard": "Здесь важно понять, что такое Count Current Hash Map.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Конкааррент ХэшМэп",
+    "heard": "Здесь важно понять, что такое Concurrent HashMap.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Конка ррент ХэшМэп",
+    "heard": "Здесь важно понять, что такое иконка RentHashMap.",
+    "sim": 0.3,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Конкаррент-ХэшМэп",
+    "heard": "Здесь важно понять, что такое конкурент HashMap.",
+    "sim": 0.5,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "LinkedHashMap",
+  "proposed": "Линкед ХэшМэп",
+  "chosen": "Линке д ХэшМэп",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "Линкед ХэшМэп",
+    "heard": "Здесь важно понять, что такое LinkedHashMap.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Лиинкед ХэшМэп",
+    "heard": "Здесь важно понять, что такое LinkedHashMap.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Линкеед ХэшМэп",
+    "heard": "Здесь важно понять, что такое Linkeet HashMap.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Линке д ХэшМэп",
+    "heard": "Здесь важно понять, что такое линки-д-хэш-мэп.",
+    "sim": 0.92,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "ArrayList",
+  "proposed": "АррейЛист",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "АррейЛист",
+    "heard": "Здесь важно понять, что такое рейлист.",
+    "sim": 0.88,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "ААррейЛист",
+    "heard": "Здесь важно понять, что такое ArrayList.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "АрреейЛист",
+    "heard": "Здесь важно понять, что такое ариэлист.",
+    "sim": 0.71,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Арре йЛист",
+    "heard": "Здесь важно понять, что такое Аре-Елист.",
+    "sim": 0.82,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "LinkedList",
+  "proposed": "Линкед Лист",
+  "chosen": "Лиинкед Лист",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "Линкед Лист",
+    "heard": "Здесь важно понять, что такое LinkedIn List.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Лиинкед Лист",
+    "heard": "Здесь важно понять, что такое линкет-лист.",
+    "sim": 0.9,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "HashSet",
+  "proposed": "ХэшСет",
+  "chosen": "ХэшСет",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "ХэшСет",
+    "heard": "Здесь важно понять, что такое хэш-сет.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "TreeSet",
+  "proposed": "ТриСет",
+  "chosen": "ТриСет",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "ТриСет",
+    "heard": "Здесь важно понять, что такое трисет.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "TreeMap",
+  "proposed": "ТриМэп",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "ТриМэп",
+    "heard": "Здесь важно понять, что такое 3Map.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "ТрииМэп",
+    "heard": "Здесь важно понять, что такое TreeMap.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "ТриМээп",
+    "heard": "Здесь важно понять, что такое TreeMap.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "ArrayDeque",
+  "proposed": "Аррей Дек",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Аррей Дек",
+    "heard": "Здесь важно понять, что такое ArrayDeck.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "ААррей Дек",
+    "heard": "Здесь важно понять, что такое Арейдек.",
+    "sim": 0.93,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Арреей Дек",
+    "heard": "Здесь важно понять, что такое Арей Дек.",
+    "sim": 0.93,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Арре й Дек",
+    "heard": "Здесь важно понять, что такое Ари-Дек.",
+    "sim": 0.71,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Аррей-Дек",
+    "heard": "Здесь важно понять, что такое ArrayDeck.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "ThreadLocal",
+  "proposed": "Тред Локал",
+  "chosen": "Треед Локал",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "Тред Локал",
+    "heard": "Здесь важно понять, что такое Thread Local.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Треед Локал",
+    "heard": "Здесь важно понять, что такое триэт-локал.",
+    "sim": 0.74,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "CompletableFuture",
+  "proposed": "Комплитебл Фьючер",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Комплитебл Фьючер",
+    "heard": "Здесь важно понять, что такое комплитебл фьючер",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Коомплитебл Фьючер",
+    "heard": "Здесь важно понять, что такое Complitable Future.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Комплиитебл Фьючер",
+    "heard": "Здесь важно понять, что такое комплитебл фьючер.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Компли тебл Фьючер",
+    "heard": "Здесь важно понять, что такое компли Table Future.",
+    "sim": 0.36,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Комплитебл-Фьючер",
+    "heard": "Здесь важно понять, что такое Complitable Future.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "StringBuilder",
+  "proposed": "Стринг Билдер",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Стринг Билдер",
+    "heard": "Здесь важно понять, что такое StringBuilder.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Стриинг Билдер",
+    "heard": "Здесь важно понять, что такое String Builder.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Стринг Биилдер",
+    "heard": "Здесь важно понять, что такое StringBuilder.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Стринг Би лдер",
+    "heard": "Здесь важно понять, что такое stringBuilder.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Стринг-Билдер",
+    "heard": "Здесь важно понять, что такое String Builder.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "ReentrantLock",
+  "proposed": "Риентрант Лок",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Риентрант Лок",
+    "heard": "Здесь важно понять, что такое риэнтрант-лог.",
+    "sim": 0.83,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Рииентрант Лок",
+    "heard": "Здесь важно понять, что такое Reentrant Lock.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Риеентрант Лок",
+    "heard": "Здесь важно понять, что такое reentrant lock.",
+    "sim": 0.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Рие нтрант Лок",
+    "heard": "Здесь важно понять, что такое Риетн-Трант-Лок.",
+    "sim": 0.96,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Риентрант-Лок",
+    "heard": "Здесь важно понять, что такое риентрант-лок.",
+    "sim": 1.0,
+    "stress_expected": 2,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "CountDownLatch",
+  "proposed": "Каунт Даун Лэтч",
+  "chosen": "Кауунт Даун Лэтч",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "Каунт Даун Лэтч",
+    "heard": "Здесь важно понять, что такое каунт Daunledge.",
+    "sim": 0.37,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Кааунт Даун Лэтч",
+    "heard": "Здесь важно понять, что такое countdown latch.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Кауунт Даун Лэтч",
+    "heard": "Здесь важно понять, что такое Каунт Даун Лэч.",
+    "sim": 0.96,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "AtomicInteger",
+  "proposed": "Атомик Интеджер",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Атомик Интеджер",
+    "heard": "Здесь важно понять, что такое Atomic Integer.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ААтомик Интеджер",
+    "heard": "Здесь важно понять, что такое Atomic Integer.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Атоомик Интеджер",
+    "heard": "Здесь важно понять, что такое Atomic Integer.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Ато мик Интеджер",
+    "heard": "Здесь важно понять, что такое Atomic Integer.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Атомик-Интеджер",
+    "heard": "Здесь важно понять, что такое Atomic Integer.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "LocalDateTime",
+  "proposed": "Локал Дейт Тайм",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Локал Дейт Тайм",
+    "heard": "Здесь важно понять, что такое Local Date Time.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Лоокал Дейт Тайм",
+    "heard": "Здесь важно понять, что такое Local DateTime.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Локаал Дейт Тайм",
+    "heard": "Здесь важно понять, что такое Local Date Time.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Лока л Дейт Тайм",
+    "heard": "Здесь важно понять, что такое LOCALDATE TIME.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Локал-Дейт-Тайм",
+    "heard": "Здесь важно понять, что такое Local, Date, Time.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "AutoCloseable",
+  "proposed": "Ауто Клоузебл",
+  "chosen": "ААуто Клоузебл",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "Ауто Клоузебл",
+    "heard": "Здесь важно понять, что такое Auto Closable.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ААуто Клоузебл",
+    "heard": "Здесь важно понять, что такое ААУТА КЛОУЗЕБЛ.",
+    "sim": 0.88,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "toString",
+  "proposed": "ту Стринг",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "ту Стринг",
+    "heard": "Здесь важно понять, что такое ToString.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "туу Стринг",
+    "heard": "Здесь важно понять, что такое ToString.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ту Стриинг",
+    "heard": "Здесь важно понять, что такое ToString.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ту-Стринг",
+    "heard": "Здесь важно понять, что такое ToString.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "flatMap",
+  "proposed": "флэт Мэп",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "флэт Мэп",
+    "heard": "Здесь важно понять, что такое Flat Map.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "флээт Мэп",
+    "heard": "Здесь важно понять, что такое Flayed Map.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "флэт Мээп",
+    "heard": "Здесь важно понять, что такое Flat Map.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "флэт-Мэп",
+    "heard": "Здесь важно понять, что такое Flat Map.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "toMap",
+  "proposed": "ту Мэп",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "ту Мэп",
+    "heard": "Здесь важно понять, что такое ToMap.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "туу Мэп",
+    "heard": "Здесь важно понять, что такое Tuu Map.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ту Мээп",
+    "heard": "Здесь важно понять, что такое ToMap.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ту-Мэп",
+    "heard": "Здесь важно понять, что такое ToMap.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "WebFlux",
+  "proposed": "Веб Флакс",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Веб Флакс",
+    "heard": "Здесь важно понять, что такое WebFlux.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Вееб Флакс",
+    "heard": "Здесь важно понять, что такое Vape Flux.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Веб Флаакс",
+    "heard": "Здесь важно понять, что такое WebFlux.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Веб-Флакс",
+    "heard": "Здесь важно понять, что такое WebFlux.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "PostgreSQL",
+  "proposed": "Постгрес",
+  "chosen": "Постгрес",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Постгрес",
+    "heard": "Здесь важно понять, что такое постгресс.",
+    "sim": 0.94,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "DynamoDB",
+  "proposed": "Динамо Ди-Би",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Динамо Ди-Би",
+    "heard": "здесь важно понять что такое динамо диби",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Диинамо Ди-Би",
+    "heard": "Здесь важно понять, что такое динамо-диби.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Динаамо Ди-Би",
+    "heard": "Здесь важно понять, что такое Динамо Диби.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Дина мо Ди-Би",
+    "heard": "Здесь важно понять, что такое Динамадиби.",
+    "sim": 0.9,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Динамо-Ди-Би",
+    "heard": "Здесь важно понять, что такое динамо-диби.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "NoSQL",
+  "proposed": "ноу эс-ку-эль",
+  "chosen": "ноу эс-ку-эль",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "ноу эс-ку-эль",
+    "heard": "Здесь важно понять, что такое НуУС, КУЛ.",
+    "sim": 0.71,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "RabbitMQ",
+  "proposed": "Рэббит эм-кью",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Рэббит эм-кью",
+    "heard": "Здесь важно понять, что такое RabbitMQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Рээббит эм-кью",
+    "heard": "Здесь важно понять, что такое RabbitMQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Рэббиит эм-кью",
+    "heard": "Здесь важно понять, что такое ребеит MQ.",
+    "sim": 0.42,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Рэбби т эм-кью",
+    "heard": "Здесь важно понять, что такое Rebbe TMQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Рэббит-эм-кью",
+    "heard": "Здесь важно понять, что такое RabbitMQ.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Spring",
+  "proposed": "Спринг",
+  "chosen": "Спринг",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Спринг",
+    "heard": "Здесь важно понять, что такое Спринг",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Spring Boot",
+  "proposed": "Спринг Бут",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Спринг Бут",
+    "heard": "Здесь важно понять, что такое Spring Boot.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Сприинг Бут",
+    "heard": "Здесь важно понять, что такое Spring Boot.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Спринг Буут",
+    "heard": "Здесь важно понять, что такое Spring Boot.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "Спринг-Бут",
+    "heard": "Здесь важно понять, что такое Spring Boot.",
+    "sim": 0.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": false,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Java",
+  "proposed": "Джава",
+  "chosen": "Джава",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Джава",
+    "heard": "Здесь важно понять, что такое Джава.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Kafka",
+  "proposed": "Кафка",
+  "chosen": "Кафка",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Кафка",
+    "heard": "Здесь важно понять, что такое кавка.",
+    "sim": 0.8,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "List",
+  "proposed": "Лист",
+  "chosen": "Лист",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Лист",
+    "heard": "Здесь важно понять, что такое лист.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "String",
+  "proposed": "Стринг",
+  "chosen": "Стринг",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Стринг",
+    "heard": "Здесь важно понять, что такое стринг.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Integer",
+  "proposed": "Интеджер",
+  "chosen": "Интеджер",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Интеджер",
+    "heard": "Здесь важно понять, что такое интеджер.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Object",
+  "proposed": "Обжект",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Обжект",
+    "heard": "Здесь важно понять, что такое объект.",
+    "sim": 0.83,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "ООбжект",
+    "heard": "Здесь важно понять, что такое O-Object.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Обжеект",
+    "heard": "Здесь важно понять, что такое обжиект.",
+    "sim": 0.92,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "Number",
+  "proposed": "Намбер",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Намбер",
+    "heard": "Здесь важно понять, что такое Number.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Наамбер",
+    "heard": "Здесь важно понять, что такое наамбер.",
+    "sim": 0.92,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Намбеер",
+    "heard": "Здесь важно понять, что такое Намбейр.",
+    "sim": 0.92,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "Stream",
+  "proposed": "Стрим",
+  "chosen": "Стрим",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Стрим",
+    "heard": "Здесь важно понять, что такое стрим.",
+    "sim": 1.0,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Optional",
+  "proposed": "Опшенал",
+  "chosen": "Опшенал",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "Опшенал",
+    "heard": "Здесь важно понять, что такое общенал",
+    "sim": 0.71,
+    "stress_expected": 2,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "Transactional",
+  "proposed": "Трансэкшенал",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "Трансэкшенал",
+    "heard": "Здесь важно понять, что такое трансэкшенал.",
+    "sim": 1.0,
+    "stress_expected": 3,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Траансэкшенал",
+    "heard": "Здесь важно понять, что такое троансикшенал.",
+    "sim": 0.88,
+    "stress_expected": 3,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "Трансээкшенал",
+    "heard": "Здесь важно понять, что такое Transactional.",
+    "sim": 0.0,
+    "stress_expected": 3,
+    "stress_detected": 2,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "Трансэ кшенал",
+    "heard": "Здесь важно понять, что такое трансэкшенал.",
+    "sim": 1.0,
+    "stress_expected": 3,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "consumer",
+  "proposed": "консьюмер",
+  "chosen": "консьюмер",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "консьюмер",
+    "heard": "Здесь важно понять, что такое консюмер.",
+    "sim": 0.94,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "producer",
+  "proposed": "продюсер",
+  "chosen": "продюсер",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "продюсер",
+    "heard": "Здесь важно понять, что такое продюсер.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "partition",
+  "proposed": "партиция",
+  "chosen": "партиция",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "партиция",
+    "heard": "Здесь важно понять, что такое партиция.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "offset",
+  "proposed": "оффсет",
+  "chosen": "оффсет",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "оффсет",
+    "heard": "Здесь важно понять, что такое оффсит.",
+    "sim": 0.83,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "equals",
+  "proposed": "иквалс",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "иквалс",
+    "heard": "Здесь важно понять, что такое Equals.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "ииквалс",
+    "heard": "Здесь важно понять, что такое Equals.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "икваалс",
+    "heard": "Здесь важно понять, что такое Equals.",
+    "sim": 0.0,
+    "stress_expected": 1,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "singleton",
+  "proposed": "синглтон",
+  "chosen": null,
+  "status": "unresolved",
+  "tries": [
+   {
+    "cand": "синглтон",
+    "heard": "Здесь важно понять, что такое Singleton.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": false,
+    "ok_stress": false
+   },
+   {
+    "cand": "сиинглтон",
+    "heard": "Здесь важно понять, что такое Синглтон.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   },
+   {
+    "cand": "синглтоон",
+    "heard": "Здесь важно понять, что такое синглтеон.",
+    "sim": 0.94,
+    "stress_expected": 0,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": false
+   }
+  ]
+ },
+ {
+  "term": "prototype",
+  "proposed": "прототайп",
+  "chosen": "прототайп",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "прототайп",
+    "heard": "Здесь важно понять, что такое прототайп.",
+    "sim": 1.0,
+    "stress_expected": 2,
+    "stress_detected": 2,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "retry",
+  "proposed": "ретрай",
+  "chosen": "ретрай",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "ретрай",
+    "heard": "Здесь важно понять, что такое ретрай.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "cookie",
+  "proposed": "куки",
+  "chosen": "куки",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "куки",
+    "heard": "Здесь важно понять, что такое куки.",
+    "sim": 1.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "poll",
+  "proposed": "полл",
+  "chosen": "полл",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "полл",
+    "heard": "Здесь важно понять, что такое пол.",
+    "sim": 0.86,
+    "stress_expected": null,
+    "stress_detected": null,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "acks",
+  "proposed": "аксы",
+  "chosen": "аксы",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "аксы",
+    "heard": "Здесь важно понять, что такое аксы.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "generics",
+  "proposed": "дженерики",
+  "chosen": "дженерики",
+  "status": "ok",
+  "tries": [
+   {
+    "cand": "дженерики",
+    "heard": "Здесь важно понять, что такое дженерики.",
+    "sim": 1.0,
+    "stress_expected": 1,
+    "stress_detected": 1,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ },
+ {
+  "term": "wildcard",
+  "proposed": "вайлдкард",
+  "chosen": "ваайлдкард",
+  "status": "fixed",
+  "tries": [
+   {
+    "cand": "вайлдкард",
+    "heard": "Здесь важно понять, что такое Wild Card.",
+    "sim": 0.0,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": false,
+    "ok_stress": true
+   },
+   {
+    "cand": "ваайлдкард",
+    "heard": "Здесь важно понять, что такое вайлдкарт.",
+    "sim": 0.89,
+    "stress_expected": 0,
+    "stress_detected": 0,
+    "ok_sound": true,
+    "ok_stress": true
+   }
+  ]
+ }
+]

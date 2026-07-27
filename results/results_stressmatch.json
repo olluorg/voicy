@@ -1,0 +1,378 @@
+{
+ "accuracy": 77.4,
+ "chance": 24.8,
+ "rows": [
+  {
+   "word": "дженерики",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "дженерики",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "дженерики",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "дженерики",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "компилятор",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "компилятор",
+   "placed": 1,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "компилятор",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "компилятор",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "коллекция",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "коллекция",
+   "placed": 1,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "коллекция",
+   "placed": 2,
+   "detected": 3,
+   "hit": false
+  },
+  {
+   "word": "коллекция",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "параметры",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "параметры",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "параметры",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "параметры",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "стирание",
+   "placed": 0,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "стирание",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "стирание",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "стирание",
+   "placed": 3,
+   "detected": 2,
+   "hit": false
+  },
+  {
+   "word": "граница",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "граница",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "граница",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "безопасность",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "безопасность",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "безопасность",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "безопасность",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "проверка",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "проверка",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "проверка",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "хранилище",
+   "placed": 0,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 1,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 2,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "переменная",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "переменная",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "переменная",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "переменная",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "переменная",
+   "placed": 4,
+   "detected": 3,
+   "hit": false
+  },
+  {
+   "word": "исключение",
+   "placed": 0,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "исключение",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "исключение",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "исключение",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "исключение",
+   "placed": 4,
+   "detected": 4,
+   "hit": true
+  },
+  {
+   "word": "состояние",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "состояние",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "состояние",
+   "placed": 2,
+   "detected": 4,
+   "hit": false
+  },
+  {
+   "word": "состояние",
+   "placed": 3,
+   "detected": 4,
+   "hit": false
+  },
+  {
+   "word": "состояние",
+   "placed": 4,
+   "detected": 4,
+   "hit": true
+  },
+  {
+   "word": "разработка",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "разработка",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "разработка",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "разработка",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "поведение",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "поведение",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "поведение",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "поведение",
+   "placed": 3,
+   "detected": 2,
+   "hit": false
+  },
+  {
+   "word": "поведение",
+   "placed": 4,
+   "detected": 2,
+   "hit": false
+  }
+ ]
+}

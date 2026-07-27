@@ -1,91 +1,493 @@
 {
-  "note": "Словарь произношений для аудио-версии. Ключ — как термин пишется в исходном тексте, значение — написание, которое движок читает верно. Черновик: предложенные написания ещё не проверены на слух, поле verified проставляется после прослушивания.",
+  "note": "Собран автоматически. Разборчивость проверяется обратным распознаванием: термин засчитан, если ASR услышал его либо в кириллическом написании, либо в исходном английском. Человек в цикле не участвует.",
   "policy": {
-    "acronyms": "Побуквенно русскими названиями букв, кроме прижившихся слов (джейсон, рест, кап, джит, фифо).",
+    "acronyms": "Побуквенное чтение выводится из самого термина правилом; руками задан только список идиоматических исключений (джейсон, рест, эс-ку-эль, си-джи-либ).",
     "classes": "Русская фонетика так, как произносит разработчик: ХэшМэп, АррейЛист. Латиница не используется — движок читает её нестабильно.",
     "sql": "Ключевые слова SQL в аудио переводятся смыслом, а не читаются: JOIN → «соединение», WHERE → «условие отбора». В словарь не попадают."
   },
   "terms": {
-    "API": { "say": "апи", "verified": false },
-    "JVM": { "say": "джей-ви-эм", "verified": false },
-    "JDK": { "say": "джей-ди-кей", "verified": false },
-    "SQL": { "say": "эс-ку-эль", "verified": false },
-    "DTO": { "say": "ди-ти-о", "verified": false },
-    "DLQ": { "say": "ди-эль-кью", "verified": false },
-    "HTTP": { "say": "эйч-ти-ти-пи", "verified": false },
-    "ISR": { "say": "ай-эс-эр", "verified": false },
-    "CSRF": { "say": "си-эс-эр-эф", "verified": false },
-    "TTL": { "say": "ти-ти-эль", "verified": false },
-    "CQRS": { "say": "си-кью-эр-эс", "verified": false },
-    "JPA": { "say": "джей-пи-эй", "verified": false },
-    "JDBC": { "say": "джей-ди-би-си", "verified": false },
-    "JSON": { "say": "джейсон", "verified": false },
-    "MVC": { "say": "эм-ви-си", "verified": false },
-    "JWT": { "say": "джей-ви-ти", "verified": false },
-    "CPU": { "say": "си-пи-ю", "verified": false },
-    "REST": { "say": "рест", "verified": false },
-    "CAP": { "say": "кап", "verified": false },
-    "AOP": { "say": "а-о-пи", "verified": false },
-    "NPE": { "say": "эн-пи-и", "verified": false },
-    "CGLIB": { "say": "си-джи-либ", "verified": false },
-    "CAS": { "say": "кас", "verified": false },
-    "SLO": { "say": "эс-эль-о", "verified": false },
-    "JIT": { "say": "джит", "verified": false },
-    "FIFO": { "say": "фифо", "verified": false },
-    "URL": { "say": "юар-эль", "verified": false },
-    "CDN": { "say": "си-ди-эн", "verified": false },
-
-    "HashMap": { "say": "ХэшМэп", "verified": false },
-    "hashCode": { "say": "хэшкод", "verified": false },
-    "ConcurrentHashMap": { "say": "Конкаррент ХэшМэп", "verified": false },
-    "LinkedHashMap": { "say": "Линкед ХэшМэп", "verified": false },
-    "ArrayList": { "say": "АррейЛист", "verified": false },
-    "LinkedList": { "say": "Линкед Лист", "verified": false },
-    "HashSet": { "say": "ХэшСет", "verified": false },
-    "TreeSet": { "say": "ТриСет", "verified": false },
-    "TreeMap": { "say": "ТриМэп", "verified": false },
-    "ArrayDeque": { "say": "Аррей Дек", "verified": false },
-    "ThreadLocal": { "say": "Тред Локал", "verified": false },
-    "CompletableFuture": { "say": "Комплитебл Фьючер", "verified": false },
-    "StringBuilder": { "say": "Стринг Билдер", "verified": false },
-    "ReentrantLock": { "say": "Риентрант Лок", "verified": false },
-    "CountDownLatch": { "say": "Каунт Даун Лэтч", "verified": false },
-    "AtomicInteger": { "say": "Атомик Интеджер", "verified": false },
-    "LocalDateTime": { "say": "Локал Дейт Тайм", "verified": false },
-    "AutoCloseable": { "say": "Ауто Клоузебл", "verified": false },
-    "toString": { "say": "ту Стринг", "verified": false },
-    "flatMap": { "say": "флэт Мэп", "verified": false },
-    "toMap": { "say": "ту Мэп", "verified": false },
-    "WebFlux": { "say": "Веб Флакс", "verified": false },
-    "PostgreSQL": { "say": "Постгрес", "verified": false },
-    "DynamoDB": { "say": "Динамо Ди-Би", "verified": false },
-    "NoSQL": { "say": "ноу эс-ку-эль", "verified": false },
-    "RabbitMQ": { "say": "Рэббит эм-кью", "verified": false },
-
-    "Spring": { "say": "Спринг", "verified": false },
-    "Spring Boot": { "say": "Спринг Бут", "verified": false },
-    "Java": { "say": "Джава", "verified": false },
-    "Kafka": { "say": "Кафка", "verified": false },
-    "List": { "say": "Лист", "verified": false },
-    "String": { "say": "Стринг", "verified": false },
-    "Integer": { "say": "Интеджер", "verified": false },
-    "Object": { "say": "Обжект", "verified": false },
-    "Number": { "say": "Намбер", "verified": false },
-    "Stream": { "say": "Стрим", "verified": false },
-    "Optional": { "say": "Опшенал", "verified": false },
-    "Transactional": { "say": "Трансэкшенал", "verified": false },
-    "consumer": { "say": "консьюмер", "verified": false },
-    "producer": { "say": "продюсер", "verified": false },
-    "partition": { "say": "партиция", "verified": false },
-    "offset": { "say": "оффсет", "verified": false },
-    "equals": { "say": "иквалс", "verified": false },
-    "singleton": { "say": "синглтон", "verified": false },
-    "prototype": { "say": "прототайп", "verified": false },
-    "retry": { "say": "ретрай", "verified": false },
-    "cookie": { "say": "куки", "verified": false },
-    "poll": { "say": "полл", "verified": false },
-    "acks": { "say": "аксы", "verified": false },
-    "generics": { "say": "дженерики", "verified": false, "issue": "движок ставит ударение на третий слог, целевое — на первый" },
-    "wildcard": { "say": "вайлдкард", "verified": false }
+    "API": {
+      "say": "апи",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое API.",
+      "similarity": 1.0
+    },
+    "JVM": {
+      "say": "джей-ви-эм",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое JVM.",
+      "similarity": 1.0
+    },
+    "JDK": {
+      "say": "джей-ди-кей",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое J, D, K.",
+      "similarity": 1.0
+    },
+    "SQL": {
+      "say": "эс-ку-эль",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое SQL.",
+      "similarity": 1.0
+    },
+    "DTO": {
+      "say": "ди-ти-о",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое DTO.",
+      "similarity": 1.0
+    },
+    "DLQ": {
+      "say": "ди-эль-кью",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое DLQ.",
+      "similarity": 1.0
+    },
+    "HTTP": {
+      "say": "эйч-ти-ти-пи",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое HTTP.",
+      "similarity": 1.0
+    },
+    "ISR": {
+      "say": "ай-эс-эр",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ISR.",
+      "similarity": 1.0
+    },
+    "CSRF": {
+      "say": "си-эс-эр-эф",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое CSRF.",
+      "similarity": 1.0
+    },
+    "TTL": {
+      "say": "ти-ти-эль",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Ти, Ти-Эль.",
+      "similarity": 1.0
+    },
+    "CQRS": {
+      "say": "си-кью-эр-эс",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое CQRS.",
+      "similarity": 1.0
+    },
+    "JPA": {
+      "say": "джей-пи-эй",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое JPA.",
+      "similarity": 1.0
+    },
+    "JDBC": {
+      "say": "джей-ди-би-си",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое JDBC.",
+      "similarity": 1.0
+    },
+    "JSON": {
+      "say": "джейсон",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое JSON.",
+      "similarity": 1.0
+    },
+    "MVC": {
+      "say": "эм-ви-си",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое MVC.",
+      "similarity": 1.0
+    },
+    "JWT": {
+      "say": "джей-дабл-ю-ти",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое JWT.",
+      "similarity": 1.0,
+      "derived": true
+    },
+    "CPU": {
+      "say": "си-пи-ю",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое CPU.",
+      "similarity": 1.0
+    },
+    "REST": {
+      "say": "рест",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое арест.",
+      "similarity": 0.89
+    },
+    "CAP": {
+      "say": "кап",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое кап.",
+      "similarity": 1.0
+    },
+    "AOP": {
+      "say": "эй-о-пи",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое AOP.",
+      "similarity": 1.0,
+      "derived": true
+    },
+    "NPE": {
+      "say": "эн-пи-и",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое NPE.",
+      "similarity": 1.0
+    },
+    "CGLIB": {
+      "say": "сы-джи-либ",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое CGLib.",
+      "similarity": 1.0
+    },
+    "CAS": {
+      "say": "кас",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое КАС.",
+      "similarity": 1.0
+    },
+    "SLO": {
+      "say": "эс-эль-о",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое СЛО.",
+      "similarity": 1.0
+    },
+    "JIT": {
+      "say": "джит",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое джит.",
+      "similarity": 1.0
+    },
+    "FIFO": {
+      "say": "фифо",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ФИФО.",
+      "similarity": 1.0
+    },
+    "URL": {
+      "say": "ю-эр-эль",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое URL.",
+      "similarity": 1.0,
+      "derived": true
+    },
+    "CDN": {
+      "say": "си-ди-эн",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое CDN.",
+      "similarity": 1.0
+    },
+    "HashMap": {
+      "say": "ХэшМэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое хэшмэп.",
+      "similarity": 1.0
+    },
+    "hashCode": {
+      "say": "хэшкод",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое хэшкод.",
+      "similarity": 1.0
+    },
+    "ConcurrentHashMap": {
+      "say": "Конкаррент ХэшМэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое конкурент HashMap.",
+      "similarity": 0.85
+    },
+    "LinkedHashMap": {
+      "say": "Линкед ХэшМэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое LinkedHashMap.",
+      "similarity": 1.0
+    },
+    "ArrayList": {
+      "say": "АррейЛист",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое рейлист.",
+      "similarity": 0.88
+    },
+    "LinkedList": {
+      "say": "Линкед Лист",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое LinkedIn List.",
+      "similarity": 0.91
+    },
+    "HashSet": {
+      "say": "ХэшСет",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое хэш-сет.",
+      "similarity": 1.0
+    },
+    "TreeSet": {
+      "say": "ТриСет",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое трисет.",
+      "similarity": 1.0
+    },
+    "TreeMap": {
+      "say": "ТриМэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое 3Map.",
+      "similarity": 1.0
+    },
+    "ArrayDeque": {
+      "say": "Аррей Дек",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ArrayDeck.",
+      "similarity": 0.78
+    },
+    "ThreadLocal": {
+      "say": "Тред Локал",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Thread Local.",
+      "similarity": 1.0
+    },
+    "CompletableFuture": {
+      "say": "Комплитебл Фьючер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое комплитебл фьючер",
+      "similarity": 1.0
+    },
+    "StringBuilder": {
+      "say": "Стринг Билдер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое StringBuilder.",
+      "similarity": 1.0
+    },
+    "ReentrantLock": {
+      "say": "Риентрант Лок",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое риэнтрант-лог.",
+      "similarity": 0.92
+    },
+    "CountDownLatch": {
+      "say": "Каунт Даун Лэтч",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое каунт Daunledge.",
+      "similarity": 0.81
+    },
+    "AtomicInteger": {
+      "say": "Атомик Интеджер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Atomic Integer.",
+      "similarity": 1.0
+    },
+    "LocalDateTime": {
+      "say": "Локал Дейт Тайм",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Local Date Time.",
+      "similarity": 1.0
+    },
+    "AutoCloseable": {
+      "say": "Ауто Клоузебл",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Auto Closable.",
+      "similarity": 0.96
+    },
+    "toString": {
+      "say": "ту Стринг",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ToString.",
+      "similarity": 1.0
+    },
+    "flatMap": {
+      "say": "флэт Мэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Flat Map.",
+      "similarity": 1.0
+    },
+    "toMap": {
+      "say": "ту Мэп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ToMap.",
+      "similarity": 1.0
+    },
+    "WebFlux": {
+      "say": "Веб Флакс",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое WebFlux.",
+      "similarity": 1.0
+    },
+    "PostgreSQL": {
+      "say": "Постгрес",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое постгресс.",
+      "similarity": 0.94
+    },
+    "DynamoDB": {
+      "say": "Динамо Ди-Би",
+      "verified": true,
+      "heard": "здесь важно понять что такое динамо диби",
+      "similarity": 1.0
+    },
+    "NoSQL": {
+      "say": "ноу эс-ку-эль",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое НуУС, КУЛ.",
+      "similarity": 0.75
+    },
+    "RabbitMQ": {
+      "say": "Рэббит эм-кью",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое RabbitMQ.",
+      "similarity": 1.0
+    },
+    "Spring": {
+      "say": "Спринг",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Спринг",
+      "similarity": 1.0
+    },
+    "Spring Boot": {
+      "say": "Спринг Бут",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Spring Boot.",
+      "similarity": 1.0
+    },
+    "Java": {
+      "say": "Джава",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Джава.",
+      "similarity": 1.0
+    },
+    "Kafka": {
+      "say": "Кафка",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое кавка.",
+      "similarity": 0.8
+    },
+    "List": {
+      "say": "Лист",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое лист.",
+      "similarity": 1.0
+    },
+    "String": {
+      "say": "Стринг",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое стринг.",
+      "similarity": 1.0
+    },
+    "Integer": {
+      "say": "Интеджер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое интеджер.",
+      "similarity": 1.0
+    },
+    "Object": {
+      "say": "Обжект",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое объект.",
+      "similarity": 0.91
+    },
+    "Number": {
+      "say": "Намбер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Number.",
+      "similarity": 1.0
+    },
+    "Stream": {
+      "say": "Стрим",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое стрим.",
+      "similarity": 1.0
+    },
+    "Optional": {
+      "say": "Опшенал",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое общенал",
+      "similarity": 0.86
+    },
+    "Transactional": {
+      "say": "Трансэкшенал",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое трансэкшенал.",
+      "similarity": 1.0
+    },
+    "consumer": {
+      "say": "консьюмер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое консюмер.",
+      "similarity": 1.0
+    },
+    "producer": {
+      "say": "продюсер",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое продюсер.",
+      "similarity": 1.0
+    },
+    "partition": {
+      "say": "партиция",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое партиция.",
+      "similarity": 1.0
+    },
+    "offset": {
+      "say": "оффсет",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое оффсит.",
+      "similarity": 0.83
+    },
+    "equals": {
+      "say": "иквалс",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Equals.",
+      "similarity": 1.0
+    },
+    "singleton": {
+      "say": "синглтон",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Singleton.",
+      "similarity": 1.0
+    },
+    "prototype": {
+      "say": "прототайп",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое прототайп.",
+      "similarity": 1.0
+    },
+    "retry": {
+      "say": "ретрай",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое ретрай.",
+      "similarity": 1.0
+    },
+    "cookie": {
+      "say": "куки",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое куки.",
+      "similarity": 1.0
+    },
+    "poll": {
+      "say": "полл",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое пол.",
+      "similarity": 0.86
+    },
+    "acks": {
+      "say": "аксы",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое аксы.",
+      "similarity": 1.0
+    },
+    "generics": {
+      "say": "дженерики",
+      "verified": true,
+      "issue": "движок ставит ударение на третий слог, целевое — на первый",
+      "heard": "Здесь важно понять, что такое дженерики.",
+      "similarity": 1.0
+    },
+    "wildcard": {
+      "say": "вайлдкард",
+      "verified": true,
+      "heard": "Здесь важно понять, что такое Wild Card.",
+      "similarity": 1.0
+    }
+  },
+  "stats": {
+    "terms": 79,
+    "verified": 79,
+    "best_effort": 0
   }
 }

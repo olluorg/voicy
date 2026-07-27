@@ -1,0 +1,233 @@
+{
+ "accuracy": 15.8,
+ "rows": [
+  {
+   "word": "дженерики",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "дженерики",
+   "placed": 1,
+   "detected": 2,
+   "hit": false
+  },
+  {
+   "word": "дженерики",
+   "placed": 2,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "дженерики",
+   "placed": 3,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "компилятор",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "компилятор",
+   "placed": 1,
+   "detected": 2,
+   "hit": false
+  },
+  {
+   "word": "компилятор",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "компилятор",
+   "placed": 3,
+   "detected": 3,
+   "hit": true
+  },
+  {
+   "word": "коллекция",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "коллекция",
+   "placed": 1,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "коллекция",
+   "placed": 2,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "коллекция",
+   "placed": 3,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "параметры",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "параметры",
+   "placed": 1,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "параметры",
+   "placed": 2,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "параметры",
+   "placed": 3,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "стирание",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "стирание",
+   "placed": 1,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "стирание",
+   "placed": 2,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "стирание",
+   "placed": 3,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "граница",
+   "placed": 0,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "граница",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "граница",
+   "placed": 2,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "безопасность",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "безопасность",
+   "placed": 1,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "безопасность",
+   "placed": 2,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "безопасность",
+   "placed": 3,
+   "detected": 2,
+   "hit": false
+  },
+  {
+   "word": "проверка",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "проверка",
+   "placed": 1,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "проверка",
+   "placed": 2,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "элементы",
+   "placed": 0,
+   "detected": null,
+   "hit": false
+  },
+  {
+   "word": "элементы",
+   "placed": 1,
+   "detected": 1,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 2,
+   "detected": 2,
+   "hit": true
+  },
+  {
+   "word": "элементы",
+   "placed": 3,
+   "detected": 1,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 0,
+   "detected": 0,
+   "hit": true
+  },
+  {
+   "word": "хранилище",
+   "placed": 1,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 2,
+   "detected": 0,
+   "hit": false
+  },
+  {
+   "word": "хранилище",
+   "placed": 3,
+   "detected": 1,
+   "hit": false
+  }
+ ]
+}
