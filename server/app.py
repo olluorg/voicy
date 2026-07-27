@@ -33,7 +33,7 @@ HERE = Path(__file__).parent
 TTS_MODEL = os.environ.get("TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
 STT_MODEL = os.environ.get("STT_MODEL", "large-v3-turbo")
 
-app = FastAPI(title="engineering-tts-lab", version="1.0.0",
+app = FastAPI(title="voicy", version="1.0.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
 tts = QwenTTS(TTS_MODEL)
 stt = WhisperSTT(STT_MODEL)
@@ -170,7 +170,7 @@ def models():
     ids = ["tts-1", "tts-1-hd", "gpt-4o-mini-tts", "whisper-1"]
     return {"object": "list",
             "data": [{"id": i, "object": "model", "created": now,
-                      "owned_by": "engineering-tts-lab"} for i in ids]}
+                      "owned_by": "voicy"} for i in ids]}
 
 
 # ------------------------------------------------------------------ extensions

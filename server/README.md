@@ -1,4 +1,4 @@
-# Речевой сервер
+# voicy — речевой сервер
 
 Локальный сервер синтеза и распознавания речи с **API, совместимым с аудио-частью
 OpenAI**. Любой код, который уже умеет обращаться к `/v1/audio/speech`
@@ -8,6 +8,24 @@ OpenAI**. Любой код, который уже умеет обращатьс
 Всё исполняется на своей машине. Ключ не проверяется, потому что ключа нет.
 
 ## Быстрый старт
+
+**Готовым образом** — репозиторий не нужен:
+
+```bash
+docker run --gpus all -p 8080:8080 \
+  -v voicy-models:/cache \
+  -v voicy-voices:/app/server/voices \
+  ghcr.io/olluorg/voicy:latest
+```
+
+Или через compose, где уже прописаны тома, перезапуск и GPU:
+
+```bash
+curl -O https://raw.githubusercontent.com/olluorg/voicy/master/compose.yml
+docker compose up -d
+```
+
+**Из исходников:**
 
 ```bash
 uv venv --python 3.12 .venv
@@ -20,7 +38,20 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080 --app-dir server
 Веб-консоль — на `http://localhost:8080`.
 
 Модели грузятся при первом обращении и остаются в памяти: Qwen3-TTS занимает
-около 3.5 ГБ, Whisper — около 1.5 ГБ.
+около 3.5 ГБ, Whisper — около 1.5 ГБ. В контейнере они складываются в том `/cache`,
+поэтому скачиваются один раз и переживают пересборку образа.
+
+## Переменные окружения
+
+| Переменная | По умолчанию | Что делает |
+|---|---|---|
+| `TTS_MODEL` | `Qwen/Qwen3-TTS-12Hz-1.7B-Base` | модель синтеза |
+| `STT_MODEL` | `large-v3-turbo` | модель распознавания |
+| `FORCE_CPU` | — | `1` — не использовать GPU |
+| `TTS_DEVICE` / `STT_DEVICE` | автоопределение | явное устройство |
+| `STT_COMPUTE_TYPE` | `float16` на GPU, `int8` на CPU | точность распознавания |
+| `HF_ENDPOINT` | — | зеркало Hugging Face при медленной загрузке |
+| `HF_HOME` | `/cache/huggingface` | куда складывать веса |
 
 ## Веб-консоль: два режима
 

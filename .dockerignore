@@ -1,0 +1,26 @@
+# В образ едет только сервер, голоса и словарь произношений.
+# Исследование — статья, замеры, 319 аудиофрагментов — остаётся в репозитории.
+.git
+.github
+article
+docs
+experiments
+results
+scripts
+
+# из данных нужен только словарь
+data/*
+!data/pronunciation.json
+
+# аудио и веса не едут — кроме референсных голосов сервера
+*.wav
+*.pt
+*.onnx
+!server/voices/*.wav
+
+*-venv/
+.venv/
+__pycache__/
+*.pyc
+compose.yml
+README.md
