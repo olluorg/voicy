@@ -1016,6 +1016,41 @@ Chatterbox, XTTS-v2, а также веса ESpeech SFT-95K и SFT-256K и ру�
   <div class="stat"><div class="v">12<small> с</small></div><div class="l">генерации на термин</div><div class="was">человек в цикле не участвует</div></div>
 </div>
 
+<h3>Как это звучит</h3>
+<p>Слева — то, что попало бы в озвучку: мои опечатки, заверенные сломанной проверкой,
+и её же «починки» растянутой гласной. Справа — то, что выбрал исправленный конвейер.</p>
+
+<div class="grid g2">
+  <div class="card player"><b>JWT · было</b><span class="n">«джей-ви-ти» — W прочитан как «ви»</span>
+    <audio controls preload="none" src="assets/audio/before__JWT_before.opus"></audio></div>
+  <div class="card player"><b>JWT · стало</b><span class="n">«джей-дабл-ю-ти» — выведено правилом · <span class="pill good">1.00</span></span>
+    <audio controls preload="none" src="assets/audio/term__JWT.opus"></audio></div>
+
+  <div class="card player"><b>AOP · было</b><span class="n">«а-о-пи» — A прочитан как «а»</span>
+    <audio controls preload="none" src="assets/audio/before__AOP_before.opus"></audio></div>
+  <div class="card player"><b>AOP · стало</b><span class="n">«эй-о-пи» · <span class="pill good">1.00</span></span>
+    <audio controls preload="none" src="assets/audio/term__AOP.opus"></audio></div>
+
+  <div class="card player"><b>URL · было</b><span class="n">«юар-эль» — слипшееся начало</span>
+    <audio controls preload="none" src="assets/audio/before__URL_before.opus"></audio></div>
+  <div class="card player"><b>URL · стало</b><span class="n">«ю-эр-эль» · <span class="pill good">1.00</span></span>
+    <audio controls preload="none" src="assets/audio/term__URL.opus"></audio></div>
+
+  <div class="card player"><b>SQL · «починка» сломанного измерителя</b><span class="n">«ээс-ку-эль» — растянутая гласная</span>
+    <audio controls preload="none" src="assets/audio/before__SQL_broken.opus"></audio></div>
+  <div class="card player"><b>SQL · стало</b><span class="n">«эс-ку-эль» — идиоматическое чтение · <span class="pill good">1.00</span></span>
+    <audio controls preload="none" src="assets/audio/term__SQL.opus"></audio></div>
+
+  <div class="card player"><b>CountDownLatch · «починка»</b><span class="n">«Кааунт Даун Лэтч»</span>
+    <audio controls preload="none" src="assets/audio/before__CDL_broken.opus"></audio></div>
+  <div class="card player"><b>CountDownLatch · стало</b><span class="n">«Каунт Даун Лэтч» — исходное написание вернулось</span>
+    <audio controls preload="none" src="assets/audio/term__CountDownLatch.opus"></audio></div>
+</div>
+
+<p>Последняя пара — самая показательная. Написание было верным с самого начала;
+сломанный измеритель объявил его негодным и «исправил», растянув гласную.
+После починки проверки конвейер вернулся к исходному варианту сам.</p>
+
 <p><b>Чего автоматика не решает.</b> Конвейер добивается того ударения, которое считает
 верным RUAccent. Где акцентуатор ошибается на жаргоне — на «дженерики» он даёт второй слог,
 а в речи разработчиков слышен первый — инструмент этого знать не может. Это вопрос нормы,
