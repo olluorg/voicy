@@ -20,10 +20,11 @@ import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
 
 import audio_io
+import jobs
 import textprep
+from schemas import SpeechRequest
 import voices as voice_registry
 from engines.device import describe, has_cuda
 from engines.stt_whisper import WhisperSTT
@@ -40,19 +41,6 @@ stt = WhisperSTT(STT_MODEL)
 
 
 # ----------------------------------------------------------------- OpenAI: TTS
-
-class SpeechRequest(BaseModel):
-    model: str = "tts-1"
-    input: str
-    voice: str | None = None
-    response_format: str = "wav"
-    speed: float = 1.0
-    language: str = "Russian"
-    # расширения, которых нет у OpenAI
-    prepare: bool = Field(default=False, description="применить словарь произношений")
-    legato: bool = Field(default=False, description="убрать запятые внутри коротких фраз")
-    seed: int | None = None
-
 
 @app.post("/v1/audio/speech")
 def speech(req: SpeechRequest):
@@ -209,6 +197,9 @@ def prepare_text(payload: dict):
     return textprep.prepare(text,
                             use_dictionary=bool(payload.get("dictionary", True)),
                             use_legato=bool(payload.get("legato", False)))
+
+
+jobs.attach(app, tts, stt)
 
 
 @app.get("/health")

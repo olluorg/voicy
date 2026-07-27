@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
+from typing import Callable
 
 from .device import whisper_device
 
@@ -61,7 +62,13 @@ class WhisperSTT:
 
     def transcribe(self, path: str, language: str | None = None, prompt: str | None = None,
                    temperature: float = 0.0, word_timestamps: bool = False,
-                   beam_size: int = 5) -> Transcript:
+                   beam_size: int = 5,
+                   on_segment: Callable[[float, float, str], None] | None = None) -> Transcript:
+        """`on_segment` receives (position, total, text) as each segment lands.
+
+        Both numbers are facts: the file duration is known before decoding starts
+        and every segment reports where it ended, so the fraction needs no guessing.
+        """
         self.load()
         with self._lock:
             segments, info = self._model.transcribe(
@@ -76,6 +83,8 @@ class WhisperSTT:
                     words=[Word(round(w.start, 3), round(w.end, 3), w.word)
                            for w in (s.words or [])],
                 ))
+                if on_segment is not None:
+                    on_segment(float(s.end), float(info.duration), s.text.strip())
         return Transcript(
             text=" ".join(s.text for s in out).strip(),
             language=info.language,

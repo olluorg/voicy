@@ -75,6 +75,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .adv{display:none}
 body[data-mode="advanced"] .adv{display:block}
 body[data-mode="advanced"] .easyonly{display:none}
+.prog{margin-top:14px;display:none}
+.prog.on{display:block}
+.bar{height:8px;background:var(--raised);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s ease}
+.bar.est i{background:repeating-linear-gradient(45deg,var(--accent),var(--accent) 7px,
+  color-mix(in srgb,var(--accent) 55%,transparent) 7px,color-mix(in srgb,var(--accent) 55%,transparent) 14px)}
+.prog-line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;
+  color:var(--muted);margin-top:7px;flex-wrap:wrap}
+.prog-line b{color:var(--ink);font-weight:600}
+.tag{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:1px 7px;color:var(--muted)}
 .drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;
   color:var(--muted);font-size:13.5px;cursor:pointer}
 .drop.over{border-color:var(--accent);color:var(--ink)}
@@ -132,6 +142,13 @@ body[data-mode="advanced"] .easyonly{display:none}
     <div class="adv"><button class="act" id="say-adv">Озвучить</button>
       <button class="ghost" id="dl" style="margin-left:8px" disabled>Скачать</button></div>
   </div>
+  <div class="prog" id="tts-prog">
+    <div class="bar est"><i id="tts-bar"></i></div>
+    <div class="prog-line">
+      <span id="tts-msg">…</span>
+      <span class="tag" title="Числитель измерен, знаменатель — оценка по числу слогов">оценка</span>
+    </div>
+  </div>
   <audio id="player" controls hidden></audio>
   <div class="stats adv" id="tts-stats"></div>
   <div class="err" id="tts-err"></div>
@@ -164,6 +181,13 @@ body[data-mode="advanced"] .easyonly{display:none}
   </div>
 
   <button class="act" id="asr" style="margin-top:14px" disabled>Распознать</button>
+  <div class="prog" id="stt-prog">
+    <div class="bar"><i id="stt-bar"></i></div>
+    <div class="prog-line">
+      <span id="stt-msg">…</span>
+      <span class="tag" title="Длительность файла известна заранее, конец сегмента приходит от распознавателя">точно</span>
+    </div>
+  </div>
   <div class="out" id="stt-out"></div>
   <div class="adv" id="seg-wrap"></div>
   <div class="err" id="stt-err"></div>
@@ -255,6 +279,28 @@ async function loadVoices(){
 }
 const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
+/* ------------------------------------------------------------------ прогресс
+
+   Числа приходят с сервера и ничего не выдумывают. У синтеза измеряется
+   числитель — шаги декодирования, каждый из которых равен 1/12 секунды
+   готового звука; знаменатель предсказывается по числу слогов, поэтому
+   полоса заштрихована и помечена «оценка». У распознавания точны обе
+   величины: длительность файла известна заранее. */
+
+function follow(id, onEvent){
+  return new Promise((resolve, reject) => {
+    const es = new EventSource(`/v1/jobs/${id}/events`);
+    es.onmessage = e => {
+      let d; try { d = JSON.parse(e.data); } catch { return; }
+      onEvent(d);
+      if (d.stage === 'done'){ es.close(); resolve(d); }
+      if (d.stage === 'error'){ es.close(); reject(new Error(d.error || 'ошибка')); }
+    };
+    es.onerror = () => { es.close(); reject(new Error('поток событий оборвался')); };
+  });
+}
+const fmt = n => (n == null ? '—' : (+n).toFixed(1));
+
 /* ------------------------------------------------------------------ синтез */
 $('#speed').oninput = e => $('#speed-v').textContent = (+e.target.value).toFixed(2);
 let lastBlob = null, lastFmt = 'wav';
@@ -278,11 +324,32 @@ async function synth(){
     legato: adv ? $('#legato').checked : false,
     seed: adv && $('#seed').value ? +$('#seed').value : null,
   };
+  $('#tts-prog').classList.add('on');
+  $('#tts-bar').style.width = '0%';
+  $('#tts-msg').textContent = 'готовлю…';
   try{
     const t0 = performance.now();
-    const res = await fetch('/v1/audio/speech', {
+    const start = await fetch('/v1/jobs/speech', {
       method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    if (!start.ok) throw new Error((await start.json()).detail || start.statusText);
+    const {id, expected_seconds} = await start.json();
+
+    await follow(id, d => {
+      if (d.stage === 'synthesis' || d.stage === 'encoding'){
+        const pct = Math.min(99, 100 * d.produced / Math.max(0.5, d.expected));
+        $('#tts-bar').style.width = pct.toFixed(1) + '%';
+        const rate = d.elapsed > 0 ? (d.produced / d.elapsed) : 0;
+        $('#tts-msg').innerHTML =
+          `сгенерировано <b>${fmt(d.produced)} с</b> звука из ~${fmt(d.expected)} · ` +
+          `шаг <b>${d.steps}</b> · ×${rate.toFixed(2)} к реальному времени`;
+      } else if (d.stage === 'queued'){
+        $('#tts-msg').textContent = 'модель просыпается…';
+      }
+    });
+    $('#tts-bar').style.width = '100%';
+
+    const res = await fetch(`/v1/jobs/${id}/audio`);
+    if (!res.ok) throw new Error(res.statusText);
     lastFmt = body.response_format;
     lastBlob = await res.blob();
     const p = $('#player');
@@ -290,13 +357,18 @@ async function synth(){
     p.hidden = false;
     p.play().catch(()=>{});
     $('#dl').disabled = false;
-    const secs = res.headers.get('X-Audio-Seconds'), gen = res.headers.get('X-Generation-Seconds');
+    const secs = +res.headers.get('X-Audio-Seconds');
+    const gen = (performance.now() - t0) / 1000;
+    $('#tts-msg').innerHTML = `готово: <b>${fmt(secs)} с</b> звука за <b>${gen.toFixed(1)} с</b>`;
     $('#tts-stats').innerHTML =
-      `<span>звучание <b>${secs} с</b></span><span>синтез <b>${gen} с</b></span>` +
+      `<span>звучание <b>${secs} с</b></span><span>синтез <b>${gen.toFixed(1)} с</b></span>` +
       `<span>×<b>${(secs/gen).toFixed(2)}</b> к реальному времени</span>` +
-      `<span>голос <b>${esc(res.headers.get('X-Voice')||'')}</b></span>` +
-      `<span>ответ за <b>${((performance.now()-t0)/1000).toFixed(1)} с</b></span>`;
-  }catch(e){ $('#tts-err').textContent = 'Не вышло: ' + e.message; }
+      `<span>шагов декодирования <b>${res.headers.get('X-Decoding-Steps')}</b></span>` +
+      `<span>голос <b>${esc(res.headers.get('X-Voice')||'')}</b></span>`;
+  }catch(e){
+    $('#tts-err').textContent = 'Не вышло: ' + e.message;
+    $('#tts-prog').classList.remove('on');
+  }
   finally{ btns.forEach(b => { b.disabled = false; b.textContent = b.dataset.label; }); }
 }
 $('#say-easy').onclick = synth;
@@ -367,14 +439,41 @@ $('#asr').onclick = async () => {
     if ($('#hint').value.trim()) fd.append('prompt', $('#hint').value.trim());
     if ($('#words').checked) fd.append('timestamp_granularities', 'word');
   }
+  $('#stt-prog').classList.add('on');
+  $('#stt-bar').style.width = '0%';
+  $('#stt-msg').textContent = 'читаю файл…';
   try{
-    const res = await fetch('/v1/audio/transcriptions', {method:'POST', body: fd});
+    const fd2 = new FormData();
+    fd2.append('file', pending);
+    if (adv){
+      if ($('#stt-lang').value.trim()) fd2.append('language', $('#stt-lang').value.trim());
+      fd2.append('temperature', $('#temp').value);
+      if ($('#hint').value.trim()) fd2.append('prompt', $('#hint').value.trim());
+      if ($('#words').checked) fd2.append('word_timestamps', 'true');
+    }
+    const start = await fetch('/v1/jobs/transcribe', {method:'POST', body: fd2});
+    if (!start.ok) throw new Error((await start.json()).detail || start.statusText);
+    const {id} = await start.json();
+    let partial = '';
+    await follow(id, d => {
+      if (d.stage === 'recognition'){
+        const pct = d.total ? Math.min(100, 100 * d.position / d.total) : 0;
+        $('#stt-bar').style.width = pct.toFixed(1) + '%';
+        $('#stt-msg').innerHTML =
+          `распознано <b>${fmt(d.position)}</b> из <b>${fmt(d.total)} с</b>`;
+        if (d.text){ partial += (partial ? ' ' : '') + d.text; $('#stt-out').textContent = partial; }
+      }
+    });
+    $('#stt-bar').style.width = '100%';
+
+    const res = await fetch(`/v1/jobs/${id}/result`);
     const ct = res.headers.get('content-type') || '';
     if (!res.ok) throw new Error(res.statusText);
     if (ct.includes('json')){
       const j = await res.json();
       $('#stt-out').textContent = j.text || '';
-      if (j.segments){
+      $('#stt-msg').innerHTML = `готово: <b>${fmt(j.duration)} с</b>, язык <b>${esc(j.language||'')}</b>`;
+      if (j.segments && adv){
         $('#seg-wrap').innerHTML =
           '<h3>Сегменты</h3><table><thead><tr><th class="num">от</th><th class="num">до</th>' +
           '<th>текст</th></tr></thead><tbody>' +
@@ -385,7 +484,10 @@ $('#asr').onclick = async () => {
     } else {
       $('#stt-out').textContent = await res.text();
     }
-  }catch(e){ $('#stt-err').textContent = 'Не вышло: ' + e.message; }
+  }catch(e){
+    $('#stt-err').textContent = 'Не вышло: ' + e.message;
+    $('#stt-prog').classList.remove('on');
+  }
   finally{ btn.disabled = false; btn.textContent = lbl; }
 };
 
