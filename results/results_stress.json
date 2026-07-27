@@ -1,0 +1,137 @@
+[
+ {
+  "case": 0,
+  "text": "Этот вопрос стоит разобрать.",
+  "digests": {
+   "plain": [
+    "843215d38485",
+    2.56
+   ],
+   "plus": [
+    "ef851d8d012c",
+    3.2
+   ],
+   "acute": [
+    "cef2a4559d3d",
+    2.88
+   ],
+   "caps": [
+    "4381ac548e28",
+    2.48
+   ]
+  },
+  "identical_to_plain": {
+   "plus": false,
+   "acute": false,
+   "caps": false
+  }
+ },
+ {
+  "case": 1,
+  "text": "Компилятор проверяет типы.",
+  "digests": {
+   "plain": [
+    "2c477ac63dee",
+    2.24
+   ],
+   "plus": [
+    "af009cd6355d",
+    4.24
+   ],
+   "acute": [
+    "e98c14b180f1",
+    2.8
+   ],
+   "caps": [
+    "1e5c10d90ec4",
+    2.32
+   ]
+  },
+  "identical_to_plain": {
+   "plus": false,
+   "acute": false,
+   "caps": false
+  }
+ },
+ {
+  "case": 2,
+  "text": "Большая часть проверок уже пройдена.",
+  "digests": {
+   "plain": [
+    "f1d9256bfde5",
+    3.2
+   ],
+   "plus": [
+    "eb58fe8308d3",
+    5.76
+   ],
+   "acute": [
+    "4dc876eb3253",
+    4.48
+   ],
+   "caps": [
+    "35cd6a35c28d",
+    3.68
+   ]
+  },
+  "identical_to_plain": {
+   "plus": false,
+   "acute": false,
+   "caps": false
+  }
+ },
+ {
+  "case": 3,
+  "text": "Список параметризован типом.",
+  "digests": {
+   "plain": [
+    "c645a6ded9f0",
+    2.48
+   ],
+   "plus": [
+    "169bd428b7f6",
+    4.48
+   ],
+   "acute": [
+    "fe32d1f960fe",
+    3.6
+   ],
+   "caps": [
+    "820628f7fd92",
+    2.56
+   ]
+  },
+  "identical_to_plain": {
+   "plus": false,
+   "acute": false,
+   "caps": false
+  }
+ },
+ {
+  "case": 4,
+  "text": "Типобезопасность рухнула бы.",
+  "digests": {
+   "plain": [
+    "c92890949865",
+    2.64
+   ],
+   "plus": [
+    "d6b93d97bb8b",
+    4.16
+   ],
+   "acute": [
+    "a3e2ff967636",
+    2.8
+   ],
+   "caps": [
+    "a424d19e3bd2",
+    2.64
+   ]
+  },
+  "identical_to_plain": {
+   "plus": false,
+   "acute": false,
+   "caps": false
+  }
+ }
+]

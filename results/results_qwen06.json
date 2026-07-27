@@ -1,0 +1,28 @@
+{
+ "total_syllables": 771,
+ "sample_rate": 24000,
+ "results": [
+  {
+   "tag": "qwen06-solid",
+   "audio_s": 151.9,
+   "wall_s": 541.0,
+   "rtf": 0.28,
+   "pauses": 38,
+   "silence_pct": 2.6,
+   "pause_median_ms": 92,
+   "syl_per_s": 5.08,
+   "wpm": 128
+  },
+  {
+   "tag": "qwen06-joined",
+   "audio_s": 177.0,
+   "wall_s": 429.5,
+   "rtf": 0.41,
+   "pauses": 117,
+   "silence_pct": 6.8,
+   "pause_median_ms": 85,
+   "syl_per_s": 4.36,
+   "wpm": 110
+  }
+ ]
+}
