@@ -8,6 +8,8 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass, field
 
+from .device import whisper_device
+
 
 @dataclass
 class Word:
@@ -34,11 +36,12 @@ class Transcript:
 
 
 class WhisperSTT:
-    def __init__(self, model_id: str = "large-v3-turbo", device: str = "cuda",
-                 compute_type: str = "float16"):
+    def __init__(self, model_id: str = "large-v3-turbo", device: str | None = None,
+                 compute_type: str | None = None):
+        auto_dev, auto_ct = whisper_device()
         self.model_id = model_id
-        self.device = device
-        self.compute_type = compute_type
+        self.device = device or auto_dev
+        self.compute_type = compute_type or auto_ct
         self._model = None
         self._lock = threading.Lock()
 

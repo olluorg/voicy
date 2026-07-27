@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 import audio_io
 import textprep
 import voices as voice_registry
+from engines.device import describe, has_cuda
 from engines.stt_whisper import WhisperSTT
 from engines.tts_qwen import QwenTTS
 
@@ -212,12 +213,12 @@ def prepare_text(payload: dict):
 
 @app.get("/health")
 def health():
-    import torch
     return {"status": "ok",
-            "tts": {"model": TTS_MODEL, "loaded": tts.loaded},
-            "stt": {"model": STT_MODEL, "loaded": stt.loaded},
-            "cuda": torch.cuda.is_available(),
-            "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
+            "tts": {"model": TTS_MODEL, "loaded": tts.loaded, "device": tts.device},
+            "stt": {"model": STT_MODEL, "loaded": stt.loaded, "device": stt.device,
+                    "compute_type": stt.compute_type},
+            "cuda": has_cuda(),
+            "device": describe(),
             "voices": [v.name for v in voice_registry.list_voices()]}
 
 

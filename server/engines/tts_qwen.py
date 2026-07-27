@@ -12,6 +12,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .device import has_cuda, torch_device
+
 
 @dataclass
 class Synthesis:
@@ -20,9 +22,9 @@ class Synthesis:
 
 
 class QwenTTS:
-    def __init__(self, model_id: str = "Qwen/Qwen3-TTS-12Hz-1.7B-Base", device: str = "cuda:0"):
+    def __init__(self, model_id: str = "Qwen/Qwen3-TTS-12Hz-1.7B-Base", device: str | None = None):
         self.model_id = model_id
-        self.device = device
+        self.device = device or torch_device()
         self._model = None
         self._lock = threading.Lock()
 
@@ -38,8 +40,11 @@ class QwenTTS:
 
         with self._lock:
             if self._model is None:
+                # bfloat16 на CPU поддержан хуже float32, а выигрыш там всё равно
+                # съедается отсутствием тензорных ядер
+                dtype = torch.bfloat16 if has_cuda() else torch.float32
                 self._model = Qwen3TTSModel.from_pretrained(
-                    self.model_id, device_map=self.device, dtype=torch.bfloat16
+                    self.model_id, device_map=self.device, dtype=dtype
                 )
 
     def speak(self, text: str, ref_audio: str | Path, ref_text: str,
