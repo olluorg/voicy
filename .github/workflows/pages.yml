@@ -1,0 +1,67 @@
+name: статья
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "article/**"
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# один деплой за раз; отменять идущий не нужно — он быстрый
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Собрать сайт
+        run: |
+          mkdir -p _site
+          cp -r article/* _site/
+          # статья ссылается на ADR через ../docs — кладём их рядом и правим путь,
+          # иначе на Pages ссылка ведёт за пределы сайта
+          mkdir -p _site/docs
+          cp -r docs/* _site/docs/
+          sed -i 's|href="\.\./docs/|href="docs/|g' _site/index.html
+          echo "страниц: $(find _site -name '*.html' | wc -l), аудио: $(find _site -name '*.opus' | wc -l)"
+
+      - name: Проверить, что ссылки на аудио живые
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          html = pathlib.Path("_site/index.html").read_text(encoding="utf-8")
+          srcs = re.findall(r'src="(assets/audio/[^"]+)"', html)
+          missing = [s for s in srcs if not (pathlib.Path("_site") / s).exists()]
+          print(f"ссылок на аудио: {len(srcs)}, битых: {len(missing)}")
+          if missing:
+              print("\n".join(missing[:10])); sys.exit(1)
+          links = re.findall(r'href="(docs/[^"]+)"', html)
+          broken = [l for l in links if not (pathlib.Path("_site") / l).exists()]
+          print(f"ссылок на документы: {len(links)}, битых: {len(broken)}")
+          if broken:
+              print("\n".join(broken)); sys.exit(1)
+          PY
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
