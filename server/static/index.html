@@ -84,6 +84,9 @@ body[data-mode="advanced"] .easyonly{display:none}
 .prog-line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;
   color:var(--muted);margin-top:7px;flex-wrap:wrap}
 .prog-line b{color:var(--ink);font-weight:600}
+kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink2)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
 .tag{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:1px 7px;color:var(--muted)}
 .drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;
   color:var(--muted);font-size:13.5px;cursor:pointer}
@@ -141,6 +144,7 @@ body[data-mode="advanced"] .easyonly{display:none}
     <button class="act big easyonly" id="say-easy">Озвучить</button>
     <div class="adv"><button class="act" id="say-adv">Озвучить</button>
       <button class="ghost" id="dl" style="margin-left:8px" disabled>Скачать</button></div>
+    <div class="hint"><kbd>Alt</kbd> + <kbd>Enter</kbd> — озвучить, не отрывая рук от клавиатуры</div>
   </div>
   <div class="prog" id="tts-prog">
     <div class="bar est"><i id="tts-bar"></i></div>
@@ -181,6 +185,7 @@ body[data-mode="advanced"] .easyonly{display:none}
   </div>
 
   <button class="act" id="asr" style="margin-top:14px" disabled>Распознать</button>
+  <div class="hint"><kbd>Alt</kbd> + <kbd>Enter</kbd> в этой карточке — распознать</div>
   <div class="prog" id="stt-prog">
     <div class="bar"><i id="stt-bar"></i></div>
     <div class="prog-line">
@@ -537,6 +542,28 @@ function snippet(kind){
 }
 $('#s-py').onclick = () => snippet('py');
 $('#s-curl').onclick = () => snippet('curl');
+
+/* ------------------------------------------------------------------ клавиши
+
+   Alt+Enter запускает то действие, в чьей карточке сейчас курсор: в поле текста
+   это синтез, внутри карточки распознавания — распознавание. Если курсор нигде,
+   решает наличие текста, потому что чаще всего приходят именно за озвучкой. */
+
+document.addEventListener('keydown', e => {
+  if (!(e.altKey && e.key === 'Enter')) return;
+  const sttCard = $('#asr').closest('.card');
+  const inStt = sttCard && document.activeElement && sttCard.contains(document.activeElement);
+
+  if (inStt){
+    if (!$('#asr').disabled){ e.preventDefault(); $('#asr').click(); }
+    return;
+  }
+  const btn = document.body.dataset.mode === 'advanced' ? $('#say-adv') : $('#say-easy');
+  if (!btn.disabled && $('#tts-text').value.trim()){
+    e.preventDefault();
+    btn.click();
+  }
+});
 
 (async () => { await health(); await loadVoices(); snippet('py'); })();
 </script>
