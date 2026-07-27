@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Речевой сервер</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface:#fcfcfb; --plane:#f9f9f7; --raised:#ffffff;
+  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:rgba(11,11,11,0.10); --accent:#2a78d6; --good:#0ca30c; --bad:#d03b3b;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --surface:#1a1a19; --plane:#0d0d0d; --raised:#232322;
+    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --line:rgba(255,255,255,0.10); --accent:#3987e5; --good:#0ca30c; --bad:#e66767;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --surface:#1a1a19; --plane:#0d0d0d; --raised:#232322;
+  --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+  --line:rgba(255,255,255,0.10); --accent:#3987e5; --good:#0ca30c; --bad:#e66767;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 18px 80px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:19px;margin:0;letter-spacing:-.01em}
+.spacer{flex:1}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px}
+.seg button{border:0;background:none;color:var(--ink2);font:inherit;font-size:13px;
+  padding:5px 14px;border-radius:99px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0}
+.card h2{font-size:15px;margin:0 0 12px;letter-spacing:-.01em}
+.card h3{font-size:13px;margin:18px 0 8px;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:4px}
+textarea,input[type=text],input[type=number],select{width:100%;background:var(--raised);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:14px}
+textarea{min-height:120px;resize:vertical;line-height:1.55}
+textarea.big{min-height:190px;font-size:15.5px}
+.row{display:grid;gap:12px}
+.r2{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.r3{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+button.act{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:11px 20px;
+  font:inherit;font-weight:600;cursor:pointer}
+button.act.big{padding:15px 26px;font-size:16px;width:100%}
+button.act:disabled{opacity:.5;cursor:default}
+button.ghost{background:var(--raised);color:var(--ink2);border:1px solid var(--line);
+  border-radius:9px;padding:9px 15px;font:inherit;font-size:13.5px;cursor:pointer}
+button.ghost:hover{color:var(--ink)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink2);margin:6px 0}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+audio{width:100%;margin-top:12px;height:38px}
+.stats{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.stats b{color:var(--ink);font-weight:600}
+pre{background:var(--raised);border:1px solid var(--line);border-radius:8px;padding:12px;
+  overflow-x:auto;font-size:12.5px;margin:8px 0;font-family:ui-monospace,Consolas,monospace}
+.out{background:var(--raised);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  min-height:56px;white-space:pre-wrap;font-size:14.5px;margin-top:10px}
+.note{font-size:12.5px;color:var(--muted);margin-top:6px}
+.err{color:var(--bad);font-size:13.5px;margin-top:8px}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink2)}
+.badge.on{color:var(--good)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--ink2);font-weight:600;font-size:12px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.adv{display:none}
+body[data-mode="advanced"] .adv{display:block}
+body[data-mode="advanced"] .easyonly{display:none}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;
+  color:var(--muted);font-size:13.5px;cursor:pointer}
+.drop.over{border-color:var(--accent);color:var(--ink)}
+.rec{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--bad);display:inline-block}
+</style>
+</head>
+<body data-mode="easy">
+<div class="wrap">
+
+<header>
+  <h1>Речевой сервер</h1>
+  <span class="badge" id="health">проверяю…</span>
+  <span class="spacer"></span>
+  <div class="seg" role="group" aria-label="режим">
+    <button id="m-easy" aria-pressed="true">Просто</button>
+    <button id="m-adv" aria-pressed="false">Подробно</button>
+  </div>
+  <button class="ghost" id="theme">тема</button>
+</header>
+
+<!-- ------------------------------------------------------------------ ТЕКСТ → РЕЧЬ -->
+<div class="card">
+  <h2>Текст → речь</h2>
+  <textarea id="tts-text" class="big" placeholder="Вставь текст, который надо озвучить."></textarea>
+
+  <div class="adv">
+    <h3>Параметры</h3>
+    <div class="row r2">
+      <div><label for="voice">Голос</label><select id="voice"></select></div>
+      <div><label for="lang">Язык</label>
+        <select id="lang">
+          <option>Russian</option><option>English</option><option>German</option>
+          <option>French</option><option>Spanish</option><option>Italian</option>
+          <option>Portuguese</option><option>Japanese</option><option>Korean</option>
+          <option>Chinese</option>
+        </select></div>
+    </div>
+    <div class="row r3" style="margin-top:12px">
+      <div><label for="fmt">Формат</label>
+        <select id="fmt"><option>wav</option><option>opus</option><option>mp3</option>
+          <option>flac</option><option>aac</option><option>pcm</option></select></div>
+      <div><label for="speed">Темп <span id="speed-v" class="badge">1.00</span></label>
+        <input type="range" id="speed" min="0.6" max="1.4" step="0.02" value="1" style="width:100%"></div>
+      <div><label for="seed">Сид</label><input type="number" id="seed" placeholder="случайный"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="prep"> применить словарь произношений</label>
+    <label class="chk"><input type="checkbox" id="legato"> убрать запятые внутри коротких фраз</label>
+    <div class="note">Темп меняется постобработкой, а не ручкой модели: у неё замедление
+      роняет разборчивость впятеро, у постобработки — нет.</div>
+  </div>
+
+  <div style="margin-top:14px">
+    <button class="act big easyonly" id="say-easy">Озвучить</button>
+    <div class="adv"><button class="act" id="say-adv">Озвучить</button>
+      <button class="ghost" id="dl" style="margin-left:8px" disabled>Скачать</button></div>
+  </div>
+  <audio id="player" controls hidden></audio>
+  <div class="stats adv" id="tts-stats"></div>
+  <div class="err" id="tts-err"></div>
+</div>
+
+<!-- ------------------------------------------------------------------ РЕЧЬ → ТЕКСТ -->
+<div class="card">
+  <h2>Речь → текст</h2>
+  <div class="drop" id="drop">Перетащи аудиофайл сюда или нажми, чтобы выбрать</div>
+  <input type="file" id="file" accept="audio/*,video/*" hidden>
+  <div class="rec">
+    <button class="ghost" id="rec">Записать с микрофона</button>
+    <span id="rec-state" class="note"></span>
+  </div>
+
+  <div class="adv">
+    <h3>Параметры</h3>
+    <div class="row r3">
+      <div><label for="stt-lang">Язык</label>
+        <input type="text" id="stt-lang" placeholder="ru — пусто = определить"></div>
+      <div><label for="stt-fmt">Ответ</label>
+        <select id="stt-fmt"><option>json</option><option>text</option>
+          <option>verbose_json</option><option>srt</option><option>vtt</option></select></div>
+      <div><label for="temp">Температура</label>
+        <input type="number" id="temp" value="0" min="0" max="1" step="0.1"></div>
+    </div>
+    <div style="margin-top:12px"><label for="hint">Подсказка контекста</label>
+      <input type="text" id="hint" placeholder="термины, имена — помогает распознаванию"></div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="words"> отметки времени по словам</label>
+  </div>
+
+  <button class="act" id="asr" style="margin-top:14px" disabled>Распознать</button>
+  <div class="out" id="stt-out"></div>
+  <div class="adv" id="seg-wrap"></div>
+  <div class="err" id="stt-err"></div>
+</div>
+
+<!-- ------------------------------------------------------------------ ГОЛОСА -->
+<div class="card adv">
+  <h2>Голоса</h2>
+  <div class="note">Голос — это короткий образец записи и его точная расшифровка. Модель
+    клонирует по этой паре, и неверная расшифровка портит каждое предложение: тот же клип
+    с текстом, обрезанным на полуслове, дал 7.3% ошибок против 1.0% при точном совпадении.</div>
+  <div id="voice-list"></div>
+  <h3>Добавить</h3>
+  <div class="row r2">
+    <div><label for="v-name">Имя</label><input type="text" id="v-name" placeholder="например turgenev"></div>
+    <div><label for="v-file">Файл, 8–14 секунд</label><input type="file" id="v-file" accept="audio/*"></div>
+  </div>
+  <div style="margin-top:10px"><label for="v-text">Расшифровка — оставь пустой, распознаю сам</label>
+    <input type="text" id="v-text" placeholder=""></div>
+  <button class="act" id="v-add" style="margin-top:12px">Добавить голос</button>
+  <div class="err" id="v-err"></div>
+</div>
+
+<!-- ------------------------------------------------------------------ API -->
+<div class="card adv">
+  <h2>Как обращаться из кода</h2>
+  <div class="note">Маршруты совместимы с аудио-API OpenAI: достаточно поменять базовый адрес,
+    ключ не проверяется.</div>
+  <pre id="snippet"></pre>
+  <div class="row r2">
+    <button class="ghost" id="s-py">Python, клиент OpenAI</button>
+    <button class="ghost" id="s-curl">curl</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const base = location.origin;
+
+/* ------------------------------------------------------------------ режимы */
+function setMode(m){
+  document.body.dataset.mode = m;
+  $('#m-easy').setAttribute('aria-pressed', m === 'easy');
+  $('#m-adv').setAttribute('aria-pressed', m === 'advanced');
+  localStorage.setItem('mode', m);
+}
+$('#m-easy').onclick = () => setMode('easy');
+$('#m-adv').onclick = () => setMode('advanced');
+setMode(localStorage.getItem('mode') || 'easy');
+
+$('#theme').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+};
+if (localStorage.getItem('theme')) document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+
+/* ------------------------------------------------------------------ здоровье */
+async function health(){
+  try{
+    const h = await (await fetch('/health')).json();
+    const b = $('#health');
+    b.textContent = `${h.device} · ${h.voices.length} голос(ов)`;
+    b.classList.toggle('on', h.status === 'ok');
+  }catch(e){ $('#health').textContent = 'сервер недоступен'; }
+}
+
+async function loadVoices(){
+  const r = await (await fetch('/v1/voices')).json();
+  const sel = $('#voice');
+  sel.innerHTML = '';
+  for (const v of r.data){
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name + (v.note ? ` — ${v.note}` : '');
+    if (v.name === r.default) o.selected = true;
+    sel.appendChild(o);
+  }
+  $('#voice-list').innerHTML = r.data.length
+    ? '<table><thead><tr><th>Имя</th><th>Расшифровка образца</th></tr></thead><tbody>' +
+      r.data.map(v => `<tr><td>${esc(v.name)}${v.name===r.default?' <span class="badge on">по умолчанию</span>':''}</td>` +
+        `<td class="note" style="color:var(--ink2)">${esc((v.reference_text||'—').slice(0,110))}</td></tr>`).join('') +
+      '</tbody></table>'
+    : '<div class="note">Голосов пока нет — добавь первый.</div>';
+}
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ------------------------------------------------------------------ синтез */
+$('#speed').oninput = e => $('#speed-v').textContent = (+e.target.value).toFixed(2);
+let lastBlob = null, lastFmt = 'wav';
+
+async function synth(){
+  const text = $('#tts-text').value.trim();
+  $('#tts-err').textContent = '';
+  if (!text){ $('#tts-err').textContent = 'Нечего озвучивать.'; return; }
+  const adv = document.body.dataset.mode === 'advanced';
+  const btns = [$('#say-easy'), $('#say-adv')];
+  btns.forEach(b => b.disabled = true);
+  btns.forEach(b => b.dataset.label = b.textContent);
+  btns.forEach(b => b.textContent = 'Синтезирую…');
+  const body = {
+    input: text,
+    voice: adv ? $('#voice').value : undefined,
+    response_format: adv ? $('#fmt').value : 'wav',
+    speed: adv ? +$('#speed').value : 1,
+    language: adv ? $('#lang').value : 'Russian',
+    prepare: adv ? $('#prep').checked : false,
+    legato: adv ? $('#legato').checked : false,
+    seed: adv && $('#seed').value ? +$('#seed').value : null,
+  };
+  try{
+    const t0 = performance.now();
+    const res = await fetch('/v1/audio/speech', {
+      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    lastFmt = body.response_format;
+    lastBlob = await res.blob();
+    const p = $('#player');
+    p.src = URL.createObjectURL(lastBlob);
+    p.hidden = false;
+    p.play().catch(()=>{});
+    $('#dl').disabled = false;
+    const secs = res.headers.get('X-Audio-Seconds'), gen = res.headers.get('X-Generation-Seconds');
+    $('#tts-stats').innerHTML =
+      `<span>звучание <b>${secs} с</b></span><span>синтез <b>${gen} с</b></span>` +
+      `<span>×<b>${(secs/gen).toFixed(2)}</b> к реальному времени</span>` +
+      `<span>голос <b>${esc(res.headers.get('X-Voice')||'')}</b></span>` +
+      `<span>ответ за <b>${((performance.now()-t0)/1000).toFixed(1)} с</b></span>`;
+  }catch(e){ $('#tts-err').textContent = 'Не вышло: ' + e.message; }
+  finally{ btns.forEach(b => { b.disabled = false; b.textContent = b.dataset.label; }); }
+}
+$('#say-easy').onclick = synth;
+$('#say-adv').onclick = synth;
+$('#dl').onclick = () => {
+  if (!lastBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(lastBlob); a.download = `speech.${lastFmt}`; a.click();
+};
+
+/* ------------------------------------------------------------------ распознавание */
+let pending = null;
+function setPending(f){
+  pending = f;
+  $('#drop').textContent = f ? `${f.name} — ${(f.size/1048576).toFixed(1)} МБ` :
+    'Перетащи аудиофайл сюда или нажми, чтобы выбрать';
+  $('#asr').disabled = !f;
+}
+$('#drop').onclick = () => $('#file').click();
+$('#file').onchange = e => setPending(e.target.files[0]);
+['dragenter','dragover'].forEach(ev => $('#drop').addEventListener(ev, e => {
+  e.preventDefault(); $('#drop').classList.add('over'); }));
+['dragleave','drop'].forEach(ev => $('#drop').addEventListener(ev, e => {
+  e.preventDefault(); $('#drop').classList.remove('over'); }));
+$('#drop').addEventListener('drop', e => setPending(e.dataTransfer.files[0]));
+
+let recorder = null, chunks = [];
+$('#rec').onclick = async () => {
+  if (recorder && recorder.state === 'recording'){
+    recorder.stop(); return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(chunks, {type: recorder.mimeType || 'audio/webm'});
+      setPending(new File([blob], 'recording.webm', {type: blob.type}));
+      $('#rec').textContent = 'Записать с микрофона';
+      $('#rec-state').textContent = '';
+    };
+    recorder.start();
+    $('#rec').textContent = 'Остановить';
+    const t0 = Date.now();
+    const tick = () => {
+      if (!recorder || recorder.state !== 'recording') return;
+      $('#rec-state').innerHTML = `<span class="dot"></span> идёт запись, ${((Date.now()-t0)/1000).toFixed(0)} с`;
+      requestAnimationFrame(() => setTimeout(tick, 200));
+    };
+    tick();
+  }catch(e){ $('#stt-err').textContent = 'Микрофон недоступен: ' + e.message; }
+};
+
+$('#asr').onclick = async () => {
+  if (!pending) return;
+  $('#stt-err').textContent = ''; $('#seg-wrap').innerHTML = '';
+  const btn = $('#asr'); btn.disabled = true; const lbl = btn.textContent; btn.textContent = 'Распознаю…';
+  const adv = document.body.dataset.mode === 'advanced';
+  const fd = new FormData();
+  fd.append('file', pending);
+  fd.append('model', 'whisper-1');
+  if (adv){
+    if ($('#stt-lang').value.trim()) fd.append('language', $('#stt-lang').value.trim());
+    fd.append('response_format', $('#stt-fmt').value);
+    fd.append('temperature', $('#temp').value);
+    if ($('#hint').value.trim()) fd.append('prompt', $('#hint').value.trim());
+    if ($('#words').checked) fd.append('timestamp_granularities', 'word');
+  }
+  try{
+    const res = await fetch('/v1/audio/transcriptions', {method:'POST', body: fd});
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok) throw new Error(res.statusText);
+    if (ct.includes('json')){
+      const j = await res.json();
+      $('#stt-out').textContent = j.text || '';
+      if (j.segments){
+        $('#seg-wrap').innerHTML =
+          '<h3>Сегменты</h3><table><thead><tr><th class="num">от</th><th class="num">до</th>' +
+          '<th>текст</th></tr></thead><tbody>' +
+          j.segments.map(s => `<tr><td class="num">${s.start.toFixed(2)}</td>` +
+            `<td class="num">${s.end.toFixed(2)}</td><td>${esc(s.text)}</td></tr>`).join('') +
+          '</tbody></table>';
+      }
+    } else {
+      $('#stt-out').textContent = await res.text();
+    }
+  }catch(e){ $('#stt-err').textContent = 'Не вышло: ' + e.message; }
+  finally{ btn.disabled = false; btn.textContent = lbl; }
+};
+
+/* ------------------------------------------------------------------ голоса */
+$('#v-add').onclick = async () => {
+  const name = $('#v-name').value.trim(), f = $('#v-file').files[0];
+  $('#v-err').textContent = '';
+  if (!name || !f){ $('#v-err').textContent = 'Нужно имя и файл.'; return; }
+  const fd = new FormData();
+  fd.append('file', f); fd.append('name', name); fd.append('text', $('#v-text').value.trim());
+  const btn = $('#v-add'); btn.disabled = true; btn.textContent = 'Добавляю…';
+  try{
+    const res = await fetch('/v1/voices', {method:'POST', body: fd});
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    $('#v-name').value = ''; $('#v-text').value = ''; $('#v-file').value = '';
+    await loadVoices(); await health();
+  }catch(e){ $('#v-err').textContent = 'Не вышло: ' + e.message; }
+  finally{ btn.disabled = false; btn.textContent = 'Добавить голос'; }
+};
+
+/* ------------------------------------------------------------------ сниппеты */
+const SNIPPETS = {
+  py: `from openai import OpenAI
+client = OpenAI(base_url="${base}/v1", api_key="not-needed")
+
+# текст → речь
+audio = client.audio.speech.create(
+    model="tts-1", voice="VOICE", input="Текст для озвучки",
+    response_format="opus",
+)
+audio.stream_to_file("out.opus")
+
+# речь → текст
+with open("out.opus", "rb") as f:
+    print(client.audio.transcriptions.create(model="whisper-1", file=f).text)`,
+  curl: `curl ${base}/v1/audio/speech \\
+  -H "content-type: application/json" \\
+  -d '{"model":"tts-1","voice":"VOICE","input":"Текст для озвучки","response_format":"opus"}' \\
+  --output out.opus
+
+curl ${base}/v1/audio/transcriptions \\
+  -F file=@out.opus -F model=whisper-1 -F response_format=text`,
+};
+function snippet(kind){
+  const v = $('#voice').value || 'default';
+  $('#snippet').textContent = SNIPPETS[kind].replaceAll('VOICE', v);
+}
+$('#s-py').onclick = () => snippet('py');
+$('#s-curl').onclick = () => snippet('curl');
+
+(async () => { await health(); await loadVoices(); snippet('py'); })();
+</script>
+</body>
+</html>
