@@ -19,6 +19,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -65,14 +67,17 @@ def _opener(url: str):
 
 
 def request(url: str, path: str, *, data: bytes | None = None,
-            content_type: str | None = None, timeout: float = 30.0):
+            content_type: str | None = None, timeout: float = 30.0,
+            hint: str = ""):
     """Возвращает (тело, заголовки). Ошибки соединения переводит в понятные."""
     req = urllib.request.Request(url.rstrip("/") + path, data=data, method="POST" if data else "GET")
     if content_type:
         req.add_header("Content-Type", content_type)
     try:
         with _opener(url).open(req, timeout=timeout) as r:
-            return r.read(), dict(r.headers)
+            # ASGI приводит имена заголовков к нижнему регистру, и через uvicorn
+            # они приходят как x-voice, а не X-Voice.
+            return r.read(), {k.lower(): v for k, v in r.headers.items()}
     except urllib.error.HTTPError as e:
         body = e.read()
         detail = ""
@@ -80,7 +85,8 @@ def request(url: str, path: str, *, data: bytes | None = None,
             detail = json.loads(body).get("detail", "")
         except Exception:
             detail = body[:300].decode("utf-8", "replace")
-        die(f"сервер ответил {e.code}: {detail or e.reason}")
+        die(f"сервер ответил {e.code}: {detail or e.reason}"
+            + (f"\n       {hint}" if hint else ""))
     except urllib.error.URLError as e:
         die(f"{url} не отвечает ({e.reason}).\n"
             f"       Поднять сервер: {sys.argv[0]} up\n"
@@ -89,9 +95,10 @@ def request(url: str, path: str, *, data: bytes | None = None,
         die(f"истёк таймаут запроса к {url}. Длинный текст? Увеличьте --timeout")
 
 
-def post_json(url: str, path: str, payload: dict, timeout: float):
+def post_json(url: str, path: str, payload: dict, timeout: float, hint: str = ""):
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    return request(url, path, data=body, content_type="application/json", timeout=timeout)
+    return request(url, path, data=body, content_type="application/json",
+                   timeout=timeout, hint=hint)
 
 
 def post_multipart(url: str, path: str, fields: dict, files: dict, timeout: float):
@@ -199,14 +206,22 @@ def cmd_say(a) -> int:
     if a.seed is not None:
         payload["seed"] = a.seed
 
+    # Всё, кроме wav и pcm, сервер кодирует через ffmpeg; растяжение темпа — тоже.
+    # В образе он есть, при запуске из исходников это системная зависимость.
+    hint = ""
+    if (fmt not in ("wav", "pcm") or a.speed != 1.0) and not shutil.which("ffmpeg"):
+        hint = ("похоже, серверу не хватает ffmpeg: он нужен для " +
+                (f"формата {fmt}" if fmt not in ("wav", "pcm") else "изменения темпа") +
+                ". Поставьте его или синтезируйте в wav")
+
     started = time.perf_counter()
-    audio, headers = post_json(a.url, "/v1/audio/speech", payload, a.timeout)
+    audio, headers = post_json(a.url, "/v1/audio/speech", payload, a.timeout, hint=hint)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(audio)
 
-    secs = headers.get("X-Audio-Seconds", "?")
-    gen = headers.get("X-Generation-Seconds", f"{time.perf_counter() - started:.1f}")
-    log(f"{headers.get('X-Voice', '?')}: {secs} с звука за {gen} с, "
+    secs = headers.get("x-audio-seconds", "?")
+    gen = headers.get("x-generation-seconds", f"{time.perf_counter() - started:.1f}")
+    log(f"{headers.get('x-voice', '?')}: {secs} с звука за {gen} с, "
         f"{len(audio) / 1024:.0f} КиБ")
     print(out)
     return 0
@@ -290,7 +305,16 @@ def cmd_status(a) -> int:
     h = health(a.url)
     if not h:
         log(f"voicy не отвечает на {a.url}")
+        pid = read_pid()
+        if pid:
+            log(f"свой процесс {pid} жив, но ещё не отвечает — журнал: {LOG_FILE}")
+        elif not docker_available():
+            log(f"docker недоступен; поднять из исходников: {sys.argv[0]} up --source")
         return 1
+    pid = read_pid()
+    # Про чужой сервер известно только то, что он отвечает: он может быть
+    # контейнером, а может быть запущен руками или вовсе на другой машине.
+    log(f"запущен процессом {pid} из исходников" if pid else "запущен не этим CLI")
     print(json.dumps(h, ensure_ascii=False, indent=2))
     return 0
 
@@ -307,14 +331,138 @@ def cmd_warm(a) -> int:
 
 
 IMAGE = os.environ.get("VOICY_IMAGE", "ghcr.io/olluorg/voicy:latest")
+RUNTIME_DIR = HERE / ".voicy"
+PID_FILE = RUNTIME_DIR / "server.pid"
+LOG_FILE = RUNTIME_DIR / "server.log"
+
+# Имена для импорта, а не для установки: python-multipart ставится под одним
+# именем, а импортируется под другим.
+NEEDED = ("fastapi", "uvicorn", "multipart", "numpy", "soundfile",
+          "torch", "transformers", "qwen_tts", "faster_whisper")
 
 
-def cmd_up(a) -> int:
-    if health(a.url):
-        log(f"voicy уже работает на {a.url}")
-        return cmd_warm(a) if a.warm else 0
+def docker_available() -> bool:
+    """Docker может быть не установлен, а может быть сломан — разницы нет."""
+    try:
+        r = subprocess.run(["docker", "version", "--format", "{{.Server.Version}}"],
+                           capture_output=True, timeout=20)
+        return r.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
-    port = urlsplit(a.url).port or 8080
+
+def interpreter() -> Path:
+    """Чем запускать сервер: заданное явно, потом .venv рядом, потом текущее."""
+    explicit = os.environ.get("VOICY_PYTHON")
+    if explicit:
+        return Path(explicit)
+    for rel in (".venv/bin/python", ".venv/Scripts/python.exe"):
+        p = HERE / rel
+        if p.exists():
+            return p
+    return Path(sys.executable)
+
+
+def missing_modules(py: Path) -> list[str]:
+    code = ("import importlib.util as u, sys; "
+            "print(' '.join(m for m in sys.argv[1:] if u.find_spec(m) is None))")
+    try:
+        r = subprocess.run([str(py), "-c", code, *NEEDED],
+                           capture_output=True, text=True, timeout=180)
+    except (OSError, subprocess.SubprocessError):
+        return list(NEEDED)
+    return list(NEEDED) if r.returncode != 0 else r.stdout.split()
+
+
+def torch_index() -> str:
+    """Колёса torch под CUDA весят втрое больше и без видеокарты бесполезны."""
+    if os.environ.get("VOICY_TORCH_INDEX"):
+        return os.environ["VOICY_TORCH_INDEX"]
+    return ("https://download.pytorch.org/whl/cu128" if shutil.which("nvidia-smi")
+            else "https://download.pytorch.org/whl/cpu")
+
+
+def install_hint(py: Path) -> str:
+    idx = torch_index()
+    return (f"    uv venv --python 3.12 .venv\n"
+            f"    uv pip install --python .venv torch torchaudio --index-url {idx}\n"
+            f"    uv pip install --python .venv -r server/requirements.txt\n"
+            f"  либо одной командой: {sys.argv[0]} up --source --install")
+
+
+def run_step(cmd: list[str]) -> None:
+    log("$ " + " ".join(cmd))
+    if subprocess.run(cmd, cwd=HERE).returncode != 0:
+        die("установка оборвалась — смотрите вывод выше")
+
+
+def install_deps() -> Path:
+    """Ставит окружение в .venv рядом с репозиторием. Качает гигабайты."""
+    venv = HERE / ".venv"
+    uv = shutil.which("uv")
+    idx = torch_index()
+    log(f"ставлю зависимости в {venv} (torch с {idx}); это гигабайты и не быстро")
+    if uv:
+        if not venv.exists():
+            run_step([uv, "venv", "--python", "3.12", str(venv)])
+        run_step([uv, "pip", "install", "--python", str(venv),
+                  "torch", "torchaudio", "--index-url", idx])
+        run_step([uv, "pip", "install", "--python", str(venv),
+                  "-r", str(HERE / "server" / "requirements.txt")])
+    else:
+        if not venv.exists():
+            run_step([sys.executable, "-m", "venv", str(venv)])
+        pip = str(venv / "bin" / "pip")
+        run_step([pip, "install", "-U", "pip"])
+        run_step([pip, "install", "torch", "torchaudio", "--index-url", idx])
+        run_step([pip, "install", "-r", str(HERE / "server" / "requirements.txt")])
+    return interpreter()
+
+
+def read_pid() -> int | None:
+    try:
+        pid = int(PID_FILE.read_text().strip())
+    except (OSError, ValueError):
+        return None
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return None
+    return pid
+
+
+def up_source(a, port: int) -> None:
+    """Сервер как обычный процесс: без docker, из исходников этого репозитория."""
+    py = interpreter()
+    missing = missing_modules(py)
+    if missing and a.install:
+        py = install_deps()
+        missing = missing_modules(py)
+    if missing:
+        die(f"в {py} не хватает: {', '.join(missing)}\n"
+            f"  поставить:\n{install_hint(py)}")
+
+    if not shutil.which("ffmpeg"):
+        log("ffmpeg не найден: синтез в opus/mp3/flac/aac и изменение темпа откажут, "
+            "wav и распознавание — нет. Поставить: sudo apt install ffmpeg")
+
+    RUNTIME_DIR.mkdir(exist_ok=True)
+    env = dict(os.environ)
+    if a.cpu:
+        env["FORCE_CPU"] = "1"
+    cmd = [str(py), "-m", "uvicorn", "app:app",
+           "--host", "127.0.0.1", "--port", str(port), "--app-dir", "server"]
+    log("$ " + " ".join(cmd))
+    with open(LOG_FILE, "ab") as logf:
+        logf.write(f"\n=== {time.strftime('%F %T')} запуск ===\n".encode())
+        # Отдельная сессия — чтобы сервер пережил завершение этой команды.
+        proc = subprocess.Popen(cmd, cwd=HERE, env=env, stdout=logf, stderr=logf,
+                                stdin=subprocess.DEVNULL, start_new_session=True)
+    PID_FILE.write_text(str(proc.pid))
+    log(f"процесс {proc.pid}, журнал — {LOG_FILE}")
+
+
+def up_docker(a, port: int) -> None:
     if a.cpu:
         # Мимо compose: там GPU затребован в deploy.reservations, и на машине
         # без видеокарты запуск падает ещё до того, как FORCE_CPU кто-то прочтёт.
@@ -329,9 +477,25 @@ def cmd_up(a) -> int:
             cmd.append("--build")
         env = {**os.environ, "VOICY_PORT": str(port)}
     log("$ " + " ".join(cmd))
-    r = subprocess.run(cmd, cwd=HERE, env=env)
-    if r.returncode != 0:
+    if subprocess.run(cmd, cwd=HERE, env=env).returncode != 0:
         die("сервер не поднялся — смотрите вывод выше")
+
+
+def cmd_up(a) -> int:
+    if health(a.url):
+        log(f"voicy уже работает на {a.url}")
+        return cmd_warm(a) if a.warm else 0
+
+    port = urlsplit(a.url).port or 8080
+    mode = a.mode
+    if mode == "auto":
+        mode = "docker" if docker_available() else "source"
+        if mode == "source":
+            log("docker недоступен — поднимаю из исходников")
+    if mode == "docker":
+        up_docker(a, port)
+    else:
+        up_source(a, port)
     if a.cpu:
         log("режим без GPU: синтез идёт медленнее реального времени")
 
@@ -343,12 +507,29 @@ def cmd_up(a) -> int:
 
 
 def cmd_down(a) -> int:
-    log("$ docker compose down")
-    rc = subprocess.run(["docker", "compose", "down"], cwd=HERE).returncode
-    # Контейнер из режима без GPU поднят не через compose, и она его не видит.
-    subprocess.run(["docker", "rm", "-f", "voicy"],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return rc
+    stopped = False
+    pid = read_pid()
+    if pid:
+        log(f"останавливаю процесс {pid}")
+        os.kill(pid, signal.SIGTERM)
+        for _ in range(50):
+            if read_pid() is None:
+                break
+            time.sleep(0.2)
+        if read_pid() is not None:
+            os.kill(pid, signal.SIGKILL)
+        PID_FILE.unlink(missing_ok=True)
+        stopped = True
+    if docker_available():
+        log("$ docker compose down")
+        subprocess.run(["docker", "compose", "down"], cwd=HERE)
+        # Контейнер без GPU поднят не через compose, и она его не видит.
+        subprocess.run(["docker", "rm", "-f", "voicy"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        stopped = True
+    if not stopped:
+        log("нечего останавливать: docker недоступен, своего процесса нет")
+    return 0
 
 
 # --------------------------------------------------------------------- разбор
@@ -401,6 +582,12 @@ def main(argv: list[str]) -> int:
     s.set_defaults(fn=cmd_prepare)
 
     s = sub.add_parser("up", help="поднять сервер и дождаться готовности")
+    s.add_argument("--source", dest="mode", action="store_const", const="source",
+                   default="auto", help="из исходников, без docker")
+    s.add_argument("--docker", dest="mode", action="store_const", const="docker",
+                   help="только через docker, без запасного пути")
+    s.add_argument("--install", action="store_true",
+                   help="доставить зависимости в .venv, если их нет")
     s.add_argument("--build", action="store_true", help="собрать образ из исходников")
     s.add_argument("--cpu", action="store_true", help="без GPU")
     s.add_argument("--wait", type=float, default=3600, help="сколько ждать готовности, с")
