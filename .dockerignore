@@ -24,3 +24,9 @@ __pycache__/
 *.pyc
 compose.yml
 README.md
+
+# инструменты и инструкции для работы с сервером снаружи
+voicy
+AGENTS.md
+CLAUDE.md
+.claude

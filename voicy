@@ -1,0 +1,429 @@
+#!/usr/bin/env python3
+"""voicy — однострочный доступ к локальному речевому серверу.
+
+Обёртка поверх HTTP-API для тех, кому нужен звук, а не протокол:
+
+    ./voicy say "текст" out.opus
+    ./voicy hear out.opus
+    ./voicy up
+
+Зависимостей нет — только стандартная библиотека, поэтому работает и там,
+где окружение сервера не установлено.
+
+Разделение потоков умышленное: в stdout уходит результат (путь к файлу,
+расшифровка, список голосов), в stderr — всё остальное. Поэтому
+`TEXT=$(./voicy hear запись.opus)` даёт ровно текст.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import NoReturn
+from urllib.parse import urlsplit
+from uuid import uuid4
+
+HERE = Path(__file__).resolve().parent
+DEFAULT_URL = os.environ.get("VOICY_URL", "http://localhost:8080")
+
+# Форматы синтеза, которые принимает сервер; opus по умолчанию — он компактный
+# и его понимает всё, что умеет читать аудио.
+AUDIO_FORMATS = ("opus", "wav", "mp3", "flac", "aac", "pcm")
+EXT_CONTENT_TYPE = {".wav": "audio/wav", ".mp3": "audio/mpeg", ".opus": "audio/ogg",
+                    ".ogg": "audio/ogg", ".flac": "audio/flac", ".m4a": "audio/mp4",
+                    ".aac": "audio/aac", ".webm": "audio/webm"}
+
+
+def log(msg: str) -> None:
+    print(msg, file=sys.stderr)
+
+
+def die(msg: str, code: int = 1) -> NoReturn:
+    print(f"voicy: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+# --------------------------------------------------------------------- запросы
+
+def _opener(url: str):
+    """Локальный адрес — мимо прокси.
+
+    Если в окружении задан HTTP_PROXY, клиент пойдёт к собственному серверу
+    через прокси и получит 503. Здесь это лечится за вызывающего, а не заметкой
+    в документации.
+    """
+    host = urlsplit(url).hostname or ""
+    if host in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
+        return urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    return urllib.request.build_opener()
+
+
+def request(url: str, path: str, *, data: bytes | None = None,
+            content_type: str | None = None, timeout: float = 30.0):
+    """Возвращает (тело, заголовки). Ошибки соединения переводит в понятные."""
+    req = urllib.request.Request(url.rstrip("/") + path, data=data, method="POST" if data else "GET")
+    if content_type:
+        req.add_header("Content-Type", content_type)
+    try:
+        with _opener(url).open(req, timeout=timeout) as r:
+            return r.read(), dict(r.headers)
+    except urllib.error.HTTPError as e:
+        body = e.read()
+        detail = ""
+        try:
+            detail = json.loads(body).get("detail", "")
+        except Exception:
+            detail = body[:300].decode("utf-8", "replace")
+        die(f"сервер ответил {e.code}: {detail or e.reason}")
+    except urllib.error.URLError as e:
+        die(f"{url} не отвечает ({e.reason}).\n"
+            f"       Поднять сервер: {sys.argv[0]} up\n"
+            f"       Другой адрес:   VOICY_URL=http://host:port {sys.argv[0]} ...")
+    except TimeoutError:
+        die(f"истёк таймаут запроса к {url}. Длинный текст? Увеличьте --timeout")
+
+
+def post_json(url: str, path: str, payload: dict, timeout: float):
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    return request(url, path, data=body, content_type="application/json", timeout=timeout)
+
+
+def post_multipart(url: str, path: str, fields: dict, files: dict, timeout: float):
+    boundary = uuid4().hex
+    body = bytearray()
+    for k, v in fields.items():
+        if v is None:
+            continue
+        body += (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n"
+                 f"{v}\r\n").encode("utf-8")
+    for k, (filename, data, ctype) in files.items():
+        body += (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"; "
+                 f"filename=\"{filename}\"\r\nContent-Type: {ctype}\r\n\r\n").encode("utf-8")
+        body += data + b"\r\n"
+    body += f"--{boundary}--\r\n".encode()
+    return request(url, path, data=bytes(body), timeout=timeout,
+                   content_type=f"multipart/form-data; boundary={boundary}")
+
+
+def health(url: str, timeout: float = 5.0) -> dict | None:
+    """Состояние сервера, либо None — если на адресе тишина или не voicy."""
+    req = urllib.request.Request(url.rstrip("/") + "/health")
+    try:
+        with _opener(url).open(req, timeout=timeout) as r:
+            data = json.loads(r.read())
+    except Exception:
+        return None
+    # На порту может сидеть чужое приложение: у него нет ни tts, ни stt.
+    if not isinstance(data, dict) or "tts" not in data or "stt" not in data:
+        return None
+    return data
+
+
+def require_server(url: str) -> dict:
+    h = health(url)
+    if h:
+        return h
+    # Различаем «никого нет» и «есть кто-то другой» — это чинится по-разному.
+    try:
+        with _opener(url).open(urllib.request.Request(url.rstrip("/") + "/health"), timeout=3):
+            pass
+        alive = True
+    except urllib.error.HTTPError:
+        alive = True
+    except Exception:
+        alive = False
+    if alive:
+        die(f"на {url} отвечает не voicy — порт занят другим приложением.\n"
+            f"       Укажите свободный: VOICY_PORT=8090 {sys.argv[0]} up\n"
+            f"                          VOICY_URL=http://localhost:8090 {sys.argv[0]} say ...")
+    die(f"сервер не запущен на {url}. Поднять: {sys.argv[0]} up")
+
+
+def wait_healthy(url: str, deadline: float) -> dict:
+    """Ждёт, пока сервер начнёт отвечать. Веса качаются долго, это нормально."""
+    last = 0.0
+    while time.time() < deadline:
+        h = health(url, timeout=3.0)
+        if h:
+            return h
+        if time.time() - last > 15:
+            log(f"  ждём {url} … ({int(deadline - time.time())} с в запасе)")
+            last = time.time()
+        time.sleep(2)
+    die(f"сервер так и не ответил на {url}.\n"
+        f"       Журнал: docker compose logs -f voicy")
+
+
+# ---------------------------------------------------------------------- say
+
+def read_text(source: str) -> str:
+    """`-` читает stdin, `@файл` — файл, всё остальное — сам текст."""
+    if source == "-":
+        return sys.stdin.read()
+    if source.startswith("@"):
+        p = Path(source[1:])
+        if not p.exists():
+            die(f"файл не найден: {p}")
+        return p.read_text(encoding="utf-8")
+    return source
+
+
+def cmd_say(a) -> int:
+    text = read_text(a.text).strip()
+    if not text:
+        die("пустой текст")
+
+    out = Path(a.out) if a.out else Path(f"voicy-{int(time.time())}.{a.format}")
+    if str(out) == "-":
+        die("аудио в stdout не пишется — бинарь засорит вывод. Укажите файл: "
+            f"{sys.argv[0]} say \"...\" out.{a.format}")
+    fmt = a.format
+    if a.out and out.suffix.lstrip(".").lower() in AUDIO_FORMATS:
+        fmt = out.suffix.lstrip(".").lower()      # расширение важнее флага
+
+    h = require_server(a.url)
+    if not h["tts"]["loaded"]:
+        log("модель синтеза ещё не в памяти — первый вызов дольше обычного "
+            "(а самый первый запуск сервера ещё и качает веса)")
+
+    payload = {"input": text, "response_format": fmt, "speed": a.speed,
+               "language": a.language, "prepare": a.prepare, "legato": a.legato}
+    if a.voice:
+        payload["voice"] = a.voice
+    if a.seed is not None:
+        payload["seed"] = a.seed
+
+    started = time.perf_counter()
+    audio, headers = post_json(a.url, "/v1/audio/speech", payload, a.timeout)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(audio)
+
+    secs = headers.get("X-Audio-Seconds", "?")
+    gen = headers.get("X-Generation-Seconds", f"{time.perf_counter() - started:.1f}")
+    log(f"{headers.get('X-Voice', '?')}: {secs} с звука за {gen} с, "
+        f"{len(audio) / 1024:.0f} КиБ")
+    print(out)
+    return 0
+
+
+# --------------------------------------------------------------------- hear
+
+def cmd_hear(a) -> int:
+    src = Path(a.file)
+    if not src.exists():
+        die(f"файл не найден: {src}")
+    require_server(a.url)
+
+    fields = {"model": "whisper-1", "response_format": a.format,
+              "temperature": str(a.temperature)}
+    if a.language:
+        fields["language"] = a.language
+    if a.prompt:
+        fields["prompt"] = a.prompt
+    if a.words:
+        fields["timestamp_granularities"] = "word"
+
+    ctype = EXT_CONTENT_TYPE.get(src.suffix.lower(), "application/octet-stream")
+    body, _ = post_multipart(a.url, "/v1/audio/transcriptions", fields,
+                             {"file": (src.name, src.read_bytes(), ctype)}, a.timeout)
+    text = body.decode("utf-8", "replace")
+    if a.format == "json":
+        try:
+            text = json.loads(text)["text"]
+        except Exception:
+            pass
+    print(text.strip())
+    return 0
+
+
+# ------------------------------------------------------------------- voices
+
+def cmd_voices(a) -> int:
+    require_server(a.url)
+    body, _ = request(a.url, "/v1/voices", timeout=10)
+    data = json.loads(body)
+    for v in data["data"]:
+        mark = "*" if v["name"] == data.get("default") else " "
+        print(f"{mark} {v['name']:<14} {v.get('note', '')}")
+    if not data["data"]:
+        log(f"голосов нет — добавьте: {sys.argv[0]} add-voice образец.wav имя")
+    return 0
+
+
+def cmd_add_voice(a) -> int:
+    src = Path(a.file)
+    if not src.exists():
+        die(f"файл не найден: {src}")
+    require_server(a.url)
+    ctype = EXT_CONTENT_TYPE.get(src.suffix.lower(), "audio/wav")
+    # Расшифровку намеренно не требуем: сервер распознает образец сам,
+    # и это точнее ручного ввода — а точность здесь решает качество клона.
+    body, _ = post_multipart(a.url, "/v1/voices",
+                             {"name": a.name, "text": a.text or "", "note": a.note or ""},
+                             {"file": (src.name, src.read_bytes(), ctype)}, a.timeout)
+    v = json.loads(body)
+    log(f"расшифровка образца: {v['reference_text']!r}")
+    print(v["name"])
+    return 0
+
+
+# ------------------------------------------------------------------ prepare
+
+def cmd_prepare(a) -> int:
+    require_server(a.url)
+    payload = {"text": read_text(a.text), "dictionary": not a.no_dictionary,
+               "legato": a.legato}
+    body, _ = post_json(a.url, "/v1/text/prepare", payload, 30)
+    print(json.loads(body)["text"])
+    return 0
+
+
+# ------------------------------------------------------------ up/down/status
+
+def cmd_status(a) -> int:
+    h = health(a.url)
+    if not h:
+        log(f"voicy не отвечает на {a.url}")
+        return 1
+    print(json.dumps(h, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_warm(a) -> int:
+    """Прогрев: первый синтез грузит модель, и лучше это сделать заранее."""
+    require_server(a.url)
+    log("прогрев моделей …")
+    started = time.perf_counter()
+    post_json(a.url, "/v1/audio/speech",
+              {"input": "Проверка связи.", "response_format": "wav"}, a.timeout)
+    log(f"синтез готов ({time.perf_counter() - started:.0f} с)")
+    return 0
+
+
+IMAGE = os.environ.get("VOICY_IMAGE", "ghcr.io/olluorg/voicy:latest")
+
+
+def cmd_up(a) -> int:
+    if health(a.url):
+        log(f"voicy уже работает на {a.url}")
+        return cmd_warm(a) if a.warm else 0
+
+    port = urlsplit(a.url).port or 8080
+    if a.cpu:
+        # Мимо compose: там GPU затребован в deploy.reservations, и на машине
+        # без видеокарты запуск падает ещё до того, как FORCE_CPU кто-то прочтёт.
+        cmd = ["docker", "run", "-d", "--name", "voicy", "--restart", "unless-stopped",
+               "-p", f"{port}:8080", "-e", "FORCE_CPU=1",
+               "-v", "voicy-models:/cache", "-v", "voicy-voices:/app/server/voices",
+               IMAGE]
+        env = dict(os.environ)
+    else:
+        cmd = ["docker", "compose", "up", "-d"]
+        if a.build:
+            cmd.append("--build")
+        env = {**os.environ, "VOICY_PORT": str(port)}
+    log("$ " + " ".join(cmd))
+    r = subprocess.run(cmd, cwd=HERE, env=env)
+    if r.returncode != 0:
+        die("сервер не поднялся — смотрите вывод выше")
+    if a.cpu:
+        log("режим без GPU: синтез идёт медленнее реального времени")
+
+    # Первый запуск качает около пяти гигабайт весов, поэтому запас большой.
+    log("ждём готовности (первый запуск качает веса, это долго) …")
+    wait_healthy(a.url, time.time() + a.wait)
+    log(f"voicy на {a.url}, консоль там же")
+    return cmd_warm(a) if a.warm else 0
+
+
+def cmd_down(a) -> int:
+    log("$ docker compose down")
+    rc = subprocess.run(["docker", "compose", "down"], cwd=HERE).returncode
+    # Контейнер из режима без GPU поднят не через compose, и она его не видит.
+    subprocess.run(["docker", "rm", "-f", "voicy"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return rc
+
+
+# --------------------------------------------------------------------- разбор
+
+def main(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(
+        prog="voicy", description="локальный синтез и распознавание речи",
+        epilog=f"адрес сервера: VOICY_URL (сейчас {DEFAULT_URL})")
+    p.add_argument("--url", default=DEFAULT_URL, help=argparse.SUPPRESS)
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    s = sub.add_parser("say", help="текст → аудиофайл")
+    s.add_argument("text", help="текст, либо @файл, либо - для stdin")
+    s.add_argument("out", nargs="?", help="куда писать; расширение задаёт формат")
+    s.add_argument("--voice", help="имя голоса (по умолчанию — серверный)")
+    s.add_argument("--format", default="opus", choices=AUDIO_FORMATS)
+    s.add_argument("--speed", type=float, default=1.0, help="0.8–1.2, растяжением готового звука")
+    s.add_argument("--language", default="Russian")
+    s.add_argument("--seed", type=int)
+    s.add_argument("--prepare", action="store_true", help="применить словарь произношений")
+    s.add_argument("--legato", action="store_true", help="убрать запятые внутри коротких фраз")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_say)
+
+    s = sub.add_parser("hear", help="аудиофайл → текст")
+    s.add_argument("file")
+    s.add_argument("--language", help="ru, en … (по умолчанию определяется)")
+    s.add_argument("--format", default="json", choices=("json", "text", "verbose_json", "srt", "vtt"))
+    s.add_argument("--prompt", help="подсказка контекста: термины, имена")
+    s.add_argument("--temperature", type=float, default=0.0)
+    s.add_argument("--words", action="store_true", help="отметки времени по словам")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_hear)
+
+    s = sub.add_parser("voices", help="список голосов")
+    s.set_defaults(fn=cmd_voices)
+
+    s = sub.add_parser("add-voice", help="добавить голос из образца 8–14 с")
+    s.add_argument("file")
+    s.add_argument("name")
+    s.add_argument("--text", help="расшифровка; по умолчанию распознаётся сервером")
+    s.add_argument("--note", help="пометка для списка")
+    s.add_argument("--timeout", type=float, default=600)
+    s.set_defaults(fn=cmd_add_voice)
+
+    s = sub.add_parser("prepare", help="словарь произношений и снятие запятых")
+    s.add_argument("text", help="текст, либо @файл, либо -")
+    s.add_argument("--no-dictionary", action="store_true")
+    s.add_argument("--legato", action="store_true")
+    s.set_defaults(fn=cmd_prepare)
+
+    s = sub.add_parser("up", help="поднять сервер и дождаться готовности")
+    s.add_argument("--build", action="store_true", help="собрать образ из исходников")
+    s.add_argument("--cpu", action="store_true", help="без GPU")
+    s.add_argument("--wait", type=float, default=3600, help="сколько ждать готовности, с")
+    s.add_argument("--no-warm", dest="warm", action="store_false", help="не прогревать модели")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_up)
+
+    s = sub.add_parser("down", help="остановить сервер")
+    s.set_defaults(fn=cmd_down)
+
+    s = sub.add_parser("status", help="состояние моделей и устройства")
+    s.set_defaults(fn=cmd_status)
+
+    s = sub.add_parser("warm", help="загрузить модели заранее")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_warm)
+
+    a = p.parse_args(argv)
+    return a.fn(a)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        sys.exit(130)
