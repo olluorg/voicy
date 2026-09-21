@@ -46,7 +46,18 @@ Docker для этого не нужен: если его нет или он с�
 ./voicy hear запись.opus                # текст в stdout
 ./voicy hear запись.opus --format srt   # субтитры
 ./voicy hear запись.opus --words        # отметки времени по словам
+./voicy hear запись.opus --context engineering   # термины латиницей: Kafka, JVM
 ```
+
+Если в записи есть термины или имена, передайте их: `--hotwords "Helm, Grafana"`.
+Верно записанных терминов становится заметно больше; `./voicy contexts` —
+готовые профили.
+
+## Длинная работа
+
+Всё идёт через одну очередь. Чтобы не держать вызов открытым:
+`ID=$(./voicy say @файл.md --detach)`, затем `./voicy job $ID out.opus --wait`.
+Так же с `hear`. Очередь — `./voicy jobs`, отмена — `./voicy cancel $ID`.
 
 ## Если текст инженерный
 

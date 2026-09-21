@@ -21,3 +21,8 @@ class SpeechRequest(BaseModel):
     prepare: bool = Field(default=False, description="применить словарь произношений")
     legato: bool = Field(default=False, description="убрать запятые внутри коротких фраз")
     seed: int | None = None
+
+
+class JobSpeechRequest(SpeechRequest):
+    webhook_url: str | None = Field(default=None,
+                                    description="POST сюда сводку задания, когда оно закончится")

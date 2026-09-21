@@ -6,15 +6,37 @@ from that pair, and a wrong transcript degrades every sentence it generates
 
 Adding a voice means dropping a wav next to a json entry. If the transcript is
 missing it is filled in by the speech recogniser rather than by hand.
+
+Whatever arrives — webm from a browser, opus from a phone — is stored as 24 kHz
+mono wav, the rate the synthesiser works at. The file name is the voice name, so
+the name is checked before it becomes a path.
 """
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 VOICES_DIR = Path(__file__).parent / "voices"
 INDEX = VOICES_DIR / "voices.json"
+SAMPLE_RATE = 24000
+
+# Буквы любого алфавита, цифры, дефис и подчёркивание — но не в начале:
+# ключи индекса на «_» служебные (`_default`).
+NAME = re.compile(r"^[^\W_][\w-]{0,39}$")
+
+# Образец короче трёх секунд не несёт тембра, длиннее минуты — лишь удлиняет
+# каждый синтез. Рекомендованные 8–14 с — из README; остальное принимается
+# с предупреждением.
+MIN_SECONDS, MAX_SECONDS = 3.0, 60.0
+GOOD_SECONDS = (8.0, 14.0)
+
+
+def check_name(name: str) -> str:
+    if not NAME.match(name or ""):
+        raise ValueError("name: 1–40 letters, digits, '-' or '_', not starting with '_'")
+    return name
 
 
 @dataclass
@@ -64,9 +86,9 @@ def default() -> Voice | None:
 
 
 def add(name: str, wav_bytes: bytes, text: str = "", note: str = "") -> Voice:
-    """Register a clip. An empty transcript is filled in by the recogniser later."""
+    """Register a clip already encoded as wav. The caller checks the name."""
     VOICES_DIR.mkdir(parents=True, exist_ok=True)
-    path = VOICES_DIR / f"{name}.wav"
+    path = VOICES_DIR / f"{check_name(name)}.wav"
     path.write_bytes(wav_bytes)
     idx = _load_index()
     idx[name] = {"text": text, "note": note}

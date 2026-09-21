@@ -68,9 +68,10 @@ def _opener(url: str):
 
 def request(url: str, path: str, *, data: bytes | None = None,
             content_type: str | None = None, timeout: float = 30.0,
-            hint: str = ""):
+            hint: str = "", method: str | None = None):
     """Возвращает (тело, заголовки). Ошибки соединения переводит в понятные."""
-    req = urllib.request.Request(url.rstrip("/") + path, data=data, method="POST" if data else "GET")
+    req = urllib.request.Request(url.rstrip("/") + path, data=data,
+                                 method=method or ("POST" if data else "GET"))
     if content_type:
         req.add_header("Content-Type", content_type)
     try:
@@ -214,6 +215,12 @@ def cmd_say(a) -> int:
                 (f"формата {fmt}" if fmt not in ("wav", "pcm") else "изменения темпа") +
                 ". Поставьте его или синтезируйте в wav")
 
+    if a.detach or a.webhook:
+        if a.webhook:
+            payload["webhook_url"] = a.webhook
+        body, _ = post_json(a.url, "/v1/jobs/speech", payload, 60, hint=hint)
+        return detached(json.loads(body), f"{out}")
+
     started = time.perf_counter()
     audio, headers = post_json(a.url, "/v1/audio/speech", payload, a.timeout, hint=hint)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -243,8 +250,21 @@ def cmd_hear(a) -> int:
         fields["prompt"] = a.prompt
     if a.words:
         fields["timestamp_granularities"] = "word"
+    if a.context:
+        fields["context"] = a.context
+    if a.hotwords:
+        fields["hotwords"] = a.hotwords
 
     ctype = EXT_CONTENT_TYPE.get(src.suffix.lower(), "application/octet-stream")
+    if a.detach or a.webhook:
+        fields.pop("model"), fields.pop("response_format")
+        fields.pop("timestamp_granularities", None)
+        fields["word_timestamps"] = str(a.words).lower()
+        fields["webhook_url"] = a.webhook
+        body, _ = post_multipart(a.url, "/v1/jobs/transcribe", fields,
+                                 {"file": (src.name, src.read_bytes(), ctype)}, 600)
+        return detached(json.loads(body), f"--format {a.format}")
+
     body, _ = post_multipart(a.url, "/v1/audio/transcriptions", fields,
                              {"file": (src.name, src.read_bytes(), ctype)}, a.timeout)
     text = body.decode("utf-8", "replace")
@@ -254,6 +274,98 @@ def cmd_hear(a) -> int:
         except Exception:
             pass
     print(text.strip())
+    return 0
+
+
+# --------------------------------------------------------------------- jobs
+
+def detached(job: dict, rest: str) -> int:
+    """Задание принято: в stdout — только id, чтобы его можно было подставить."""
+    ahead = job.get("position") or 0
+    log(f"задание {job['id']} принято" + (f", впереди {ahead}" if ahead else "") +
+        f"\n       забрать: {sys.argv[0]} job {job['id']} {rest} --wait")
+    print(job["id"])
+    return 0
+
+
+def cmd_job(a) -> int:
+    require_server(a.url)
+    last = None
+    while True:
+        body, _ = request(a.url, f"/v1/jobs/{a.id}", timeout=30)
+        job = json.loads(body)
+        if job["state"] in ("done", "error", "cancelled") or not a.wait:
+            break
+        stage = job["progress"].get("stage")
+        note = (f"в очереди, впереди {job['position']}" if job["state"] == "queued"
+                else stage)
+        if note != last:
+            log(f"  {note}")
+            last = note
+        time.sleep(1)
+
+    if job["state"] != "done":
+        if job["state"] == "error":
+            die(f"задание {a.id} упало: {job['error']}")
+        log(f"задание {a.id}: {job['state']}")
+        if not a.out:
+            print(json.dumps(job, ensure_ascii=False, indent=2))
+        return 3 if job["state"] in ("queued", "running") else 1
+
+    if job["kind"] == "speech":
+        if not a.out:
+            print(json.dumps(job, ensure_ascii=False, indent=2))
+            log(f"звук готов — укажите файл: {sys.argv[0]} job {a.id} out.{job['result']['format']}")
+            return 0
+        audio, _ = request(a.url, f"/v1/jobs/{a.id}/audio", timeout=600)
+        out = Path(a.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(audio)
+        log(f"{job['result']['voice']}: {job['result']['seconds']} с звука")
+        print(out)
+        return 0
+
+    body, _ = request(a.url, f"/v1/jobs/{a.id}/result?format={a.format}", timeout=60)
+    text = body.decode("utf-8", "replace")
+    if a.format == "json":
+        text = json.loads(text)["text"]
+    print(text.strip())
+    return 0
+
+
+def cmd_jobs(a) -> int:
+    require_server(a.url)
+    body, _ = request(a.url, "/v1/jobs", timeout=30)
+    data = json.loads(body)
+    for j in data["data"]:
+        extra = (f"впереди {j['position']}" if j["state"] == "queued" else
+                 j.get("error") or "")
+        print(f"{j['id']}  {j['kind']:<10} {j['state']:<9} {extra}")
+    q = data["queue"]
+    log(f"в очереди {q['pending']} из {q['max']}" +
+        (f", работает {q['running']}" if q["running"] else ""))
+    return 0
+
+
+def cmd_cancel(a) -> int:
+    require_server(a.url)
+    body, _ = request(a.url, f"/v1/jobs/{a.id}", method="DELETE", timeout=30)
+    job = json.loads(body)
+    log("остановится на ближайшем шаге" if job.get("cancel_requested") else "отменено")
+    print(job["id"])
+    return 0
+
+
+# ----------------------------------------------------------------- contexts
+
+def cmd_contexts(a) -> int:
+    require_server(a.url)
+    body, _ = request(a.url, "/v1/contexts", timeout=10)
+    for c in json.loads(body)["data"]:
+        mark = "*" if c["builtin"] else " "
+        print(f"{mark} {c['name']:<14} {len(c['hotwords']):>3} терм.  {c.get('note', '')}")
+    log(f"свой: curl -X PUT {a.url}/v1/contexts/имя -H 'Content-Type: application/json' "
+        "-d '{\"hotwords\": [...], \"replacements\": {...}}'")
     return 0
 
 
@@ -280,10 +392,13 @@ def cmd_add_voice(a) -> int:
     # Расшифровку намеренно не требуем: сервер распознает образец сам,
     # и это точнее ручного ввода — а точность здесь решает качество клона.
     body, _ = post_multipart(a.url, "/v1/voices",
-                             {"name": a.name, "text": a.text or "", "note": a.note or ""},
+                             {"name": a.name, "text": a.text or "", "note": a.note or "",
+                              "replace": str(a.replace).lower()},
                              {"file": (src.name, src.read_bytes(), ctype)}, a.timeout)
     v = json.loads(body)
     log(f"расшифровка образца: {v['reference_text']!r}")
+    for w in v.get("warnings", []):
+        log(f"внимание: {w}")
     print(v["name"])
     return 0
 
@@ -337,8 +452,8 @@ LOG_FILE = RUNTIME_DIR / "server.log"
 
 # Имена для импорта, а не для установки: python-multipart ставится под одним
 # именем, а импортируется под другим.
-NEEDED = ("fastapi", "uvicorn", "multipart", "numpy", "soundfile",
-          "torch", "transformers", "qwen_tts", "faster_whisper")
+NEEDED = ("fastapi", "uvicorn", "multipart", "numpy", "soundfile", "soxr", "scipy",
+          "onnxruntime", "torch", "transformers", "qwen_tts", "faster_whisper")
 
 
 def docker_available() -> bool:
@@ -551,6 +666,9 @@ def main(argv: list[str]) -> int:
     s.add_argument("--seed", type=int)
     s.add_argument("--prepare", action="store_true", help="применить словарь произношений")
     s.add_argument("--legato", action="store_true", help="убрать запятые внутри коротких фраз")
+    s.add_argument("--detach", action="store_true",
+                   help="не ждать: напечатать id задания и выйти")
+    s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
     s.add_argument("--timeout", type=float, default=1800)
     s.set_defaults(fn=cmd_say)
 
@@ -561,8 +679,31 @@ def main(argv: list[str]) -> int:
     s.add_argument("--prompt", help="подсказка контекста: термины, имена")
     s.add_argument("--temperature", type=float, default=0.0)
     s.add_argument("--words", action="store_true", help="отметки времени по словам")
+    s.add_argument("--context", help="профиль контекста: термины и замены (см. contexts)")
+    s.add_argument("--hotwords", help="термины через запятую: Kafka, Grafana, Helm")
+    s.add_argument("--detach", action="store_true",
+                   help="не ждать: напечатать id задания и выйти")
+    s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
     s.add_argument("--timeout", type=float, default=1800)
     s.set_defaults(fn=cmd_hear)
+
+    s = sub.add_parser("job", help="состояние задания; готовое — в файл или stdout")
+    s.add_argument("id")
+    s.add_argument("out", nargs="?", help="куда писать звук, если это синтез")
+    s.add_argument("--wait", action="store_true", help="дождаться конца")
+    s.add_argument("--format", default="json", choices=("json", "text", "verbose_json", "srt", "vtt"),
+                   help="формат расшифровки")
+    s.set_defaults(fn=cmd_job)
+
+    s = sub.add_parser("jobs", help="задания и очередь")
+    s.set_defaults(fn=cmd_jobs)
+
+    s = sub.add_parser("cancel", help="отменить задание")
+    s.add_argument("id")
+    s.set_defaults(fn=cmd_cancel)
+
+    s = sub.add_parser("contexts", help="профили контекста распознавания")
+    s.set_defaults(fn=cmd_contexts)
 
     s = sub.add_parser("voices", help="список голосов")
     s.set_defaults(fn=cmd_voices)
@@ -572,6 +713,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("name")
     s.add_argument("--text", help="расшифровка; по умолчанию распознаётся сервером")
     s.add_argument("--note", help="пометка для списка")
+    s.add_argument("--replace", action="store_true", help="перезаписать голос с тем же именем")
     s.add_argument("--timeout", type=float, default=600)
     s.set_defaults(fn=cmd_add_voice)
 

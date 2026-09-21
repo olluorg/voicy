@@ -1,0 +1,721 @@
+{
+ "report": {
+  "none": {
+   "terms_pct": 60.0,
+   "cer_pct": 11.5
+  },
+  "prompt": {
+   "terms_pct": 62.9,
+   "cer_pct": 10.2
+  },
+  "hotwords": {
+   "terms_pct": 85.7,
+   "cer_pct": 6.1
+  },
+  "both": {
+   "terms_pct": 82.9,
+   "cer_pct": 6.3
+  },
+  "terms": 35
+ },
+ "prompt": "Разговор разработчиков о бэкенде на Java: Spring, Kafka, базы данных, многопоточность.",
+ "rows": [
+  {
+   "text": "Консьюмер читает сообщения из Kafka и фиксирует offset после обработки.",
+   "terms": [
+    "Kafka",
+    "offset"
+   ],
+   "none": {
+    "hyp": "Консюмер читает сообщение из Kafka и фиксирует оффсет после обработки.",
+    "hits": [
+     "Kafka"
+    ],
+    "cer": 11.4
+   },
+   "prompt": {
+    "hyp": "Консюмер читает сообщение из Kafka и фиксирует offset после обработки.",
+    "hits": [
+     "Kafka",
+     "offset"
+    ],
+    "cer": 2.9
+   },
+   "hotwords": {
+    "hyp": "Consumer читает сообщение из Kafka и фиксирует offset после обработки.",
+    "hits": [
+     "Kafka",
+     "offset"
+    ],
+    "cer": 14.3
+   },
+   "both": {
+    "hyp": "Consumer читает сообщение из Kafka и фиксирует offset после обработки",
+    "hits": [
+     "Kafka",
+     "offset"
+    ],
+    "cer": 14.3
+   }
+  },
+  {
+   "text": "В Spring Boot транзакция открывается аннотацией Transactional.",
+   "terms": [
+    "Spring Boot",
+    "Transactional"
+   ],
+   "none": {
+    "hyp": "В Spring Boot транзакция открывается аннотацией Transactional.",
+    "hits": [
+     "Spring Boot",
+     "Transactional"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "В Spring Boot транзакция открывается аннотацией Transactional.",
+    "hits": [
+     "Spring Boot",
+     "Transactional"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "В Spring Boot транзакция открывается аннотацией Transactional",
+    "hits": [
+     "Spring Boot",
+     "Transactional"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "В Spring Boot транзакция открывается аннотацией Transactional",
+    "hits": [
+     "Spring Boot",
+     "Transactional"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "HashMap не потокобезопасен, для этого есть ConcurrentHashMap.",
+   "terms": [
+    "HashMap",
+    "ConcurrentHashMap"
+   ],
+   "none": {
+    "hyp": "Хэшмэп не потокобезопасен. Для этого есть конкурент Хэшмэп.",
+    "hits": [],
+    "cer": 40.7
+   },
+   "prompt": {
+    "hyp": "Хешмэп не потокобезопасен. Для этого есть конкурент Хешмэп.",
+    "hits": [],
+    "cer": 40.7
+   },
+   "hotwords": {
+    "hyp": "HashMap не потокобезопасен. Для этого есть конкурент HashMap.",
+    "hits": [
+     "HashMap"
+    ],
+    "cer": 16.9
+   },
+   "both": {
+    "hyp": "HashMap не потокобезопасен. Для этого есть конкурент HashMap.",
+    "hits": [
+     "HashMap"
+    ],
+    "cer": 16.9
+   }
+  },
+  {
+   "text": "Сервис отдаёт JSON по REST, а токен передаётся в JWT.",
+   "terms": [
+    "JSON",
+    "REST",
+    "JWT"
+   ],
+   "none": {
+    "hyp": "Сервис отдает JSON по REST, а токен передается в JWT.",
+    "hits": [
+     "JSON",
+     "REST",
+     "JWT"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "Сервис отдает JSON по REST, а токен передается в JWT.",
+    "hits": [
+     "JSON",
+     "REST",
+     "JWT"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "Сервис отдает JSON по REST, а токен передается в JWT",
+    "hits": [
+     "JSON",
+     "REST",
+     "JWT"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "Сервис отдает JSON по REST, а токен передается в JWT",
+    "hits": [
+     "JSON",
+     "REST",
+     "JWT"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Данные лежат в PostgreSQL, а кэш вынесен в DynamoDB.",
+   "terms": [
+    "PostgreSQL",
+    "DynamoDB"
+   ],
+   "none": {
+    "hyp": "Данные лежат в Postgres, а кэш вынесен в DynamoDB.",
+    "hits": [
+     "DynamoDB"
+    ],
+    "cer": 4.0
+   },
+   "prompt": {
+    "hyp": "Данные лежат в Postgres, а кэш вынесен в DynamoDB.",
+    "hits": [
+     "DynamoDB"
+    ],
+    "cer": 4.0
+   },
+   "hotwords": {
+    "hyp": "Данные лежат в PostgreSQL, а кэш вынесен в DynamoDB",
+    "hits": [
+     "PostgreSQL",
+     "DynamoDB"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "Данные лежат в PostgreSQL, а кэш вынесен в DynamoDB",
+    "hits": [
+     "PostgreSQL",
+     "DynamoDB"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Очередь на RabbitMQ, а сообщения с ошибкой уходят в DLQ.",
+   "terms": [
+    "RabbitMQ",
+    "DLQ"
+   ],
+   "none": {
+    "hyp": "Очередь на RabbitMQ, а сообщения с ошибкой уходят в DLQ.",
+    "hits": [
+     "RabbitMQ",
+     "DLQ"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "Очередь на RabbitMQ, а сообщения с ошибкой уходят в DLQ.",
+    "hits": [
+     "RabbitMQ",
+     "DLQ"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "очередь на RabbitMQ, а сообщения с ошибкой уходят в DLQ.",
+    "hits": [
+     "RabbitMQ",
+     "DLQ"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "очередь на RabbitMQ, а сообщения с ошибкой уходят в DLQ.",
+    "hits": [
+     "RabbitMQ",
+     "DLQ"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "ArrayList быстрее LinkedList почти во всех сценариях.",
+   "terms": [
+    "ArrayList",
+    "LinkedList"
+   ],
+   "none": {
+    "hyp": "Рейлист быстрее линкет-лист почти во всех сценариях.",
+    "hits": [],
+    "cer": 38.5
+   },
+   "prompt": {
+    "hyp": "Рейлист быстрее линкет-лист почти во всех сценариях.",
+    "hits": [],
+    "cer": 38.5
+   },
+   "hotwords": {
+    "hyp": "ArrayList быстрее LinkedList почти во всех сценариях",
+    "hits": [
+     "ArrayList",
+     "LinkedList"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "Рейлист быстрее линкетлист почти во всех сценариях",
+    "hits": [],
+    "cer": 36.5
+   }
+  },
+  {
+   "text": "CompletableFuture позволяет собрать цепочку асинхронных шагов.",
+   "terms": [
+    "CompletableFuture"
+   ],
+   "none": {
+    "hyp": "Completeable Future позволяет собрать цепочку асинхронных шагов.",
+    "hits": [],
+    "cer": 3.3
+   },
+   "prompt": {
+    "hyp": "Completeable Future позволяет собрать цепочку асинхронных шагов.",
+    "hits": [],
+    "cer": 3.3
+   },
+   "hotwords": {
+    "hyp": "CompleteableFuture позволяет собрать цепочку асинхронных шагов.",
+    "hits": [],
+    "cer": 1.6
+   },
+   "both": {
+    "hyp": "CompletableFuture позволяет собрать цепочку асинхронных шагов.",
+    "hits": [
+     "CompletableFuture"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "JVM выделяет память под объекты в куче, а JIT компилирует горячий код.",
+   "terms": [
+    "JVM",
+    "JIT"
+   ],
+   "none": {
+    "hyp": "JVM выделяет память под объекты в куче, а JIT компилирует горячий код.",
+    "hits": [
+     "JVM",
+     "JIT"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "JVM выделяет память под объекты в куче, а JIT компилирует горячий код.",
+    "hits": [
+     "JVM",
+     "JIT"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "JVM выделяет память под объекты в куче, а JIT компилирует горячий код.",
+    "hits": [
+     "JVM",
+     "JIT"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "JVM выделяет память под объекты в куче, а JIT компилирует горячий код.",
+    "hits": [
+     "JVM",
+     "JIT"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Запрос к базе идёт через JDBC, а маппинг делает JPA.",
+   "terms": [
+    "JDBC",
+    "JPA"
+   ],
+   "none": {
+    "hyp": "Запрос к базе идет через JDBC, а маппинг делает JPA.",
+    "hits": [
+     "JDBC",
+     "JPA"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "Запрос к базе идет через JDBC, а маппинг делает JPA.",
+    "hits": [
+     "JDBC",
+     "JPA"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "Запрос к базе идет через JDBC, а маппинг делает JPA",
+    "hits": [
+     "JDBC",
+     "JPA"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "Запрос к базе идет через JDBC, а маппинг делает JPA",
+    "hits": [
+     "JDBC",
+     "JPA"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Если метод equals переопределён, hashCode тоже нужно переопределить.",
+   "terms": [
+    "equals",
+    "hashCode"
+   ],
+   "none": {
+    "hyp": "Если метод Equals переопределен, хэшкод тоже нужно переопределить.",
+    "hits": [
+     "equals"
+    ],
+    "cer": 12.1
+   },
+   "prompt": {
+    "hyp": "Если метод Equals переопределен, хэшкод тоже нужно переопределить.",
+    "hits": [
+     "equals"
+    ],
+    "cer": 12.1
+   },
+   "hotwords": {
+    "hyp": "Если метод Equals переопределен, хэшкод тоже нужно переопределить",
+    "hits": [
+     "equals"
+    ],
+    "cer": 12.1
+   },
+   "both": {
+    "hyp": "Если метод Equals переопределен, хэшкод тоже нужно переопределить",
+    "hits": [
+     "equals"
+    ],
+    "cer": 12.1
+   }
+  },
+  {
+   "text": "Producer пишет в partition по ключу сообщения.",
+   "terms": [
+    "producer",
+    "partition"
+   ],
+   "none": {
+    "hyp": "Продюсер пишет в партиция по ключу сообщения",
+    "hits": [],
+    "cer": 37.8
+   },
+   "prompt": {
+    "hyp": "Продюсер пишет в партиция по ключу сообщения.",
+    "hits": [],
+    "cer": 37.8
+   },
+   "hotwords": {
+    "hyp": "Продюсер пишет в партиция по ключу сообщения",
+    "hits": [],
+    "cer": 37.8
+   },
+   "both": {
+    "hyp": "Продюсер пишет в партиция по ключу сообщения",
+    "hits": [],
+    "cer": 37.8
+   }
+  },
+  {
+   "text": "StringBuilder дешевле конкатенации строк в цикле.",
+   "terms": [
+    "StringBuilder"
+   ],
+   "none": {
+    "hyp": "String Builder дешевле конкатенаций строк в цикле",
+    "hits": [],
+    "cer": 4.2
+   },
+   "prompt": {
+    "hyp": "Стринг-билдер дешевле конкатенаций строк в цикле.",
+    "hits": [],
+    "cer": 29.2
+   },
+   "hotwords": {
+    "hyp": "StringBuilder дешевле конкатенаций строк в цикле",
+    "hits": [
+     "StringBuilder"
+    ],
+    "cer": 2.1
+   },
+   "both": {
+    "hyp": "StringBuilder, дешевле конкатенаций, строк в цикле",
+    "hits": [
+     "StringBuilder"
+    ],
+    "cer": 2.1
+   }
+  },
+  {
+   "text": "ReentrantLock даёт то же, что synchronized, но с таймаутом.",
+   "terms": [
+    "ReentrantLock"
+   ],
+   "none": {
+    "hyp": "Reentrant Lock дает то же, что сэкронайст, но с таймаутом.",
+    "hits": [],
+    "cer": 23.2
+   },
+   "prompt": {
+    "hyp": "Reentrant Lock дает то же, что Synchronized, но с тайм-аутом.",
+    "hits": [],
+    "cer": 3.6
+   },
+   "hotwords": {
+    "hyp": "ReentrantLock дает то же, что сэкранайст, но с таймаутом.",
+    "hits": [
+     "ReentrantLock"
+    ],
+    "cer": 21.4
+   },
+   "both": {
+    "hyp": "ReentrantLock дает то же что с synchronized, но с тайм-аутом",
+    "hits": [
+     "ReentrantLock"
+    ],
+    "cer": 5.4
+   }
+  },
+  {
+   "text": "CountDownLatch ждёт, пока отработают все потоки.",
+   "terms": [
+    "CountDownLatch"
+   ],
+   "none": {
+    "hyp": "Каунд-даун-ледж ждет, пока отработают все потоки.",
+    "hits": [],
+    "cer": 32.6
+   },
+   "prompt": {
+    "hyp": "Countdown Ledge ждет, пока отработают все потоки.",
+    "hits": [],
+    "cer": 10.9
+   },
+   "hotwords": {
+    "hyp": "CountDownLatch ждет, пока отработают все потоки",
+    "hits": [
+     "CountDownLatch"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "CountDownLatch ждет, пока отработают все потоки",
+    "hits": [
+     "CountDownLatch"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Статика раздаётся через CDN, а API закрыт от CSRF.",
+   "terms": [
+    "CDN",
+    "API",
+    "CSRF"
+   ],
+   "none": {
+    "hyp": "Статика раздается через CDN, а API закрыт от CSRF.",
+    "hits": [
+     "CDN",
+     "API",
+     "CSRF"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "Статика раздается через CDN, а API закрыт от CSRF.",
+    "hits": [
+     "CDN",
+     "API",
+     "CSRF"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "статика раздается через CDN, а API закрыт от CSRF.",
+    "hits": [
+     "CDN",
+     "API",
+     "CSRF"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "статика раздается через CDN, а API закрыт от CSRF.",
+    "hits": [
+     "CDN",
+     "API",
+     "CSRF"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "Кэш хранит запись, пока не истечёт TTL.",
+   "terms": [
+    "TTL"
+   ],
+   "none": {
+    "hyp": "Кэш хранит запись, пока не истечет TTL.",
+    "hits": [
+     "TTL"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "Кэш хранит запись, пока не истечет TTL.",
+    "hits": [
+     "TTL"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "Cache хранит запись, пока не истечет TTL",
+    "hits": [
+     "TTL"
+    ],
+    "cer": 13.5
+   },
+   "both": {
+    "hyp": "Кэш хранит запись, пока не истечет TTL",
+    "hits": [
+     "TTL"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "CQRS разделяет модели чтения и записи.",
+   "terms": [
+    "CQRS"
+   ],
+   "none": {
+    "hyp": "CQRS разделяет модели чтения и записи.",
+    "hits": [
+     "CQRS"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "CQRS разделяет модели чтения и записи.",
+    "hits": [
+     "CQRS"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "CQRS разделяет модели чтения и записи",
+    "hits": [
+     "CQRS"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "CQRS разделяет модели чтения и записи",
+    "hits": [
+     "CQRS"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "WebFlux построен на реактивных потоках, а не на MVC.",
+   "terms": [
+    "WebFlux",
+    "MVC"
+   ],
+   "none": {
+    "hyp": "WebFlux построен на реактивных потоках, а не на MVC.",
+    "hits": [
+     "WebFlux",
+     "MVC"
+    ],
+    "cer": 0.0
+   },
+   "prompt": {
+    "hyp": "WebFlux построен на реактивных потоках, а не на MVC.",
+    "hits": [
+     "WebFlux",
+     "MVC"
+    ],
+    "cer": 0.0
+   },
+   "hotwords": {
+    "hyp": "WebFlux построен на реактивных потоках, а не на MVC.",
+    "hits": [
+     "WebFlux",
+     "MVC"
+    ],
+    "cer": 0.0
+   },
+   "both": {
+    "hyp": "WebFlux построен на реактивных потоках, а не на MVC",
+    "hits": [
+     "WebFlux",
+     "MVC"
+    ],
+    "cer": 0.0
+   }
+  },
+  {
+   "text": "ThreadLocal хранит значение отдельно для каждого потока.",
+   "terms": [
+    "ThreadLocal"
+   ],
+   "none": {
+    "hyp": "Тредлокал хранит значения отдельно для каждого потока.",
+    "hits": [],
+    "cer": 21.8
+   },
+   "prompt": {
+    "hyp": "Тредлокал хранит значения отдельно для каждого потока.",
+    "hits": [],
+    "cer": 21.8
+   },
+   "hotwords": {
+    "hyp": "ThreadLocal хранит значения отдельно для каждого потока.",
+    "hits": [
+     "ThreadLocal"
+    ],
+    "cer": 1.8
+   },
+   "both": {
+    "hyp": "ThreadLocal хранит значения отдельно для каждого потока",
+    "hits": [
+     "ThreadLocal"
+    ],
+    "cer": 1.8
+   }
+  }
+ ]
+}

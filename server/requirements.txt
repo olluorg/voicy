@@ -7,3 +7,10 @@ uvicorn[standard]
 python-multipart
 soundfile
 numpy
+# пересчёт частоты потоком и для образцов голоса
+soxr
+scipy
+# детектор конца реплики: ONNX на CPU, признаки Whisper из transformers
+onnxruntime
+transformers
+huggingface_hub

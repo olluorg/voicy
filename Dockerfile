@@ -31,8 +31,9 @@ COPY server/ /app/server/
 COPY data/pronunciation.json /app/data/pronunciation.json
 
 # Голоса лежат в образе, но каталог объявлен томом: добавленные через API
-# переживают перезапуск, а образ остаётся самодостаточным.
-VOLUME ["/cache", "/app/server/voices"]
+# переживают перезапуск, а образ остаётся самодостаточным. Контексты
+# распознавания — так же.
+VOLUME ["/cache", "/app/server/voices", "/app/server/contexts"]
 
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \

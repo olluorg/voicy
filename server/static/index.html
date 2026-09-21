@@ -165,6 +165,7 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
   <input type="file" id="file" accept="audio/*,video/*" hidden>
   <div class="rec">
     <button class="ghost" id="rec">Записать с микрофона</button>
+    <button class="ghost" id="live">Диктовка</button>
     <span id="rec-state" class="note"></span>
   </div>
 
@@ -179,8 +180,14 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
       <div><label for="temp">Температура</label>
         <input type="number" id="temp" value="0" min="0" max="1" step="0.1"></div>
     </div>
+    <div class="row r2" style="margin-top:12px">
+      <div><label for="stt-ctx">Контекст</label>
+        <select id="stt-ctx"><option value="">без контекста</option></select></div>
+      <div><label for="hotwords">Термины</label>
+        <input type="text" id="hotwords" placeholder="Kafka, Grafana, Helm — пишутся как заданы"></div>
+    </div>
     <div style="margin-top:12px"><label for="hint">Подсказка контекста</label>
-      <input type="text" id="hint" placeholder="термины, имена — помогает распознаванию"></div>
+      <input type="text" id="hint" placeholder="фраза в духе ожидаемой речи — задаёт стиль"></div>
     <label class="chk" style="margin-top:8px"><input type="checkbox" id="words"> отметки времени по словам</label>
   </div>
 
@@ -264,6 +271,15 @@ async function health(){
   }catch(e){ $('#health').textContent = 'сервер недоступен'; }
 }
 
+async function loadContexts(){
+  try{
+    const r = await (await fetch('/v1/contexts')).json();
+    const sel = $('#stt-ctx'), cur = sel.value;
+    sel.innerHTML = '<option value="">без контекста</option>' + r.data.map(c =>
+      `<option value="${esc(c.name)}">${esc(c.name)} — ${c.hotwords.length} терм.</option>`).join('');
+    sel.value = cur;
+  }catch(e){}
+}
 async function loadVoices(){
   const r = await (await fetch('/v1/voices')).json();
   const sel = $('#voice');
@@ -300,11 +316,20 @@ function follow(id, onEvent){
       onEvent(d);
       if (d.stage === 'done'){ es.close(); resolve(d); }
       if (d.stage === 'error'){ es.close(); reject(new Error(d.error || 'ошибка')); }
+      if (d.stage === 'cancelled'){ es.close(); reject(new Error('задание отменено')); }
     };
     es.onerror = () => { es.close(); reject(new Error('поток событий оборвался')); };
   });
 }
 const fmt = n => (n == null ? '—' : (+n).toFixed(1));
+
+/* Очередь одна на обе модели: пока впереди есть задания, показываем, сколько. */
+function waiting(d){
+  if (d.stage === 'queued' && d.queue_position > 0)
+    return `в очереди, впереди заданий: <b>${d.queue_position}</b>`;
+  if (d.stage === 'queued' || d.stage === 'running') return 'модель просыпается…';
+  return null;
+}
 
 /* ------------------------------------------------------------------ синтез */
 $('#speed').oninput = e => $('#speed-v').textContent = (+e.target.value).toFixed(2);
@@ -347,8 +372,8 @@ async function synth(){
         $('#tts-msg').innerHTML =
           `сгенерировано <b>${fmt(d.produced)} с</b> звука из ~${fmt(d.expected)} · ` +
           `шаг <b>${d.steps}</b> · ×${rate.toFixed(2)} к реальному времени`;
-      } else if (d.stage === 'queued'){
-        $('#tts-msg').textContent = 'модель просыпается…';
+      } else if (waiting(d)){
+        $('#tts-msg').innerHTML = waiting(d);
       }
     });
     $('#tts-bar').style.width = '100%';
@@ -429,6 +454,96 @@ $('#rec').onclick = async () => {
   }catch(e){ $('#stt-err').textContent = 'Микрофон недоступен: ' + e.message; }
 };
 
+/* Диктовка: звук уходит на сервер по WebSocket кусками по 100 мс, текст
+   приходит обратно по фразам. Серое — черновик, который ещё может измениться;
+   фраза чернеет, когда два прочтения подряд с ней согласились. Реплика —
+   абзац: сервер закрывает её, когда решил, что человек договорил, — так же,
+   как это увидел бы голосовой агент. */
+const LIVE_WORKLET = `
+class Tap extends AudioWorkletProcessor {
+  process(inputs){ const ch = inputs[0][0]; if (ch) this.port.postMessage(ch.slice(0)); return true; }
+}
+registerProcessor('tap', Tap);`;
+let live = null;
+async function liveStart(){
+  $('#stt-err').textContent = '';
+  const stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true}});
+  const ctx = new AudioContext();
+  await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([LIVE_WORKLET], {type:'text/javascript'})));
+  const src = ctx.createMediaStreamSource(stream), tap = new AudioWorkletNode(ctx, 'tap');
+  src.connect(tap);
+  const q = new URLSearchParams({sample_rate: ctx.sampleRate});
+  const lang = $('#stt-lang').value.trim(), hint = $('#hint').value.trim();
+  if (lang) q.set('language', lang);
+  if (hint) q.set('prompt', hint);
+  if ($('#stt-ctx').value) q.set('context', $('#stt-ctx').value);
+  if ($('#hotwords').value.trim()) q.set('hotwords', $('#hotwords').value.trim());
+  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/v1/audio/transcriptions/stream?${q}`);
+  ws.binaryType = 'arraybuffer';
+  let pending = [], size = 0, turns = [[]], draft = '', note = '';
+  const show = () => {
+    const html = turns.map((t, i) => {
+      const last = i === turns.length - 1;
+      const body = esc(t.join(' ')) + (last && draft ? ` <span style="opacity:.55">${esc(draft)}</span>` : '');
+      return body ? `<p style="margin:0 0 8px">${body}</p>` : '';
+    }).join('');
+    $('#stt-out').innerHTML = html + (note ? `<div class="note">${note}</div>` : '');
+  };
+  tap.port.onmessage = e => {
+    pending.push(e.data); size += e.data.length;
+    if (size < ctx.sampleRate / 10 || ws.readyState !== WebSocket.OPEN) return;
+    const pcm = new Int16Array(size); let o = 0;
+    for (const c of pending) for (let i = 0; i < c.length; i++)
+      pcm[o++] = Math.max(-1, Math.min(1, c[i])) * 32767;
+    pending = []; size = 0;
+    ws.send(pcm.buffer);
+  };
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'partial'){ draft = d.text; show(); }
+    else if (d.type === 'final'){ turns[turns.length - 1].push(d.text); draft = ''; show(); }
+    else if (d.type === 'speech_start'){ note = 'говорите…'; show(); }
+    else if (d.type === 'turn_check' && !d.complete){
+      note = d.veto ? `пауза, но фраза оборвана на «${esc(d.veto)}» — жду` :
+                      `пауза, но по интонации не закончено (${d.probability.toFixed(2)}) — жду`;
+      show();
+    }
+    else if (d.type === 'turn_end'){
+      const why = {model: 'по интонации', silence: 'по долгой паузе', end: 'конец записи'}[d.reason] || d.reason;
+      note = `реплика закрыта ${why}` + (d.probability != null ? ` (${d.probability.toFixed(2)})` : '');
+      turns.push([]); draft = ''; show();
+    }
+    else if (d.type === 'done'){ draft = ''; show(); }
+    else if (d.type === 'error') $('#stt-err').textContent = 'Не вышло: ' + d.error;
+  };
+  ws.onclose = () => liveStop(true);
+  const t0 = Date.now();
+  const tick = () => {
+    if (!live) return;
+    $('#rec-state').innerHTML = `<span class="dot"></span> диктовка, ${((Date.now()-t0)/1000).toFixed(0)} с`;
+    setTimeout(tick, 250);
+  };
+  live = {stream, ctx, ws};
+  $('#stt-out').textContent = '';
+  $('#live').textContent = 'Закончить';
+  tick();
+}
+function liveStop(closed){
+  if (!live) return;
+  const {stream, ctx, ws} = live; live = null;
+  stream.getTracks().forEach(t => t.stop());
+  ctx.close();
+  // Сервер дочитает хвост, пришлёт последнюю фразу и закроет соединение сам.
+  if (!closed && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({type:'end'}));
+  $('#live').textContent = 'Диктовка';
+  $('#rec-state').textContent = '';
+}
+$('#live').onclick = async () => {
+  if (live){ liveStop(false); return; }
+  try{ await liveStart(); }
+  catch(e){ $('#stt-err').textContent = 'Микрофон недоступен: ' + e.message; liveStop(true); }
+};
+
 $('#asr').onclick = async () => {
   if (!pending) return;
   $('#stt-err').textContent = ''; $('#seg-wrap').innerHTML = '';
@@ -442,6 +557,8 @@ $('#asr').onclick = async () => {
     fd.append('response_format', $('#stt-fmt').value);
     fd.append('temperature', $('#temp').value);
     if ($('#hint').value.trim()) fd.append('prompt', $('#hint').value.trim());
+    if ($('#stt-ctx').value) fd.append('context', $('#stt-ctx').value);
+    if ($('#hotwords').value.trim()) fd.append('hotwords', $('#hotwords').value.trim());
     if ($('#words').checked) fd.append('timestamp_granularities', 'word');
   }
   $('#stt-prog').classList.add('on');
@@ -454,6 +571,8 @@ $('#asr').onclick = async () => {
       if ($('#stt-lang').value.trim()) fd2.append('language', $('#stt-lang').value.trim());
       fd2.append('temperature', $('#temp').value);
       if ($('#hint').value.trim()) fd2.append('prompt', $('#hint').value.trim());
+      if ($('#stt-ctx').value) fd2.append('context', $('#stt-ctx').value);
+      if ($('#hotwords').value.trim()) fd2.append('hotwords', $('#hotwords').value.trim());
       if ($('#words').checked) fd2.append('word_timestamps', 'true');
     }
     const start = await fetch('/v1/jobs/transcribe', {method:'POST', body: fd2});
@@ -467,6 +586,8 @@ $('#asr').onclick = async () => {
         $('#stt-msg').innerHTML =
           `распознано <b>${fmt(d.position)}</b> из <b>${fmt(d.total)} с</b>`;
         if (d.text){ partial += (partial ? ' ' : '') + d.text; $('#stt-out').textContent = partial; }
+      } else if (waiting(d)){
+        $('#stt-msg').innerHTML = waiting(d);
       }
     });
     $('#stt-bar').style.width = '100%';
@@ -565,7 +686,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-(async () => { await health(); await loadVoices(); snippet('py'); })();
+(async () => { await health(); await loadVoices(); loadContexts(); snippet('py'); })();
 </script>
 </body>
 </html>

@@ -85,3 +85,27 @@ def stretch(x: np.ndarray, sr: int, factor: float) -> np.ndarray:
                         "-filter:a", f"atempo={factor}", b], check=True)
         y, _ = sf.read(b, dtype="float32")
     return y
+
+
+def decode(raw: bytes, sr: int) -> np.ndarray:
+    """Any container a browser or a phone produces → mono float32 at `sr`.
+
+    Goes through PyAV, which faster-whisper already brings along, so it works
+    without the system ffmpeg that a source install may lack.
+    """
+    from faster_whisper.audio import decode_audio
+
+    try:
+        return decode_audio(io.BytesIO(raw), sampling_rate=sr)
+    except Exception as e:                  # noqa: BLE001 — формат приходит от клиента
+        raise ValueError(f"cannot decode audio: {e}") from None
+
+
+def resample(x: np.ndarray, src: int, dst: int) -> np.ndarray:
+    if src == dst:
+        return x
+    from math import gcd
+
+    from scipy.signal import resample_poly
+    g = gcd(src, dst)
+    return resample_poly(x, dst // g, src // g).astype(np.float32)

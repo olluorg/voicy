@@ -22,6 +22,8 @@ cat статья.md | ./voicy say - out.opus      # или из потока
 
 ./voicy hear запись.opus                    # распознавание → текст в stdout
 ./voicy hear запись.opus --format srt       # субтитры
+./voicy hear созвон.opus --context engineering   # термины: Kafka, а не «кавка»
+./voicy hear созвон.opus --hotwords "Helm, Grafana"
 TEXT=$(./voicy hear запись.opus)            # stdout чистый, можно подставлять
 
 ./voicy voices                              # какие голоса есть
@@ -29,6 +31,22 @@ TEXT=$(./voicy hear запись.opus)            # stdout чистый, мож�
 ```
 
 `./voicy <команда> --help` — остальные флаги.
+
+## Не ждать
+
+Все запросы идут через одну очередь. Длинную работу можно поставить и уйти:
+
+```bash
+ID=$(./voicy say @статья.md --detach)       # в stdout только id задания
+./voicy job $ID out.opus --wait             # дождаться и забрать звук
+ID=$(./voicy hear лекция.opus --detach)
+./voicy job $ID --wait --format srt         # расшифровка по id
+./voicy jobs                                # что в очереди
+./voicy cancel $ID
+./voicy say "..." --webhook http://сервис/hook   # сервер сам позовёт, когда готово
+```
+
+Задания живут в памяти сервера: 30 минут после готовности и до перезапуска.
 
 ## Сервер
 
@@ -94,6 +112,9 @@ CLI обходит прокси для локальных адресов сам.
 ./voicy add-voice образец.wav имя --note "чем хорош"
 ```
 
+Подойдёт любой формат, хоть запись с телефона: сервер перекодирует образец сам.
+Существующее имя не перезаписывается без `--replace`.
+
 Расшифровку писать не нужно — сервер распознает её сам, и это надёжнее ручного
 ввода. Расшифровка здесь важнее, чем кажется: тот же клип с текстом, обрезанным
 на полуслове, дал 7.3% ошибок против 1.0% при точном совпадении.
@@ -135,8 +156,11 @@ curl -s localhost:8080/v1/audio/speech -H 'Content-Type: application/json' \
   -d '{"input":"текст","voice":"turgenev","response_format":"opus"}' -o out.opus
 ```
 
-Полный список маршрутов, включая задания с прогрессом
-(`/v1/jobs/speech` + поток событий) — [`server/README.md`](server/README.md).
+Полный список маршрутов — [`server/README.md`](server/README.md): задания,
+очередь и webhook (`/v1/jobs`), расшифровка с `stream=true`, профили контекста
+(`/v1/contexts`) и живая речь для голосового агента по WebSocket
+(`/v1/audio/transcriptions/stream`): начало речи, текст по предложениям
+и конец реплики, который определяется по интонации, а не только по паузе.
 
 ## Где что лежит
 

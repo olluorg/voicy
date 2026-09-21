@@ -10,101 +10,106 @@ Everything runs locally. No key leaves the machine, because there is no key.
 """
 from __future__ import annotations
 
-import io
+import asyncio
+import json
 import os
-import tempfile
 import time
 from pathlib import Path
 
-import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 import audio_io
+import contexts
 import jobs
+import live
 import textprep
+import transcripts
 from schemas import SpeechRequest
 import voices as voice_registry
 from engines.device import describe, has_cuda
 from engines.stt_whisper import WhisperSTT
 from engines.tts_qwen import QwenTTS
+from engines.turn_smart import SmartTurn
 
 HERE = Path(__file__).parent
 TTS_MODEL = os.environ.get("TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
 STT_MODEL = os.environ.get("STT_MODEL", "large-v3-turbo")
 
-app = FastAPI(title="voicy", version="1.0.0",
+app = FastAPI(title="voicy", version="1.1.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
 tts = QwenTTS(TTS_MODEL)
 stt = WhisperSTT(STT_MODEL)
+turn = SmartTurn()
 
 
 # ----------------------------------------------------------------- OpenAI: TTS
+#
+# Совместимые маршруты тоже становятся заданиями и ждут в общей очереди —
+# снаружи они по-прежнему синхронны, а id задания приходит в X-Job-Id.
 
 @app.post("/v1/audio/speech")
-def speech(req: SpeechRequest):
-    if not req.input.strip():
-        raise HTTPException(400, "input is empty")
-    v = voice_registry.get(req.voice) if req.voice else voice_registry.default()
-    if v is None:
-        raise HTTPException(400, "no voice available — add one via /v1/voices")
-    if not v.text:
-        raise HTTPException(400, f"voice '{v.name}' has no reference transcript")
-
-    text = req.input
-    if req.prepare or req.legato:
-        text = textprep.prepare(text, req.prepare, req.legato)["text"]
-
-    started = time.perf_counter()
-    out = tts.speak(text, v.path, v.text, language=req.language, seed=req.seed)
-    audio = audio_io.stretch(out.audio, out.sample_rate, req.speed) if req.speed != 1.0 else out.audio
-    data, content_type = audio_io.encode(audio, out.sample_rate, req.response_format)
-
-    return Response(content=data, media_type=content_type, headers={
-        "X-Voice": v.name,
-        "X-Audio-Seconds": f"{len(audio) / out.sample_rate:.2f}",
-        "X-Generation-Seconds": f"{time.perf_counter() - started:.2f}",
+async def speech(req: SpeechRequest, request: Request):
+    job, _ = jobs.submit_speech(req, request)
+    await jobs.wait(job)
+    r = job.result
+    return Response(content=r["data"], media_type=r["content_type"], headers={
+        "X-Job-Id": job.id,
+        "X-Voice": r["voice"],
+        "X-Audio-Seconds": f"{r['seconds']:.2f}",
+        "X-Generation-Seconds": f"{job.finished - job.started:.2f}",
+        "X-Queue-Seconds": f"{job.started - job.created:.2f}",
     })
 
 
 # ----------------------------------------------------------------- OpenAI: STT
 
-def _srt_time(t: float) -> str:
-    h, rem = divmod(t, 3600)
-    m, s = divmod(rem, 60)
-    return f"{int(h):02}:{int(m):02}:{int(s):02},{int((s % 1) * 1000):03}"
+def _delta_stream(job):
+    """`stream=true` in OpenAI's shape: text deltas, then the whole text.
 
+    OpenAI streams only for its newer models; here Whisper's segments are the
+    deltas, each with the time span it covers as an extra field.
+    """
+    async def gen():
+        q = job.subscribe()
+        first = True
+        try:
+            while not job.done:
+                try:
+                    event = await asyncio.wait_for(q.get(), timeout=25)
+                except asyncio.TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
+                stage = event.get("stage")
+                if stage == "recognition" and event.get("text"):
+                    delta = event["text"] if first else " " + event["text"]
+                    first = False
+                    payload = {"type": "transcript.text.delta", "delta": delta,
+                               "end": event["position"], "duration": event["total"]}
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                elif stage in ("error", "cancelled"):
+                    break
+            if job.state == "done":
+                payload = {"type": "transcript.text.done", "text": job.result["text"],
+                           "language": job.result["language"],
+                           "duration": job.result["duration"], "job_id": job.id}
+            else:
+                payload = {"type": "error", "error": {"message": job.error or job.state}}
+            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        finally:
+            job.unsubscribe(q)
+            if not job.done:                        # клиент ушёл — работа никому не нужна
+                jobs.queue.cancel(job)
 
-def _format_transcript(tr, response_format: str):
-    fmt = (response_format or "json").lower()
-    if fmt == "text":
-        return Response(tr.text, media_type="text/plain; charset=utf-8")
-    if fmt == "srt":
-        lines = []
-        for i, s in enumerate(tr.segments, 1):
-            lines += [str(i), f"{_srt_time(s.start)} --> {_srt_time(s.end)}", s.text, ""]
-        return Response("\n".join(lines), media_type="text/plain; charset=utf-8")
-    if fmt == "vtt":
-        lines = ["WEBVTT", ""]
-        for s in tr.segments:
-            lines += [f"{_srt_time(s.start).replace(',', '.')} --> "
-                      f"{_srt_time(s.end).replace(',', '.')}", s.text, ""]
-        return Response("\n".join(lines), media_type="text/vtt; charset=utf-8")
-    if fmt == "verbose_json":
-        return JSONResponse({
-            "task": "transcribe", "language": tr.language, "duration": tr.duration,
-            "text": tr.text,
-            "segments": [{"id": i, "start": s.start, "end": s.end, "text": s.text,
-                          "words": [{"word": w.word, "start": w.start, "end": w.end}
-                                    for w in s.words]}
-                         for i, s in enumerate(tr.segments)],
-        })
-    return JSONResponse({"text": tr.text})
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no",
+                                      "X-Job-Id": job.id})
 
 
 @app.post("/v1/audio/transcriptions")
 async def transcriptions(
+    request: Request,
     file: UploadFile = File(...),
     model: str = Form("whisper-1"),
     language: str | None = Form(None),
@@ -112,42 +117,37 @@ async def transcriptions(
     response_format: str = Form("json"),
     temperature: float = Form(0.0),
     timestamp_granularities: str | None = Form(None),
+    stream: bool = Form(False),
+    context: str | None = Form(None),
+    hotwords: str | None = Form(None),
 ):
-    raw = await file.read()
-    if not raw:
-        raise HTTPException(400, "file is empty")
-    suffix = Path(file.filename or "audio.wav").suffix or ".wav"
-    with tempfile.TemporaryDirectory() as d:
-        path = os.path.join(d, f"in{suffix}")
-        with open(path, "wb") as f:
-            f.write(raw)
-        want_words = bool(timestamp_granularities and "word" in timestamp_granularities) \
-            or response_format == "verbose_json"
-        tr = stt.transcribe(path, language=language, prompt=prompt,
-                            temperature=temperature, word_timestamps=want_words)
-    return _format_transcript(tr, response_format)
+    want_words = bool(timestamp_granularities and "word" in timestamp_granularities) \
+        or response_format == "verbose_json"
+    job = jobs.submit_transcription(await file.read(), file.filename, request,
+                                    language=language, prompt=prompt,
+                                    temperature=temperature, word_timestamps=want_words,
+                                    context=context, hotwords=hotwords)
+    if stream:
+        return _delta_stream(job)
+    await jobs.wait(job)
+    resp = transcripts.render(job.result, response_format)
+    resp.headers["X-Job-Id"] = job.id
+    return resp
 
 
 @app.post("/v1/audio/translations")
-async def translations(file: UploadFile = File(...), model: str = Form("whisper-1"),
-                       prompt: str | None = Form(None), response_format: str = Form("json"),
-                       temperature: float = Form(0.0)):
+async def translations(request: Request, file: UploadFile = File(...),
+                       model: str = Form("whisper-1"), prompt: str | None = Form(None),
+                       response_format: str = Form("json"), temperature: float = Form(0.0)):
     """OpenAI translates to English here. Whisper does that with task=translate;
     faster-whisper exposes it the same way, so the contract is honoured."""
-    raw = await file.read()
-    with tempfile.TemporaryDirectory() as d:
-        path = os.path.join(d, "in" + (Path(file.filename or "a.wav").suffix or ".wav"))
-        with open(path, "wb") as f:
-            f.write(raw)
-        stt.load()
-        with stt._lock:                                    # noqa: SLF001 — тот же GPU
-            segments, info = stt._model.transcribe(path, task="translate",  # noqa: SLF001
-                                                   initial_prompt=prompt,
-                                                   temperature=temperature, beam_size=5)
-            text = " ".join(s.text for s in segments).strip()
-    if response_format == "text":
-        return Response(text, media_type="text/plain; charset=utf-8")
-    return JSONResponse({"text": text})
+    job = jobs.submit_transcription(await file.read(), file.filename, request,
+                                    task="translate", prompt=prompt,
+                                    temperature=temperature)
+    await jobs.wait(job)
+    resp = transcripts.render(job.result, response_format)
+    resp.headers["X-Job-Id"] = job.id
+    return resp
 
 
 # -------------------------------------------------------------- OpenAI: models
@@ -172,23 +172,82 @@ def get_voices():
 
 @app.post("/v1/voices")
 async def add_voice(file: UploadFile = File(...), name: str = Form(...),
-                    text: str = Form(""), note: str = Form("")):
+                    text: str = Form(""), note: str = Form(""),
+                    replace: bool = Form(False)):
     """Register a reference clip. An empty transcript is filled in by the recogniser.
 
     The transcript matters more than it looks: the same clip with a transcript cut
     mid-phrase measured 7.3% error against 1.0% when the two agreed exactly.
     """
+    try:
+        voice_registry.check_name(name)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from None
+    if voice_registry.get(name) and not replace:
+        raise HTTPException(409, f"voice '{name}' exists — pass replace=true to overwrite")
     raw = await file.read()
     if not raw:
         raise HTTPException(400, "file is empty")
+    try:
+        audio = audio_io.decode(raw, voice_registry.SAMPLE_RATE)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from None
+
+    seconds = len(audio) / voice_registry.SAMPLE_RATE
+    lo, hi = voice_registry.GOOD_SECONDS
+    if not voice_registry.MIN_SECONDS <= seconds <= voice_registry.MAX_SECONDS:
+        raise HTTPException(400, f"sample is {seconds:.1f} s; need "
+                                 f"{voice_registry.MIN_SECONDS:.0f}–"
+                                 f"{voice_registry.MAX_SECONDS:.0f} s, best {lo:.0f}–{hi:.0f}")
+    warnings = []
+    if not lo <= seconds <= hi:
+        warnings.append(f"sample is {seconds:.1f} s; clones are best from {lo:.0f}–{hi:.0f} s")
+
     if not text.strip():
-        with tempfile.TemporaryDirectory() as d:
-            p = os.path.join(d, "ref" + (Path(file.filename or "a.wav").suffix or ".wav"))
-            with open(p, "wb") as f:
-                f.write(raw)
-            text = stt.transcribe(p).text
-    v = voice_registry.add(name, raw, text.strip(), note)
-    return v.as_dict()
+        pcm16k = audio_io.resample(audio, voice_registry.SAMPLE_RATE, 16000)
+        text = (await asyncio.to_thread(stt.transcribe, pcm16k)).text
+    v = voice_registry.add(name, audio_io.to_wav(audio, voice_registry.SAMPLE_RATE),
+                           text.strip(), note)
+    return {**v.as_dict(), "seconds": round(seconds, 2), "warnings": warnings}
+
+
+@app.get("/v1/contexts")
+def get_contexts():
+    return {"object": "list", "data": [c.as_dict() for c in contexts.list_contexts()]}
+
+
+@app.get("/v1/contexts/{name}")
+def get_context(name: str):
+    c = contexts.get(name)
+    if c is None:
+        raise HTTPException(404, "unknown context")
+    return c.as_dict()
+
+
+@app.put("/v1/contexts/{name}")
+def put_context(name: str, payload: dict):
+    """{"prompt": "...", "hotwords": ["Kafka", ...], "replacements": {"кавка": "Kafka"}, "note": "..."}"""
+    hot = payload.get("hotwords") or []
+    rep = payload.get("replacements") or {}
+    if not isinstance(hot, list) or not isinstance(rep, dict):
+        raise HTTPException(400, "hotwords must be a list, replacements an object")
+    try:
+        c = contexts.put(name, note=str(payload.get("note", "")),
+                         prompt=str(payload.get("prompt", "")),
+                         hotwords=[str(h) for h in hot],
+                         replacements={str(k): str(v) for k, v in rep.items()})
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from None
+    return c.as_dict()
+
+
+@app.delete("/v1/contexts/{name}")
+def delete_context(name: str):
+    if name == contexts.BUILTIN:
+        raise HTTPException(400, f"'{name}' is built in")
+    if not contexts.delete(name):
+        raise HTTPException(404, "unknown context")
+    return {"deleted": name}
 
 
 @app.post("/v1/text/prepare")
@@ -200,6 +259,7 @@ def prepare_text(payload: dict):
 
 
 jobs.attach(app, tts, stt)
+live.attach(app, stt, turn)
 
 
 @app.get("/health")
@@ -208,9 +268,13 @@ def health():
             "tts": {"model": TTS_MODEL, "loaded": tts.loaded, "device": tts.device},
             "stt": {"model": STT_MODEL, "loaded": stt.loaded, "device": stt.device,
                     "compute_type": stt.compute_type},
+            "turn": {"model": f"{turn.repo}/{turn.filename}", "loaded": turn.loaded,
+                     "device": "cpu"},
             "cuda": has_cuda(),
             "device": describe(),
-            "voices": [v.name for v in voice_registry.list_voices()]}
+            "voices": [v.name for v in voice_registry.list_voices()],
+            "queue": {"pending": jobs.queue.pending(), "max": jobs.queue.max_pending,
+                      "running": jobs.queue.current.id if jobs.queue.current else None}}
 
 
 # ------------------------------------------------------------------------- UI

@@ -1,0 +1,2859 @@
+{
+ "report": {
+  "n": 400,
+  "pause_s": 0.2,
+  "ms_per_call": 24.3,
+  "thresholds": {
+   "0.3": {
+    "model": {
+     "accuracy": 58.2,
+     "false_complete_pct": 75.5,
+     "false_incomplete_pct": 8.0
+    },
+    "model+text": {
+     "accuracy": 61.6,
+     "false_complete_pct": 68.8,
+     "false_incomplete_pct": 8.0
+    }
+   },
+   "0.5": {
+    "model": {
+     "accuracy": 61.1,
+     "false_complete_pct": 68.2,
+     "false_incomplete_pct": 9.5
+    },
+    "model+text": {
+     "accuracy": 63.9,
+     "false_complete_pct": 62.8,
+     "false_incomplete_pct": 9.5
+    }
+   },
+   "0.7": {
+    "model": {
+     "accuracy": 63.8,
+     "false_complete_pct": 60.0,
+     "false_incomplete_pct": 12.5
+    },
+    "model+text": {
+     "accuracy": 66.1,
+     "false_complete_pct": 55.2,
+     "false_incomplete_pct": 12.5
+    }
+   },
+   "0.9": {
+    "model": {
+     "accuracy": 67.1,
+     "false_complete_pct": 44.2,
+     "false_incomplete_pct": 21.5
+    },
+    "model+text": {
+     "accuracy": 69.0,
+     "false_complete_pct": 40.5,
+     "false_incomplete_pct": 21.5
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "file": "golos/00000.wav",
+   "complete": 0.9897,
+   "incomplete": 0.8111,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00001.wav",
+   "complete": 0.9893,
+   "incomplete": 0.983,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00005.wav",
+   "complete": 0.9685,
+   "incomplete": 0.9685,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00006.wav",
+   "complete": 0.9816,
+   "incomplete": 0.5972,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00008.wav",
+   "complete": 0.9446,
+   "incomplete": 0.083,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00009.wav",
+   "complete": 0.9865,
+   "incomplete": 0.3386,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00010.wav",
+   "complete": 0.983,
+   "incomplete": 0.9647,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00011.wav",
+   "complete": 0.7722,
+   "incomplete": 0.9357,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00014.wav",
+   "complete": 0.92,
+   "incomplete": 0.7508,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00015.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9589,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00018.wav",
+   "complete": 0.9897,
+   "incomplete": 0.9589,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00021.wav",
+   "complete": 0.9719,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00023.wav",
+   "complete": 0.9759,
+   "incomplete": 0.9308,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00025.wav",
+   "complete": 0.9228,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00026.wav",
+   "complete": 0.0366,
+   "incomplete": 0.2076,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00027.wav",
+   "complete": 0.9823,
+   "incomplete": 0.986,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00031.wav",
+   "complete": 0.1065,
+   "incomplete": 0.0643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00032.wav",
+   "complete": 0.9708,
+   "incomplete": 0.9589,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00034.wav",
+   "complete": 0.9809,
+   "incomplete": 0.983,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00035.wav",
+   "complete": 0.988,
+   "incomplete": 0.9505,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00036.wav",
+   "complete": 0.5972,
+   "incomplete": 0.8395,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00037.wav",
+   "complete": 0.8111,
+   "incomplete": 0.0744,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00039.wav",
+   "complete": 0.986,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00042.wav",
+   "complete": 0.9708,
+   "incomplete": 0.8897,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00043.wav",
+   "complete": 0.027,
+   "incomplete": 0.046,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00044.wav",
+   "complete": 0.9647,
+   "incomplete": 0.5295,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00045.wav",
+   "complete": 0.9505,
+   "incomplete": 0.2142,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00048.wav",
+   "complete": 0.8596,
+   "incomplete": 0.8688,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00050.wav",
+   "complete": 0.025,
+   "incomplete": 0.0575,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00051.wav",
+   "complete": 0.8817,
+   "incomplete": 0.9768,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00052.wav",
+   "complete": 0.0111,
+   "incomplete": 0.0717,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00054.wav",
+   "complete": 0.9897,
+   "incomplete": 0.9357,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00055.wav",
+   "complete": 0.9619,
+   "incomplete": 0.8171,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00056.wav",
+   "complete": 0.9008,
+   "incomplete": 0.4607,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00057.wav",
+   "complete": 0.9446,
+   "incomplete": 0.086,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00058.wav",
+   "complete": 0.0091,
+   "incomplete": 0.0534,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00059.wav",
+   "complete": 0.8775,
+   "incomplete": 0.9308,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00064.wav",
+   "complete": 0.9893,
+   "incomplete": 0.8111,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00066.wav",
+   "complete": 0.9875,
+   "incomplete": 0.027,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00067.wav",
+   "complete": 0.914,
+   "incomplete": 0.8897,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00068.wav",
+   "complete": 0.9708,
+   "incomplete": 0.8858,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00070.wav",
+   "complete": 0.5972,
+   "incomplete": 0.2012,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00071.wav",
+   "complete": 0.9308,
+   "incomplete": 0.9228,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00072.wav",
+   "complete": 0.986,
+   "incomplete": 0.1889,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00073.wav",
+   "complete": 0.9708,
+   "incomplete": 0.2278,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00074.wav",
+   "complete": 0.975,
+   "incomplete": 0.9403,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00076.wav",
+   "complete": 0.9786,
+   "incomplete": 0.9685,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00077.wav",
+   "complete": 0.7202,
+   "incomplete": 0.0062,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00079.wav",
+   "complete": 0.9823,
+   "incomplete": 0.9719,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00082.wav",
+   "complete": 0.9708,
+   "incomplete": 0.7722,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00083.wav",
+   "complete": 0.3298,
+   "incomplete": 0.3212,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00084.wav",
+   "complete": 0.8229,
+   "incomplete": 0.9228,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00086.wav",
+   "complete": 0.9816,
+   "incomplete": 0.7358,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00088.wav",
+   "complete": 0.9634,
+   "incomplete": 0.7581,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00089.wav",
+   "complete": 0.9889,
+   "incomplete": 0.9403,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00090.wav",
+   "complete": 0.9794,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00091.wav",
+   "complete": 0.9889,
+   "incomplete": 0.0381,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00093.wav",
+   "complete": 0.988,
+   "incomplete": 0.8643,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00094.wav",
+   "complete": 0.9849,
+   "incomplete": 0.616,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00097.wav",
+   "complete": 0.975,
+   "incomplete": 0.9634,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00101.wav",
+   "complete": 0.9708,
+   "incomplete": 0.917,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00102.wav",
+   "complete": 0.988,
+   "incomplete": 0.9505,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00103.wav",
+   "complete": 0.9854,
+   "incomplete": 0.3933,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00104.wav",
+   "complete": 0.0924,
+   "incomplete": 0.5197,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00105.wav",
+   "complete": 0.9768,
+   "incomplete": 0.8897,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00106.wav",
+   "complete": 0.9697,
+   "incomplete": 0.7581,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00107.wav",
+   "complete": 0.9854,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00108.wav",
+   "complete": 0.9801,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00109.wav",
+   "complete": 0.9008,
+   "incomplete": 0.704,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00110.wav",
+   "complete": 0.8732,
+   "incomplete": 0.0495,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00111.wav",
+   "complete": 0.6702,
+   "incomplete": 0.5685,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00112.wav",
+   "complete": 0.6957,
+   "incomplete": 0.0214,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00113.wav",
+   "complete": 0.8897,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00114.wav",
+   "complete": 0.8732,
+   "incomplete": 0.805,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00116.wav",
+   "complete": 0.9768,
+   "incomplete": 0.5,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00120.wav",
+   "complete": 0.9885,
+   "incomplete": 0.8732,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00121.wav",
+   "complete": 0.9865,
+   "incomplete": 0.8935,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00122.wav",
+   "complete": 0.9836,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00124.wav",
+   "complete": 0.9843,
+   "incomplete": 0.3386,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00126.wav",
+   "complete": 0.9685,
+   "incomplete": 0.966,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00128.wav",
+   "complete": 0.026,
+   "incomplete": 0.3564,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00129.wav",
+   "complete": 0.9843,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00130.wav",
+   "complete": 0.9801,
+   "incomplete": 0.7508,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00131.wav",
+   "complete": 0.8341,
+   "incomplete": 0.9425,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00135.wav",
+   "complete": 0.9901,
+   "incomplete": 0.966,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00136.wav",
+   "complete": 0.9786,
+   "incomplete": 0.6873,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00137.wav",
+   "complete": 0.9786,
+   "incomplete": 0.9228,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00138.wav",
+   "complete": 0.9425,
+   "incomplete": 0.8498,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00146.wav",
+   "complete": 0.9801,
+   "incomplete": 0.1771,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00148.wav",
+   "complete": 0.988,
+   "incomplete": 0.917,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00149.wav",
+   "complete": 0.9893,
+   "incomplete": 0.9719,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00150.wav",
+   "complete": 0.9849,
+   "incomplete": 0.7581,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00152.wav",
+   "complete": 0.0292,
+   "incomplete": 0.025,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00154.wav",
+   "complete": 0.9816,
+   "incomplete": 0.9854,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00156.wav",
+   "complete": 0.9719,
+   "incomplete": 0.9486,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00157.wav",
+   "complete": 0.975,
+   "incomplete": 0.2798,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00158.wav",
+   "complete": 0.9865,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00159.wav",
+   "complete": 0.5781,
+   "incomplete": 0.914,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00161.wav",
+   "complete": 0.9897,
+   "incomplete": 0.9308,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00163.wav",
+   "complete": 0.987,
+   "incomplete": 0.1183,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00164.wav",
+   "complete": 0.805,
+   "incomplete": 0.4123,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00165.wav",
+   "complete": 0.9849,
+   "incomplete": 0.9283,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00166.wav",
+   "complete": 0.9889,
+   "incomplete": 0.987,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00167.wav",
+   "complete": 0.988,
+   "incomplete": 0.974,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00171.wav",
+   "complete": 0.0078,
+   "incomplete": 0.3043,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00172.wav",
+   "complete": 0.9486,
+   "incomplete": 0.025,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00173.wav",
+   "complete": 0.6067,
+   "incomplete": 0.9228,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00174.wav",
+   "complete": 0.9697,
+   "incomplete": 0.0992,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00176.wav",
+   "complete": 0.4412,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00177.wav",
+   "complete": 0.9836,
+   "incomplete": 0.986,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00179.wav",
+   "complete": 0.9809,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00180.wav",
+   "complete": 0.0107,
+   "incomplete": 0.9357,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00181.wav",
+   "complete": 0.9801,
+   "incomplete": 0.983,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00182.wav",
+   "complete": 0.728,
+   "incomplete": 0.9719,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00183.wav",
+   "complete": 0.9885,
+   "incomplete": 0.2278,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00184.wav",
+   "complete": 0.973,
+   "incomplete": 0.975,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00186.wav",
+   "complete": 0.9777,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00188.wav",
+   "complete": 0.986,
+   "incomplete": 0.0992,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00190.wav",
+   "complete": 0.988,
+   "incomplete": 0.1714,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00191.wav",
+   "complete": 0.9381,
+   "incomplete": 0.9786,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00193.wav",
+   "complete": 0.9849,
+   "incomplete": 0.8341,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00196.wav",
+   "complete": 0.9843,
+   "incomplete": 0.8643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00197.wav",
+   "complete": 0.988,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00198.wav",
+   "complete": 0.7581,
+   "incomplete": 0.9283,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00199.wav",
+   "complete": 0.616,
+   "incomplete": 0.8935,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00200.wav",
+   "complete": 0.8775,
+   "incomplete": 0.6525,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00201.wav",
+   "complete": 0.9889,
+   "incomplete": 0.9786,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00202.wav",
+   "complete": 0.9557,
+   "incomplete": 0.6253,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00204.wav",
+   "complete": 0.9403,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00205.wav",
+   "complete": 0.9816,
+   "incomplete": 0.9505,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00208.wav",
+   "complete": 0.9843,
+   "incomplete": 0.9697,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00212.wav",
+   "complete": 0.6788,
+   "incomplete": 0.9768,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00215.wav",
+   "complete": 0.9256,
+   "incomplete": 0.1714,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00217.wav",
+   "complete": 0.9849,
+   "incomplete": 0.9768,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00218.wav",
+   "complete": 0.9893,
+   "incomplete": 0.0554,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00219.wav",
+   "complete": 0.9557,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00221.wav",
+   "complete": 0.8341,
+   "incomplete": 0.2878,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00223.wav",
+   "complete": 0.9809,
+   "incomplete": 0.1357,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00224.wav",
+   "complete": 0.9605,
+   "incomplete": 0.8286,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00225.wav",
+   "complete": 0.9885,
+   "incomplete": 0.987,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00226.wav",
+   "complete": 0.6345,
+   "incomplete": 0.8688,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00235.wav",
+   "complete": 0.8111,
+   "incomplete": 0.6702,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00239.wav",
+   "complete": 0.0426,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00241.wav",
+   "complete": 0.9685,
+   "incomplete": 0.2642,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00242.wav",
+   "complete": 0.987,
+   "incomplete": 0.0514,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00245.wav",
+   "complete": 0.0597,
+   "incomplete": 0.7988,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00247.wav",
+   "complete": 0.9357,
+   "incomplete": 0.2798,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00248.wav",
+   "complete": 0.017,
+   "incomplete": 0.0069,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00255.wav",
+   "complete": 0.4509,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00257.wav",
+   "complete": 0.9893,
+   "incomplete": 0.8286,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00258.wav",
+   "complete": 0.9786,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00262.wav",
+   "complete": 0.986,
+   "incomplete": 0.9849,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00264.wav",
+   "complete": 0.8972,
+   "incomplete": 0.8935,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00265.wav",
+   "complete": 0.9875,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00266.wav",
+   "complete": 0.9897,
+   "incomplete": 0.4803,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00268.wav",
+   "complete": 0.8596,
+   "incomplete": 0.3043,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00269.wav",
+   "complete": 0.9901,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00270.wav",
+   "complete": 0.9574,
+   "incomplete": 0.1065,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00271.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9697,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00272.wav",
+   "complete": 0.9697,
+   "incomplete": 0.9849,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00275.wav",
+   "complete": 0.9333,
+   "incomplete": 0.5295,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00276.wav",
+   "complete": 0.0103,
+   "incomplete": 0.7924,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00277.wav",
+   "complete": 0.983,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00278.wav",
+   "complete": 0.975,
+   "incomplete": 0.4705,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00281.wav",
+   "complete": 0.9865,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00282.wav",
+   "complete": 0.9685,
+   "incomplete": 0.08,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00285.wav",
+   "complete": 0.9505,
+   "incomplete": 0.8341,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00287.wav",
+   "complete": 0.9836,
+   "incomplete": 0.9283,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00289.wav",
+   "complete": 0.986,
+   "incomplete": 0.0214,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00291.wav",
+   "complete": 0.974,
+   "incomplete": 0.6253,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00292.wav",
+   "complete": 0.92,
+   "incomplete": 0.975,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00294.wav",
+   "complete": 0.9816,
+   "incomplete": 0.0191,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00295.wav",
+   "complete": 0.974,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00297.wav",
+   "complete": 0.9823,
+   "incomplete": 0.6253,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00299.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9786,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00301.wav",
+   "complete": 0.9901,
+   "incomplete": 0.9042,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00302.wav",
+   "complete": 0.983,
+   "incomplete": 0.9673,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00303.wav",
+   "complete": 0.9836,
+   "incomplete": 0.9425,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00304.wav",
+   "complete": 0.9333,
+   "incomplete": 0.025,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00305.wav",
+   "complete": 0.9425,
+   "incomplete": 0.7122,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00306.wav",
+   "complete": 0.983,
+   "incomplete": 0.9816,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00307.wav",
+   "complete": 0.986,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00308.wav",
+   "complete": 0.9843,
+   "incomplete": 0.1183,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00309.wav",
+   "complete": 0.9885,
+   "incomplete": 0.3475,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00310.wav",
+   "complete": 0.9809,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00312.wav",
+   "complete": 0.9849,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00313.wav",
+   "complete": 0.9768,
+   "incomplete": 0.7358,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00317.wav",
+   "complete": 0.9901,
+   "incomplete": 0.6345,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00319.wav",
+   "complete": 0.9708,
+   "incomplete": 0.9557,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00320.wav",
+   "complete": 0.9108,
+   "incomplete": 0.9685,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00321.wav",
+   "complete": 0.9854,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00322.wav",
+   "complete": 0.9809,
+   "incomplete": 0.5098,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00323.wav",
+   "complete": 0.9875,
+   "incomplete": 0.0381,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00324.wav",
+   "complete": 0.9008,
+   "incomplete": 0.966,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00325.wav",
+   "complete": 0.8171,
+   "incomplete": 0.8548,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00327.wav",
+   "complete": 0.2012,
+   "incomplete": 0.9673,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00329.wav",
+   "complete": 0.0892,
+   "incomplete": 0.4803,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00331.wav",
+   "complete": 0.9865,
+   "incomplete": 0.4902,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00332.wav",
+   "complete": 0.975,
+   "incomplete": 0.9486,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00334.wav",
+   "complete": 0.986,
+   "incomplete": 0.6525,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00335.wav",
+   "complete": 0.9897,
+   "incomplete": 0.3655,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00336.wav",
+   "complete": 0.9557,
+   "incomplete": 0.0477,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00337.wav",
+   "complete": 0.5877,
+   "incomplete": 0.6788,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00338.wav",
+   "complete": 0.988,
+   "incomplete": 0.9076,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00340.wav",
+   "complete": 0.9605,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00341.wav",
+   "complete": 0.9256,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00342.wav",
+   "complete": 0.9816,
+   "incomplete": 0.9446,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00343.wav",
+   "complete": 0.4412,
+   "incomplete": 0.0575,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00344.wav",
+   "complete": 0.8858,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00345.wav",
+   "complete": 0.9809,
+   "incomplete": 0.7988,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00348.wav",
+   "complete": 0.8972,
+   "incomplete": 0.9816,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00349.wav",
+   "complete": 0.9816,
+   "incomplete": 0.9589,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00351.wav",
+   "complete": 0.986,
+   "incomplete": 0.9865,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00352.wav",
+   "complete": 0.027,
+   "incomplete": 0.0426,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00354.wav",
+   "complete": 0.986,
+   "incomplete": 0.1829,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00355.wav",
+   "complete": 0.914,
+   "incomplete": 0.9403,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00357.wav",
+   "complete": 0.973,
+   "incomplete": 0.805,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00358.wav",
+   "complete": 0.9849,
+   "incomplete": 0.1404,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00359.wav",
+   "complete": 0.9836,
+   "incomplete": 0.8935,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00360.wav",
+   "complete": 0.8548,
+   "incomplete": 0.027,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00361.wav",
+   "complete": 0.9865,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00362.wav",
+   "complete": 0.8732,
+   "incomplete": 0.1502,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00365.wav",
+   "complete": 0.9885,
+   "incomplete": 0.2209,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00366.wav",
+   "complete": 0.0643,
+   "incomplete": 0.9042,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00368.wav",
+   "complete": 0.7988,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00369.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9816,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00370.wav",
+   "complete": 0.9108,
+   "incomplete": 0.8548,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00371.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9854,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00372.wav",
+   "complete": 0.9759,
+   "incomplete": 0.1357,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00373.wav",
+   "complete": 0.9574,
+   "incomplete": 0.9685,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00376.wav",
+   "complete": 0.986,
+   "incomplete": 0.3655,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00377.wav",
+   "complete": 0.9381,
+   "incomplete": 0.9076,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00379.wav",
+   "complete": 0.9809,
+   "incomplete": 0.9619,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00380.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9777,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00381.wav",
+   "complete": 0.0514,
+   "incomplete": 0.7434,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00382.wav",
+   "complete": 0.9446,
+   "incomplete": 0.2419,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00383.wav",
+   "complete": 0.9505,
+   "incomplete": 0.9875,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00387.wav",
+   "complete": 0.9697,
+   "incomplete": 0.1312,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00388.wav",
+   "complete": 0.012,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00390.wav",
+   "complete": 0.9836,
+   "incomplete": 0.917,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00391.wav",
+   "complete": 0.9486,
+   "incomplete": 0.0214,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00392.wav",
+   "complete": 0.9849,
+   "incomplete": 0.1452,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00393.wav",
+   "complete": 0.9685,
+   "incomplete": 0.9816,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00394.wav",
+   "complete": 0.9854,
+   "incomplete": 0.616,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00395.wav",
+   "complete": 0.9893,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00397.wav",
+   "complete": 0.9897,
+   "incomplete": 0.2076,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00398.wav",
+   "complete": 0.9777,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00400.wav",
+   "complete": 0.9076,
+   "incomplete": 0.966,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00402.wav",
+   "complete": 0.9697,
+   "incomplete": 0.8972,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00404.wav",
+   "complete": 0.987,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00405.wav",
+   "complete": 0.9634,
+   "incomplete": 0.1312,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00407.wav",
+   "complete": 0.4705,
+   "incomplete": 0.5,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00410.wav",
+   "complete": 0.986,
+   "incomplete": 0.9108,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00411.wav",
+   "complete": 0.7722,
+   "incomplete": 0.025,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00414.wav",
+   "complete": 0.0135,
+   "incomplete": 0.0241,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00415.wav",
+   "complete": 0.986,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00416.wav",
+   "complete": 0.9836,
+   "incomplete": 0.8732,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00420.wav",
+   "complete": 0.9708,
+   "incomplete": 0.3475,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00422.wav",
+   "complete": 0.9885,
+   "incomplete": 0.1225,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00423.wav",
+   "complete": 0.954,
+   "incomplete": 0.5781,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00424.wav",
+   "complete": 0.9759,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00425.wav",
+   "complete": 0.9801,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00426.wav",
+   "complete": 0.4123,
+   "incomplete": 0.9446,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00428.wav",
+   "complete": 0.0177,
+   "incomplete": 0.2142,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00430.wav",
+   "complete": 0.9816,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00431.wav",
+   "complete": 0.966,
+   "incomplete": 0.2492,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00433.wav",
+   "complete": 0.9865,
+   "incomplete": 0.8286,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00435.wav",
+   "complete": 0.9557,
+   "incomplete": 0.8596,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00436.wav",
+   "complete": 0.9875,
+   "incomplete": 0.9708,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00437.wav",
+   "complete": 0.986,
+   "incomplete": 0.3212,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00438.wav",
+   "complete": 0.9108,
+   "incomplete": 0.9256,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00440.wav",
+   "complete": 0.974,
+   "incomplete": 0.9425,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00443.wav",
+   "complete": 0.9823,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00445.wav",
+   "complete": 0.9228,
+   "incomplete": 0.7202,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00446.wav",
+   "complete": 0.973,
+   "incomplete": 0.9446,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00447.wav",
+   "complete": 0.973,
+   "incomplete": 0.2878,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00448.wav",
+   "complete": 0.9809,
+   "incomplete": 0.034,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00449.wav",
+   "complete": 0.9849,
+   "incomplete": 0.2798,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00452.wav",
+   "complete": 0.986,
+   "incomplete": 0.9108,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00454.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9619,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00455.wav",
+   "complete": 0.9865,
+   "incomplete": 0.0084,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00456.wav",
+   "complete": 0.9801,
+   "incomplete": 0.9256,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00459.wav",
+   "complete": 0.974,
+   "incomplete": 0.1714,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00460.wav",
+   "complete": 0.7924,
+   "incomplete": 0.7508,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00463.wav",
+   "complete": 0.9697,
+   "incomplete": 0.616,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00464.wav",
+   "complete": 0.9523,
+   "incomplete": 0.0772,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00465.wav",
+   "complete": 0.9885,
+   "incomplete": 0.914,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00466.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9357,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00468.wav",
+   "complete": 0.9794,
+   "incomplete": 0.8111,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00470.wav",
+   "complete": 0.9901,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00471.wav",
+   "complete": 0.92,
+   "incomplete": 0.8643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00472.wav",
+   "complete": 0.0772,
+   "incomplete": 0.8229,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00476.wav",
+   "complete": 0.9719,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00477.wav",
+   "complete": 0.9893,
+   "incomplete": 0.9875,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00478.wav",
+   "complete": 0.9865,
+   "incomplete": 0.8111,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00479.wav",
+   "complete": 0.9486,
+   "incomplete": 0.0206,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00480.wav",
+   "complete": 0.9875,
+   "incomplete": 0.0575,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00481.wav",
+   "complete": 0.9854,
+   "incomplete": 0.974,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00491.wav",
+   "complete": 0.9893,
+   "incomplete": 0.9308,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00492.wav",
+   "complete": 0.9708,
+   "incomplete": 0.6525,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00493.wav",
+   "complete": 0.8498,
+   "incomplete": 0.8286,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00494.wav",
+   "complete": 0.7722,
+   "incomplete": 0.7858,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00496.wav",
+   "complete": 0.9697,
+   "incomplete": 0.1065,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00497.wav",
+   "complete": 0.9889,
+   "incomplete": 0.975,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00498.wav",
+   "complete": 0.8732,
+   "incomplete": 0.5393,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00499.wav",
+   "complete": 0.987,
+   "incomplete": 0.9228,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00500.wav",
+   "complete": 0.9885,
+   "incomplete": 0.975,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00501.wav",
+   "complete": 0.9777,
+   "incomplete": 0.5393,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00502.wav",
+   "complete": 0.973,
+   "incomplete": 0.917,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00503.wav",
+   "complete": 0.9589,
+   "incomplete": 0.1771,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00505.wav",
+   "complete": 0.0692,
+   "incomplete": 0.2076,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00507.wav",
+   "complete": 0.9634,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00508.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9619,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00510.wav",
+   "complete": 0.9893,
+   "incomplete": 0.0078,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00511.wav",
+   "complete": 0.0395,
+   "incomplete": 0.9425,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00513.wav",
+   "complete": 0.0958,
+   "incomplete": 0.6788,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00514.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9719,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00515.wav",
+   "complete": 0.9673,
+   "incomplete": 0.0924,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00516.wav",
+   "complete": 0.9809,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00519.wav",
+   "complete": 0.9875,
+   "incomplete": 0.2076,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00520.wav",
+   "complete": 0.9228,
+   "incomplete": 0.917,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00521.wav",
+   "complete": 0.9523,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00522.wav",
+   "complete": 0.9849,
+   "incomplete": 0.9673,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00523.wav",
+   "complete": 0.9893,
+   "incomplete": 0.3933,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00524.wav",
+   "complete": 0.9634,
+   "incomplete": 0.1183,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00525.wav",
+   "complete": 0.1714,
+   "incomplete": 0.0924,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00527.wav",
+   "complete": 0.1553,
+   "incomplete": 0.0411,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00533.wav",
+   "complete": 0.9719,
+   "incomplete": 0.9523,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00534.wav",
+   "complete": 0.988,
+   "incomplete": 0.9357,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00535.wav",
+   "complete": 0.987,
+   "incomplete": 0.3386,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00536.wav",
+   "complete": 0.9816,
+   "incomplete": 0.8447,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00537.wav",
+   "complete": 0.9446,
+   "incomplete": 0.966,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00541.wav",
+   "complete": 0.9897,
+   "incomplete": 0.973,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00542.wav",
+   "complete": 0.9849,
+   "incomplete": 0.1103,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00545.wav",
+   "complete": 0.9768,
+   "incomplete": 0.9673,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00546.wav",
+   "complete": 0.986,
+   "incomplete": 0.1312,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00547.wav",
+   "complete": 0.966,
+   "incomplete": 0.3475,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00548.wav",
+   "complete": 0.987,
+   "incomplete": 0.4803,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00550.wav",
+   "complete": 0.9885,
+   "incomplete": 0.9042,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00551.wav",
+   "complete": 0.9854,
+   "incomplete": 0.2012,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00554.wav",
+   "complete": 0.987,
+   "incomplete": 0.986,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00555.wav",
+   "complete": 0.987,
+   "incomplete": 0.5781,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00556.wav",
+   "complete": 0.9854,
+   "incomplete": 0.2278,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00558.wav",
+   "complete": 0.7924,
+   "incomplete": 0.914,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00560.wav",
+   "complete": 0.983,
+   "incomplete": 0.8643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00563.wav",
+   "complete": 0.973,
+   "incomplete": 0.0643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00564.wav",
+   "complete": 0.9836,
+   "incomplete": 0.4315,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00565.wav",
+   "complete": 0.9865,
+   "incomplete": 0.704,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00567.wav",
+   "complete": 0.9685,
+   "incomplete": 0.9697,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00568.wav",
+   "complete": 0.9697,
+   "incomplete": 0.9885,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00570.wav",
+   "complete": 0.1553,
+   "incomplete": 0.0241,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00571.wav",
+   "complete": 0.9823,
+   "incomplete": 0.0514,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00572.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9381,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00573.wav",
+   "complete": 0.5972,
+   "incomplete": 0.0223,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00574.wav",
+   "complete": 0.0151,
+   "incomplete": 0.1404,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00575.wav",
+   "complete": 0.9823,
+   "incomplete": 0.1889,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00576.wav",
+   "complete": 0.988,
+   "incomplete": 0.9823,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00577.wav",
+   "complete": 0.9885,
+   "incomplete": 0.8643,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00578.wav",
+   "complete": 0.973,
+   "incomplete": 0.0514,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00579.wav",
+   "complete": 0.966,
+   "incomplete": 0.8548,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00581.wav",
+   "complete": 0.9801,
+   "incomplete": 0.5781,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00582.wav",
+   "complete": 0.9708,
+   "incomplete": 0.6614,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00583.wav",
+   "complete": 0.6873,
+   "incomplete": 0.384,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00584.wav",
+   "complete": 0.987,
+   "incomplete": 0.6873,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00586.wav",
+   "complete": 0.9403,
+   "incomplete": 0.805,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00587.wav",
+   "complete": 0.9875,
+   "incomplete": 0.1889,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00589.wav",
+   "complete": 0.986,
+   "incomplete": 0.9786,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00590.wav",
+   "complete": 0.9849,
+   "incomplete": 0.6614,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00593.wav",
+   "complete": 0.7652,
+   "incomplete": 0.9605,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00597.wav",
+   "complete": 0.9794,
+   "incomplete": 0.2878,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00598.wav",
+   "complete": 0.988,
+   "incomplete": 0.08,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00601.wav",
+   "complete": 0.9505,
+   "incomplete": 0.5972,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00602.wav",
+   "complete": 0.9759,
+   "incomplete": 0.9619,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00603.wav",
+   "complete": 0.986,
+   "incomplete": 0.8111,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00604.wav",
+   "complete": 0.9801,
+   "incomplete": 0.8972,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00606.wav",
+   "complete": 0.9854,
+   "incomplete": 0.987,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00607.wav",
+   "complete": 0.988,
+   "incomplete": 0.8171,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00609.wav",
+   "complete": 0.8548,
+   "incomplete": 0.9381,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00610.wav",
+   "complete": 0.9823,
+   "incomplete": 0.6067,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00611.wav",
+   "complete": 0.9381,
+   "incomplete": 0.954,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00612.wav",
+   "complete": 0.983,
+   "incomplete": 0.9076,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00613.wav",
+   "complete": 0.9854,
+   "incomplete": 0.9446,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00614.wav",
+   "complete": 0.1553,
+   "incomplete": 0.0223,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00619.wav",
+   "complete": 0.9523,
+   "incomplete": 0.7508,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00620.wav",
+   "complete": 0.8643,
+   "incomplete": 0.5098,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00624.wav",
+   "complete": 0.9589,
+   "incomplete": 0.9794,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00625.wav",
+   "complete": 0.973,
+   "incomplete": 0.9801,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00630.wav",
+   "complete": 0.966,
+   "incomplete": 0.017,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00631.wav",
+   "complete": 0.9777,
+   "incomplete": 0.704,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00632.wav",
+   "complete": 0.8395,
+   "incomplete": 0.0772,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00635.wav",
+   "complete": 0.9885,
+   "incomplete": 0.92,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00636.wav",
+   "complete": 0.9809,
+   "incomplete": 0.3212,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00639.wav",
+   "complete": 0.986,
+   "incomplete": 0.4509,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00641.wav",
+   "complete": 0.9381,
+   "incomplete": 0.4412,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00645.wav",
+   "complete": 0.9875,
+   "incomplete": 0.4412,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00646.wav",
+   "complete": 0.9897,
+   "incomplete": 0.9885,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00649.wav",
+   "complete": 0.9768,
+   "incomplete": 0.3386,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00652.wav",
+   "complete": 0.9523,
+   "incomplete": 0.017,
+   "complete_veto": false,
+   "incomplete_veto": false
+  },
+  {
+   "file": "golos/00654.wav",
+   "complete": 0.7858,
+   "incomplete": 0.0064,
+   "complete_veto": false,
+   "incomplete_veto": true
+  },
+  {
+   "file": "golos/00655.wav",
+   "complete": 0.9843,
+   "incomplete": 0.9574,
+   "complete_veto": false,
+   "incomplete_veto": false
+  }
+ ]
+}

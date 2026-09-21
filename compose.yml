@@ -20,6 +20,7 @@ services:
     volumes:
       - models:/cache          # веса Qwen3-TTS и Whisper
       - voices:/app/server/voices
+      - contexts:/app/server/contexts   # профили контекста распознавания
     environment:
       # можно подменить модели, не пересобирая образ
       TTS_MODEL: ${TTS_MODEL:-Qwen/Qwen3-TTS-12Hz-1.7B-Base}
@@ -38,3 +39,4 @@ services:
 volumes:
   models:
   voices:
+  contexts:
