@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import time
 from pathlib import Path
 
@@ -31,20 +30,19 @@ import textprep
 import transcripts
 from schemas import SpeechRequest
 import voices as voice_registry
+import engines
 from engines.device import describe, has_cuda
-from engines.stt_whisper import WhisperSTT
-from engines.tts_qwen import QwenTTS
-from engines.turn_smart import SmartTurn
 
 HERE = Path(__file__).parent
-TTS_MODEL = os.environ.get("TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
-STT_MODEL = os.environ.get("STT_MODEL", "large-v3-turbo")
 
-app = FastAPI(title="voicy", version="1.3.0",
+app = FastAPI(title="voicy", version="1.4.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
-tts = QwenTTS(TTS_MODEL)
-stt = WhisperSTT(STT_MODEL)
-turn = SmartTurn()
+# Модели — за интерфейсами engines/base.py; какую взять, решает окружение
+# (TTS_ENGINE, STT_ENGINE, …), а сервер про их устройство не знает.
+tts = engines.create("tts")
+stt = engines.create("stt")
+turn = engines.create("turn")
+vad = engines.create("vad")
 
 
 # ----------------------------------------------------------------- OpenAI: TTS
@@ -74,8 +72,8 @@ async def speech(req: SpeechRequest, request: Request):
 def _delta_stream(job):
     """`stream=true` in OpenAI's shape: text deltas, then the whole text.
 
-    OpenAI streams only for its newer models; here Whisper's segments are the
-    deltas, each with the time span it covers as an extra field.
+    OpenAI streams only for its newer models; here the recogniser's segments are
+    the deltas, each with the time span it covers as an extra field.
     """
     async def gen():
         q = job.subscribe()
@@ -145,8 +143,8 @@ async def transcriptions(
 async def translations(request: Request, file: UploadFile = File(...),
                        model: str = Form("whisper-1"), prompt: str | None = Form(None),
                        response_format: str = Form("json"), temperature: float = Form(0.0)):
-    """OpenAI translates to English here. Whisper does that with task=translate;
-    faster-whisper exposes it the same way, so the contract is honoured."""
+    """OpenAI translates to English here — for a recogniser with the
+    "translate" feature; any other answers 400."""
     job = jobs.submit_transcription(await file.read(), file.filename, request,
                                     task="translate", prompt=prompt,
                                     temperature=temperature)
@@ -200,11 +198,12 @@ async def add_voice(file: UploadFile = File(...), name: str = Form(...),
         raise HTTPException(400, str(e)) from None
 
     seconds = len(audio) / voice_registry.SAMPLE_RATE
-    lo, hi = voice_registry.GOOD_SECONDS
-    if not voice_registry.MIN_SECONDS <= seconds <= voice_registry.MAX_SECONDS:
-        raise HTTPException(400, f"sample is {seconds:.1f} s; need "
-                                 f"{voice_registry.MIN_SECONDS:.0f}–"
-                                 f"{voice_registry.MAX_SECONDS:.0f} s, best {lo:.0f}–{hi:.0f}")
+    # пределы — у движка синтеза: образец, годный одной модели, другой может не подойти
+    lo, hi = tts.reference_best
+    lo_ok, hi_ok = tts.reference_seconds
+    if not lo_ok <= seconds <= hi_ok:
+        raise HTTPException(400, f"sample is {seconds:.1f} s; {tts.name} needs "
+                                 f"{lo_ok:.0f}–{hi_ok:.0f} s, best {lo:.0f}–{hi:.0f}")
     warnings = []
     if not lo <= seconds <= hi:
         warnings.append(f"sample is {seconds:.1f} s; clones are best from {lo:.0f}–{hi:.0f} s")
@@ -265,7 +264,7 @@ def prepare_text(payload: dict):
 
 
 jobs.attach(app, tts, stt)
-live.attach(app, stt, turn)
+live.attach(app, stt, turn, vad)
 speak.attach(app, tts)
 errors.attach(app)
 app.add_middleware(auth.Middleware)
@@ -274,11 +273,10 @@ app.add_middleware(auth.Middleware)
 @app.get("/health")
 def health():
     return {"status": "ok",
-            "tts": {"model": TTS_MODEL, "loaded": tts.loaded, "device": tts.device},
-            "stt": {"model": STT_MODEL, "loaded": stt.loaded, "device": stt.device,
-                    "compute_type": stt.compute_type},
-            "turn": {"model": f"{turn.repo}/{turn.filename}", "loaded": turn.loaded,
-                     "device": "cpu"},
+            "tts": tts.status(),
+            "stt": {**stt.status(), "features": sorted(stt.features)},
+            "turn": turn.status(),
+            "vad": {"engine": vad.name},
             "cuda": has_cuda(),
             "auth": auth.enabled(),
             "device": describe(),

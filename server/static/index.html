@@ -120,10 +120,11 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
       <div><label for="voice">Голос</label><select id="voice"></select></div>
       <div><label for="lang">Язык</label>
         <select id="lang">
-          <option>Russian</option><option>English</option><option>German</option>
-          <option>French</option><option>Spanish</option><option>Italian</option>
-          <option>Portuguese</option><option>Japanese</option><option>Korean</option>
-          <option>Chinese</option>
+          <option value="ru">Russian</option><option value="en">English</option>
+          <option value="de">German</option><option value="fr">French</option>
+          <option value="es">Spanish</option><option value="it">Italian</option>
+          <option value="pt">Portuguese</option><option value="ja">Japanese</option>
+          <option value="ko">Korean</option><option value="zh">Chinese</option>
         </select></div>
     </div>
     <div class="row r3" style="margin-top:12px">
@@ -147,10 +148,10 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
     <div class="hint"><kbd>Alt</kbd> + <kbd>Enter</kbd> — озвучить, не отрывая рук от клавиатуры</div>
   </div>
   <div class="prog" id="tts-prog">
-    <div class="bar est"><i id="tts-bar"></i></div>
+    <div class="bar est" id="tts-barbox"><i id="tts-bar"></i></div>
     <div class="prog-line">
       <span id="tts-msg">…</span>
-      <span class="tag" title="Числитель измерен, знаменатель — оценка по числу слогов">оценка</span>
+      <span class="tag" id="tts-tag" title="Числитель измерен, знаменатель — оценка по числу слогов">оценка</span>
     </div>
   </div>
   <audio id="player" controls hidden></audio>
@@ -336,11 +337,11 @@ const errText = async res => {
 
 /* ------------------------------------------------------------------ прогресс
 
-   Числа приходят с сервера и ничего не выдумывают. У синтеза измеряется
-   числитель — шаги декодирования, каждый из которых равен 1/12 секунды
-   готового звука; знаменатель предсказывается по числу слогов, поэтому
-   полоса заштрихована и помечена «оценка». У распознавания точны обе
-   величины: длительность файла известна заранее. */
+   Числа приходят с сервера и ничего не выдумывают. У синтеза движок сообщает
+   то, что знает: сколько секунд звука готово или какая доля работы сделана.
+   Если длительность результата он заранее не знает, она предсказывается
+   по числу слогов — тогда полоса заштрихована и помечена «оценка».
+   У распознавания точны обе величины: длительность файла известна заранее. */
 
 function follow(id, onEvent){
   return new Promise((resolve, reject) => {
@@ -383,7 +384,7 @@ async function synth(){
     voice: adv ? $('#voice').value : undefined,
     response_format: adv ? $('#fmt').value : 'wav',
     speed: adv ? +$('#speed').value : 1,
-    language: adv ? $('#lang').value : 'Russian',
+    language: adv ? $('#lang').value : 'ru',
     prepare: adv ? $('#prep').checked : false,
     legato: adv ? $('#legato').checked : false,
     seed: adv && $('#seed').value ? +$('#seed').value : null,
@@ -400,12 +401,19 @@ async function synth(){
 
     await follow(id, d => {
       if (d.stage === 'synthesis' || d.stage === 'encoding'){
-        const pct = Math.min(99, 100 * d.produced / Math.max(0.5, d.expected));
-        $('#tts-bar').style.width = pct.toFixed(1) + '%';
-        const rate = d.elapsed > 0 ? (d.produced / d.elapsed) : 0;
-        $('#tts-msg').innerHTML =
-          `сгенерировано <b>${fmt(d.produced)} с</b> звука из ~${fmt(d.expected)} · ` +
-          `шаг <b>${d.steps}</b> · ×${rate.toFixed(2)} к реальному времени`;
+        const share = d.done ?? (d.produced ?? 0) / Math.max(0.5, d.expected);
+        $('#tts-bar').style.width = Math.min(99, 100 * share).toFixed(1) + '%';
+        const total = `${d.expected_exact ? '' : '~'}${fmt(d.expected)} с`;
+        $('#tts-barbox').classList.toggle('est', !d.expected_exact);
+        $('#tts-tag').hidden = !!d.expected_exact;
+        if (d.produced != null){
+          const rate = d.elapsed > 0 ? (d.produced / d.elapsed) : 0;
+          $('#tts-msg').innerHTML =
+            `сгенерировано <b>${fmt(d.produced)} с</b> звука из ${total} · ` +
+            `×${rate.toFixed(2)} к реальному времени`;
+        } else {
+          $('#tts-msg').innerHTML = `готово <b>${Math.round(100 * share)}%</b> работы · звука будет ${total}`;
+        }
       } else if (waiting(d)){
         $('#tts-msg').innerHTML = waiting(d);
       }
@@ -427,7 +435,6 @@ async function synth(){
     $('#tts-stats').innerHTML =
       `<span>звучание <b>${secs} с</b></span><span>синтез <b>${gen.toFixed(1)} с</b></span>` +
       `<span>×<b>${(secs/gen).toFixed(2)}</b> к реальному времени</span>` +
-      `<span>шагов декодирования <b>${res.headers.get('X-Decoding-Steps')}</b></span>` +
       `<span>голос <b>${esc(res.headers.get('X-Voice')||'')}</b></span>`;
   }catch(e){
     $('#tts-err').textContent = 'Не вышло: ' + e.message;

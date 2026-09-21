@@ -85,7 +85,7 @@ def main() -> None:
                 hyp = stt.transcribe(audio, language="ru").text
                 rows.append({"variant": variant, "text": text, "seed": seed,
                              "audio_s": round(len(out.audio) / out.sample_rate, 2),
-                             "synth_s": round(dt, 2), "ms_per_frame": round(1000 * dt / out.steps),
+                             "synth_s": round(dt, 2), "ms_per_frame": round(1000 * dt / out.info["steps"]),
                              "cer": round(100 * cer(text, hyp), 2), "heard": hyp})
                 print(f"{variant:8} seed {seed} CER {rows[-1]['cer']:5.1f}%  "
                       f"{rows[-1]['ms_per_frame']:3d} мс/кадр  {text[:40]}", flush=True)

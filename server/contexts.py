@@ -105,9 +105,12 @@ def delete(name: str) -> bool:
 
 @dataclass
 class Resolved:
-    """What one recognition call actually uses, after merging request and context."""
+    """What one recognition call actually uses, after merging request and context.
+
+    Prompt and terms stay apart: how to hand them to the model — which goes
+    first, whether terms become part of the prompt — is the engine's business."""
     prompt: str | None = None
-    hotwords: str | None = None
+    hotwords: list[str] | None = None
     replacements: tuple = ()
 
     def fix(self, text: str) -> str:
@@ -134,14 +137,7 @@ def resolve(context: str | None = None, prompt: str | None = None,
             words.append(h)
     prompts = " ".join(p.strip() for p in ((ctx.prompt if ctx else ""), prompt or "")
                        if p and p.strip())
-    terms = ", ".join(words)
-    if prompts and terms:
-        # faster-whisper ставит hotwords *перед* подсказкой, и русская фраза,
-        # оказавшись ближе к декодеру, перетягивает термины обратно в кириллицу:
-        # 62.9% терминов против 85.7% у одних hotwords. Термины после подсказки
-        # в той же строке возвращают 82.9% (experiments/16-voice-agent).
-        return Resolved(prompt=f"{prompts} {terms}", hotwords=None, replacements=fix)
-    return Resolved(prompt=prompts or None, hotwords=terms or None, replacements=fix)
+    return Resolved(prompt=prompts or None, hotwords=words or None, replacements=fix)
 
 
 @lru_cache(maxsize=64)

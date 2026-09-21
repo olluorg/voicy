@@ -18,7 +18,7 @@ class SpeechRequest(BaseModel):
     voice: str | None = None
     response_format: str = "wav"
     speed: float = 1.0
-    language: str = "Russian"
+    language: str | None = Field(default=None, description="ru, en …; по умолчанию — русский")
     # расширения, которых нет у OpenAI
     prepare: bool = Field(default=False, description="применить словарь произношений")
     legato: bool = Field(default=False, description="убрать запятые внутри коротких фраз")

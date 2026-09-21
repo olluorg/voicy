@@ -1,10 +1,11 @@
 """Speech as it is synthesised, for a voice agent that should not go silent.
 
-Qwen3-TTS returns a sentence only once the whole of it is generated. Waiting for
-the whole answer makes the listener wait for its last sentence before hearing
-the first, so the text is cut into pieces and each piece is sent as soon as it
-is ready. On an RTX 3080 synthesis runs at ×1.5 (tts_fast.py), so after the
-first piece the next one is ready before the current one finishes playing.
+The synthesiser returns a piece of text only once the whole of it is generated.
+Waiting for the whole answer makes the listener wait for its last sentence
+before hearing the first, so the text is cut into pieces and each piece is sent
+as soon as it is ready. With Qwen3-TTS on an RTX 3080 synthesis runs at ×1.5
+(engines/tts_fast.py), so after the first piece the next one is ready before
+the current one finishes playing.
 
 The cuts still go where a listener expects a pause. On a card slower than real
 time there will be gaps between pieces; at sentence boundaries they sound like
@@ -58,11 +59,11 @@ from fastapi.responses import StreamingResponse
 import audio_io
 import textprep
 import voices as voice_registry
+from engines.base import Unsupported
 
 MAX_CHUNK = 200             # символов — длиннее режем по запятой
 MIN_CHUNK = 25              # символов — короче склеиваем с соседом, если он уже есть
 FIRST_CLAUSE_WORDS = 3      # первый кусок можно отрезать по запятой после стольких слов
-MODEL_RATE = 24000
 STREAM_FORMATS = ("pcm", "wav", "mp3")
 
 # Конец предложения — знак, пробел и слово не со строчной буквы: так «т. е.»,
@@ -147,7 +148,7 @@ class Segmenter:
 @dataclass
 class Options:
     voice: voice_registry.Voice
-    language: str = "Russian"
+    language: str | None = None
     speed: float = 1.0
     prepare: bool = False
     legato: bool = False
@@ -155,17 +156,17 @@ class Options:
 
 
 def synthesize(tts, text: str, o: Options, cancelled) -> tuple[np.ndarray, int, float]:
-    """One chunk. `cancelled()` is polled on every decoding step."""
+    """One chunk. `cancelled()` is polled whenever the engine reports progress."""
     if o.prepare or o.legato:
         text = textprep.prepare(text, o.prepare, o.legato)["text"]
 
-    def on_step(_: int) -> None:
+    def on_progress(_) -> None:
         if cancelled():
             raise Cancelled()
 
     started = time.perf_counter()
     out = tts.speak(text, o.voice.path, o.voice.text, language=o.language,
-                    seed=o.seed, on_step=on_step)
+                    seed=o.seed, on_progress=on_progress)
     audio = audio_io.stretch(out.audio, out.sample_rate, o.speed) if o.speed != 1.0 else out.audio
     return audio, out.sample_rate, time.perf_counter() - started
 
@@ -179,12 +180,12 @@ def _wav_header(sr: int) -> bytes:
             + b"data" + struct.pack("<I", unknown))
 
 
-def pick_voice(name: str | None) -> voice_registry.Voice:
+def pick_voice(tts, name: str | None) -> voice_registry.Voice:
     v = voice_registry.get(name) if name else voice_registry.default()
     if v is None:
         raise HTTPException(400, f"unknown voice '{name}'" if name else
                             "no voice available — add one via /v1/voices")
-    if not v.text:
+    if tts.needs_reference_text and not v.text:
         raise HTTPException(400, f"voice '{v.name}' has no reference transcript")
     return v
 
@@ -199,7 +200,8 @@ def http_stream(tts, req) -> StreamingResponse:
                                  f"use sse for {fmt}")
     if not req.input.strip():
         raise HTTPException(400, "input is empty")
-    o = Options(voice=pick_voice(req.voice), language=req.language, speed=req.speed,
+    o = Options(voice=pick_voice(tts, req.voice), language=tts.language(req.language),
+                speed=req.speed,
                 prepare=req.prepare, legato=req.legato, seed=req.seed)
     seg = Segmenter()
     chunks = seg.split(req.input)
@@ -209,7 +211,7 @@ def http_stream(tts, req) -> StreamingResponse:
         total, t0 = 0.0, time.perf_counter()
         try:
             if req.stream_format == "audio" and fmt == "wav":
-                yield _wav_header(MODEL_RATE)
+                yield _wav_header(tts.sample_rate)
             for text in chunks:
                 audio, sr, _ = await asyncio.to_thread(
                     synthesize, tts, text, o, lambda: state["stop"])
@@ -238,7 +240,7 @@ def http_stream(tts, req) -> StreamingResponse:
         media = "audio/pcm" if fmt == "pcm" else audio_io.CONTENT_TYPES[fmt]
     return StreamingResponse(gen(), media_type=media, headers={
         "X-Voice": o.voice.name, "X-Chunks": str(len(chunks)),
-        "X-Sample-Rate": str(MODEL_RATE), "Cache-Control": "no-cache",
+        "X-Sample-Rate": str(tts.sample_rate), "Cache-Control": "no-cache",
         "X-Accel-Buffering": "no"})
 
 
@@ -246,18 +248,20 @@ def http_stream(tts, req) -> StreamingResponse:
 
 def attach(app, tts):
     @app.websocket("/v1/audio/speech/stream")
-    async def speak(ws: WebSocket, voice: str | None = None, language: str = "Russian",
-                    speed: float = 1.0, sample_rate: int = MODEL_RATE,
+    async def speak(ws: WebSocket, voice: str | None = None, language: str | None = None,
+                    speed: float = 1.0, sample_rate: int | None = None,
                     prepare: bool = False, legato: bool = False, seed: int | None = None):
         await ws.accept()
+        sample_rate = sample_rate or tts.sample_rate
         try:
             if not 8000 <= sample_rate <= 48000:
                 raise HTTPException(400, "sample_rate must be 8000–48000")
-            o = Options(voice=pick_voice(voice), language=language,
+            o = Options(voice=pick_voice(tts, voice), language=tts.language(language),
                         speed=min(1.2, max(0.8, speed)) if speed != 1.0 else 1.0,
                         prepare=prepare, legato=legato, seed=seed)
-        except HTTPException as e:
-            await ws.send_json({"type": "error", "error": e.detail})
+        except (HTTPException, Unsupported) as e:
+            await ws.send_json({"type": "error",
+                                "error": e.detail if isinstance(e, HTTPException) else str(e)})
             await ws.close(code=1003)
             return
 

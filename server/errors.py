@@ -16,6 +16,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from engines.base import Unsupported
+
 log = logging.getLogger("voicy")
 
 # статус → (type, code), как у OpenAI
@@ -56,6 +58,10 @@ def attach(app) -> None:
         param = ".".join(loc) or None
         message = first.get("msg", "invalid request")
         return response(400, f"{param}: {message}" if param else message, param=param)
+
+    @app.exception_handler(Unsupported)
+    async def unsupported(request: Request, exc: Unsupported):
+        return response(400, str(exc))
 
     @app.exception_handler(Exception)
     async def unexpected(request: Request, exc: Exception):

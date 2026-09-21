@@ -1,14 +1,17 @@
 """Named voices.
 
-A voice is a short reference clip plus its exact transcript — the model clones
+A voice is a short reference clip plus its exact transcript. Qwen3-TTS clones
 from that pair, and a wrong transcript degrades every sentence it generates
 (measured: 7.3% CER against 1.0% for the same clip cut on phrase boundaries).
+The transcript is kept even for an engine that does not need one, so switching
+engines never leaves a voice without it.
 
 Adding a voice means dropping a wav next to a json entry. If the transcript is
 missing it is filled in by the speech recogniser rather than by hand.
 
 Whatever arrives — webm from a browser, opus from a phone — is stored as 24 kHz
-mono wav, the rate the synthesiser works at. The file name is the voice name, so
+mono wav, the rate Qwen3-TTS works at; an engine at another rate resamples the
+clip itself. The file name is the voice name, so
 the name is checked before it becomes a path.
 """
 from __future__ import annotations
@@ -25,12 +28,6 @@ SAMPLE_RATE = 24000
 # Буквы любого алфавита, цифры, дефис и подчёркивание — но не в начале:
 # ключи индекса на «_» служебные (`_default`).
 NAME = re.compile(r"^[^\W_][\w-]{0,39}$")
-
-# Образец короче трёх секунд не несёт тембра, длиннее минуты — лишь удлиняет
-# каждый синтез. Рекомендованные 8–14 с — из README; остальное принимается
-# с предупреждением.
-MIN_SECONDS, MAX_SECONDS = 3.0, 60.0
-GOOD_SECONDS = (8.0, 14.0)
 
 
 def check_name(name: str) -> str:

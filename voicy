@@ -674,7 +674,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("--voice", help="имя голоса (по умолчанию — серверный)")
     s.add_argument("--format", default="opus", choices=AUDIO_FORMATS)
     s.add_argument("--speed", type=float, default=1.0, help="0.8–1.2, растяжением готового звука")
-    s.add_argument("--language", default="Russian")
+    s.add_argument("--language", help="ru, en … (по умолчанию — серверный, русский)")
     s.add_argument("--seed", type=int)
     s.add_argument("--prepare", action="store_true", help="применить словарь произношений")
     s.add_argument("--legato", action="store_true", help="убрать запятые внутри коротких фраз")

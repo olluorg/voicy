@@ -2,10 +2,9 @@
 
 Every number that reaches the client here is measured, not predicted:
 
-  synthesis — the talker's decoding loop is counted step by step, and the model
-              is a 12 Hz codec, so steps convert to seconds of audio already
-              produced. The *total* is not knowable until generation stops, so
-              it is carried separately and labelled as an estimate;
+  synthesis — the engine reports seconds of audio already produced. The
+              *total* is not knowable until generation stops, so it is carried
+              separately and labelled as an estimate;
 
   recognition — the audio duration is known up front and each segment reports
               where it ended, so both halves of the fraction are facts.
@@ -30,11 +29,6 @@ class JobCancelled(Exception):
     """Raised from inside a progress callback to abandon the work."""
 
 
-class BadInput(Exception):
-    """The job failed because of what it was given, not because of the server.
-    Reaches the client as 400 rather than 500."""
-
-
 @dataclass
 class Job:
     id: str
@@ -45,7 +39,7 @@ class Job:
     state: str = "queued"           # queued | running | done | error | cancelled
     result: Any = None
     error: str | None = None
-    error_status: int = 500         # 400, если виноват вход (BadInput)
+    error_status: int = 500         # 400, если виноват вход (engines.base.BadAudio, Unsupported)
     last: dict = field(default_factory=dict)
     loop: asyncio.AbstractEventLoop | None = None
     base_url: str = ""
@@ -149,15 +143,6 @@ class Registry:
 
 registry = Registry(int(os.environ.get("VOICY_JOB_TTL", "1800")))
 
-
-# Один шаг декодирования = один аудио-токен. Название модели обещает 12 Гц, но
-# на готовом звуке измеряется 12.6–13.0 шага на секунду: несколько шагов уходит
-# на промпт и на завершение, и по номинальным 12 счётчик обгоняет реальность
-# примерно на 5%. Берём измеренное значение, а не заявленное.
-#
-#   24 шага → 1.84 с (13.0)   67 → 5.28 (12.7)
-#  127 шагов → 10.08 с (12.6) 145 → 11.52 (12.6)
-STEPS_PER_SECOND = 12.6
 
 # Темп выбранного по умолчанию голоса, слогов в секунду. Используется только
 # для оценки полной длительности, то есть знаменателя — и помечается как оценка.

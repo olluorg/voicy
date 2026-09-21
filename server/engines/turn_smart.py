@@ -28,8 +28,13 @@ WINDOW = 8                              # с — столько модель в�
 
 
 class SmartTurn:
+    name = "smart-turn"
+    device = "cpu"
+    sample_rate = SR
+
     def __init__(self, repo: str = REPO, filename: str = FILE):
         self.repo, self.filename = repo, filename
+        self.model = f"{repo}/{filename}"
         self._session = None
         self._features = None
         self._lock = threading.Lock()
@@ -37,6 +42,10 @@ class SmartTurn:
     @property
     def loaded(self) -> bool:
         return self._session is not None
+
+    def status(self) -> dict:
+        return {"engine": self.name, "model": self.model, "loaded": self.loaded,
+                "device": self.device}
 
     def load(self) -> None:
         if self._session is not None:

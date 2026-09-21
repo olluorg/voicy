@@ -7,10 +7,12 @@ leave a `webhook_url` and be called when it ends.
 
 Nothing reported here is invented:
 
-  synthesis — the decoding loop is counted step by step and the model is a 12 Hz
-              codec, so the count converts to seconds of audio already produced.
-              Only the *total* is unknown until generation stops, so it travels
-              as a separate field named `expected` and the UI marks it as such;
+  synthesis — the engine reports what it knows from inside its own loop:
+              seconds of audio already produced (`produced`), the share of work
+              done (`done`), or both. The total duration travels as `expected`:
+              an estimate from the text, marked as such, unless the engine
+              decides the length before generating and so knows it exactly
+              (`expected_exact`);
 
   recognition — the file duration is known before decoding starts and each
               segment reports where it ended. Both halves are facts.
@@ -33,7 +35,8 @@ import speak
 import textprep
 import transcripts
 import webhooks
-from progress import BadInput, Job
+from engines.base import require
+from progress import Job
 from schemas import JobSpeechRequest, SpeechRequest
 from workqueue import QueueFull, queue
 
@@ -72,32 +75,39 @@ def submit_speech(req: SpeechRequest, request: Request,
                   webhook_url: str | None = None) -> tuple[Job, float]:
     if not req.input.strip():
         raise HTTPException(400, "input is empty")
-    v = speak.pick_voice(req.voice)
+    tts = _engines["tts"]
+    v = speak.pick_voice(tts, req.voice)
+    language = tts.language(req.language)
 
     text = req.input
     if req.prepare or req.legato:
         text = textprep.prepare(text, req.prepare, req.legato)["text"]
     expected = progress_mod.estimate_seconds(text)
-    tts = _engines["tts"]
 
     def work(job: Job) -> dict:
-        def on_step(n: int) -> None:
+        def on_progress(p) -> None:
             job.check()
-            job.emit(stage="synthesis", steps=n,
-                     produced=round(n / progress_mod.STEPS_PER_SECOND, 2),
-                     expected=round(expected, 1))
+            event = {"stage": "synthesis"}
+            if p.produced is not None:
+                event["produced"] = round(p.produced, 2)
+            if p.done is not None:
+                event["done"] = round(p.done, 3)
+            # длительность, известная движку заранее, — факт, а не оценка
+            event["expected"] = round(p.total if p.total is not None else expected, 1)
+            event["expected_exact"] = p.total is not None
+            job.emit(**event)
 
-        out = tts.speak(text, v.path, v.text, language=req.language,
-                        seed=req.seed, on_step=on_step)
+        out = tts.speak(text, v.path, v.text, language=language,
+                        seed=req.seed, on_progress=on_progress)
         job.check()
         audio = (audio_io.stretch(out.audio, out.sample_rate, req.speed)
                  if req.speed != 1.0 else out.audio)
         seconds = round(len(audio) / out.sample_rate, 2)
-        job.emit(stage="encoding", steps=out.steps, produced=seconds, expected=seconds)
+        job.emit(stage="encoding", produced=seconds, expected=seconds, expected_exact=True)
         data, ctype = audio_io.encode(audio, out.sample_rate, req.response_format)
         job.result = {"data": data, "content_type": ctype, "format": req.response_format,
-                      "voice": v.name, "seconds": seconds, "steps": out.steps}
-        return {"produced": seconds, "expected": seconds, "steps": out.steps,
+                      "voice": v.name, "seconds": seconds}
+        return {"produced": seconds, "expected": seconds,
                 "seconds": seconds, "voice": v.name}
 
     job = _create("speech", request, webhook_url)
@@ -116,8 +126,10 @@ def submit_transcription(raw: bytes, filename: str | None, request: Request, *,
         ctx = contexts.resolve(context, prompt, hotwords)
     except KeyError:
         raise HTTPException(400, f"unknown context '{context}'") from None
-    suffix = Path(filename or "audio.wav").suffix or ".wav"
     stt = _engines["stt"]
+    require(stt, task=task, prompt=ctx.prompt, hotwords=ctx.hotwords,
+            word_timestamps=word_timestamps)
+    suffix = Path(filename or "audio.wav").suffix or ".wav"
 
     def work(job: Job) -> dict:
         with tempfile.TemporaryDirectory() as d:
@@ -130,14 +142,10 @@ def submit_transcription(raw: bytes, filename: str | None, request: Request, *,
                 job.emit(stage="recognition", position=round(pos, 2),
                          total=round(total, 2), text=ctx.fix(text))
 
-            import av
-            try:
-                tr = stt.transcribe(path, language=language, prompt=ctx.prompt,
-                                    hotwords=ctx.hotwords, temperature=temperature,
-                                    word_timestamps=word_timestamps, task=task,
-                                    on_segment=on_segment)
-            except av.error.FFmpegError as e:     # не звук или битый файл — вина входа
-                raise BadInput(f"cannot decode audio: {e}") from None
+            tr = stt.transcribe(path, language=language, prompt=ctx.prompt,
+                                hotwords=ctx.hotwords, temperature=temperature,
+                                word_timestamps=word_timestamps, task=task,
+                                on_segment=on_segment)
         job.result = {**transcripts.to_dict(tr, ctx.fix), "task": task}
         return {"position": tr.duration, "total": tr.duration, "language": tr.language}
 
@@ -164,8 +172,7 @@ def summary(job: Job) -> dict:
     if job.state == "done" and job.result:
         r = job.result
         if job.kind == "speech":
-            out["result"] = {k: r[k] for k in ("voice", "seconds", "steps",
-                                                "format", "content_type")}
+            out["result"] = {k: r[k] for k in ("voice", "seconds", "format", "content_type")}
             out["links"]["audio"] = f"{base}/audio"
         else:
             out["result"] = {k: r.get(k) for k in ("text", "language", "duration")}
@@ -287,8 +294,7 @@ def attach(app, tts, stt):
         return Response(content=job.result["data"], media_type=job.result["content_type"],
                         headers={"X-Job-Id": job.id,
                                  "X-Voice": job.result["voice"],
-                                 "X-Audio-Seconds": str(job.result["seconds"]),
-                                 "X-Decoding-Steps": str(job.result["steps"])})
+                                 "X-Audio-Seconds": str(job.result["seconds"])})
 
     @app.get("/v1/jobs/{job_id}/result")
     def job_result(job_id: str, format: str | None = None):

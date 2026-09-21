@@ -159,7 +159,7 @@ def part_tts() -> dict:
             dt = time.perf_counter() - t
             audio = len(out.audio) / out.sample_rate
             rows.append({"audio_s": round(audio, 2), "synth_s": round(dt, 2),
-                         "speed": round(audio / dt, 2), "ms_per_step": round(1000 * dt / out.steps)})
+                         "speed": round(audio / dt, 2), "ms_per_step": round(1000 * dt / out.info["steps"])})
         runs[name] = {"chars": len(text), "runs": rows}
         if name == "xlong":
             WORK.mkdir(parents=True, exist_ok=True)

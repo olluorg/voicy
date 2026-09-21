@@ -9,9 +9,9 @@ The agent needs three things from the listening side, in this order of urgency:
 Whisper is not a streaming model and knows nothing about turns, so each of the
 three is built separately.
 
-**Speech start and pauses** come from the Silero voice detector, run frame by
-frame on the incoming audio (32 ms frames, on the CPU). It never waits for the
-recogniser.
+**Speech start and pauses** come from the voice detector (engines/vad_silero.py),
+run frame by frame on the incoming audio (32 ms frames, on the CPU). It never
+waits for the recogniser.
 
 **End of turn** is decided at the start of each pause. Pause length alone is a
 poor signal: people stop mid-thought to find a word. So after `min_pause` of
@@ -57,12 +57,11 @@ import numpy as np
 from fastapi import WebSocket, WebSocketDisconnect
 
 import contexts
+from engines.base import require
 
 SR = 16000
-FRAME = 512                 # отсчётов на кадр детектора голоса, 32 мс
-CONTEXT = 64                # столько предыдущих отсчётов видит кадр
 SPEECH_ON, SPEECH_OFF = 0.5, 0.35   # гистерезис, как у Silero по умолчанию
-START_FRAMES = 3            # ~100 мс речи подряд — речь началась
+START_SECONDS = 0.1         # столько речи подряд — речь началась
 PRE_ROLL = 0.5              # с до начала речи, которые идут в реплику
 MAX_WINDOW = 15.0           # с непрочитанного окна — дальше закрываем согласованное
 SENTENCE_END = re.compile(r"[.!?…]$")
@@ -77,33 +76,6 @@ DANGLING = frozenset("""
 которая которое которые очень самый не ни
 э ээ эээ эм мм м ну вот типа короче значит
 """.split())
-
-
-class StreamVAD:
-    """Silero, frame by frame. Each frame sees only 64 samples before it, so
-    frames can be scored as they arrive with the same result as all at once."""
-
-    def __init__(self):
-        from faster_whisper.vad import get_vad_model
-
-        self._model = get_vad_model()
-        self._tail = np.zeros(CONTEXT, np.float32)
-        self.rest = np.zeros(0, np.float32)          # хвост короче кадра
-
-    def feed(self, x: np.ndarray) -> np.ndarray:
-        x = np.concatenate([self.rest, x])
-        n = len(x) // FRAME
-        self.rest = x[n * FRAME:]
-        if n == 0:
-            return np.zeros(0, np.float32)
-        frames = x[:n * FRAME].reshape(n, FRAME)
-        ctx = np.vstack([self._tail[None, :], frames[:-1, -CONTEXT:]])
-        self._tail = frames[-1, -CONTEXT:].copy()
-        batch = np.concatenate([ctx, frames], axis=1).astype(np.float32)
-        h = np.zeros((1, 1, 128), np.float32)
-        c = np.zeros((1, 1, 128), np.float32)
-        out, _, _ = self._model.session.run(None, {"input": batch, "h": h, "c": c})
-        return np.asarray(out, np.float32).reshape(-1)
 
 
 def _norm(word: str) -> str:
@@ -144,7 +116,7 @@ class Turn:
 
 
 class Session:
-    def __init__(self, ws: WebSocket, stt, turn_model, *, rate: int, language: str | None,
+    def __init__(self, ws: WebSocket, stt, turn_model, vad, *, rate: int, language: str | None,
                  ctx: contexts.Resolved, interval: float, threshold: float,
                  min_pause: float, max_pause: float):
         import soxr
@@ -155,7 +127,7 @@ class Session:
         self.min_pause, self.max_pause = min_pause, max_pause
         # потоковый пересчёт частоты: кусочки по 100 мс не щёлкают на стыках
         self._resampler = soxr.ResampleStream(rate, SR, 1, dtype="float32") if rate != SR else None
-        self.vad = StreamVAD()
+        self.vad = vad.stream()
 
         self.audio = np.zeros(0, np.float32)     # 16 кГц, начиная с отсчёта `base`
         self.base = 0
@@ -215,18 +187,20 @@ class Session:
 
     async def _endpoint(self, probs: np.ndarray) -> None:
         t = self.turn
-        frames_done = (self.total - len(self.vad.rest)) // FRAME     # кадры идут без пропусков
+        frame = self.vad.frame
+        start_frames = max(1, round(START_SECONDS * SR / frame))
+        frames_done = (self.total - self.vad.pending) // frame       # кадры идут без пропусков
         for i, p in enumerate(probs):
-            at = (frames_done - len(probs) + i + 1) * FRAME / SR      # конец этого кадра
+            at = (frames_done - len(probs) + i + 1) * frame / SR      # конец этого кадра
             if p >= SPEECH_ON or (t.speaking and p >= SPEECH_OFF):
                 t.speech_run += 1
                 t.silence_run = 0
                 t.last_speech = at
-                self.speech_since_pass += FRAME
-                if not t.speaking and t.speech_run >= START_FRAMES:
+                self.speech_since_pass += frame
+                if not t.speaking and t.speech_run >= start_frames:
                     t.speaking = True
                     if not t.active and not t.ending:
-                        began = at - START_FRAMES * FRAME / SR
+                        began = at - start_frames * frame / SR
                         t.active, t.finals, t.probability = True, [], None
                         t.start = max(0.0, began - PRE_ROLL)
                         self.commit_at = min(self.commit_at, int(t.start * SR))
@@ -237,7 +211,7 @@ class Session:
             if t.speaking:
                 t.speaking = False
                 t.pause_id += 1
-            pause = t.silence_run * FRAME / SR
+            pause = t.silence_run * frame / SR
             if t.active and not t.ending:
                 if pause >= self.min_pause and t.checked != t.pause_id:
                     t.checked = t.pause_id
@@ -252,6 +226,9 @@ class Session:
 
     async def _check_turn(self, t: Turn, pause_id: int) -> None:
         audio = self._slice(int(t.start * SR))
+        if self.turn_model.sample_rate != SR:
+            import soxr
+            audio = soxr.resample(audio, SR, self.turn_model.sample_rate).astype(np.float32)
         p = await asyncio.to_thread(self.turn_model.probability, audio)
         complete = p >= self.threshold
         await self.send(type="turn_check", at=self.total / SR, probability=round(p, 3),
@@ -313,8 +290,7 @@ class Session:
             return ""
         tr = await asyncio.to_thread(
             self.stt.transcribe, audio, language=self.language, prompt=self._prompt(),
-            hotwords=self.ctx.hotwords, beam_size=5,
-            condition_on_previous_text=False, vad_filter=True)
+            hotwords=self.ctx.hotwords, live=True)
         return self.ctx.fix(tr.text.strip())
 
     async def reader_pass(self) -> None:
@@ -330,8 +306,7 @@ class Session:
                 return
             tr = await asyncio.to_thread(
                 self.stt.transcribe, audio, language=self.language, prompt=self._prompt(),
-                hotwords=self.ctx.hotwords, beam_size=2, word_timestamps=True,
-                condition_on_previous_text=False, vad_filter=True)
+                hotwords=self.ctx.hotwords, word_timestamps=True, live=True, draft=True)
             if self.commit_at != start or self.turn is not t or not t.active:
                 return                                  # реплика закрылась, пока читали
             t0 = start / SR
@@ -377,7 +352,7 @@ class Session:
                         duration=round(self.total / SR, 2))
 
 
-def attach(app, stt, turn_model):
+def attach(app, stt, turn_model, vad):
     @app.websocket("/v1/audio/transcriptions/stream")
     async def live(ws: WebSocket, language: str | None = None, prompt: str | None = None,
                    hotwords: str | None = None, context: str | None = None,
@@ -392,12 +367,14 @@ def attach(app, stt, turn_model):
                 ctx = contexts.resolve(context, prompt, hotwords)
             except KeyError:
                 raise ValueError(f"unknown context '{context}'") from None
+            # окно читается со временем слов — без них согласовывать нечего
+            require(stt, prompt=ctx.prompt, hotwords=ctx.hotwords, word_timestamps=True)
         except ValueError as e:
             await ws.send_json({"type": "error", "error": str(e)})
             await ws.close(code=1003)
             return
 
-        s = Session(ws, stt, turn_model, rate=sample_rate, language=language or None, ctx=ctx,
+        s = Session(ws, stt, turn_model, vad, rate=sample_rate, language=language or None, ctx=ctx,
                     interval=min(5.0, max(0.3, interval)),
                     threshold=min(0.99, max(0.01, turn_threshold)),
                     min_pause=min(2.0, max(0.1, min_pause)),
