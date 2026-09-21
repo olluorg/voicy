@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title>Слои voicy</title>
+  <desc>Пять слоёв: клиенты, сервер, движки, среда исполнения, железо. Между слоями — швы, по которым любой слой меняется отдельно: HTTP API, контракт движков, выбор среды исполнения движком, выбор устройства при запуске. Сплошная рамка — работает и проверено, пунктир — план или не проверено.</desc>
+  <style>
+    .band  { fill: #f5f6f8; }
+    .name  { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .sub   { fill: #59636e; font-size: 11.5px; }
+    .box   { fill: #ffffff; stroke: #8c959f; stroke-width: 1.2; }
+    .plan  { fill: none; stroke: #8c959f; stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .t     { fill: #1f2328; font-size: 12.5px; text-anchor: middle; dominant-baseline: central; }
+    .tp    { fill: #59636e; font-size: 12.5px; text-anchor: middle; dominant-baseline: central; }
+    .group { fill: #59636e; font-size: 11.5px; }
+    .seam  { fill: #dbe9ff; stroke: #4c8df6; stroke-width: 1.2; }
+    .st    { fill: #0b3d91; font-size: 12px; text-anchor: middle; dominant-baseline: central; }
+    .line  { stroke: #4c8df6; stroke-width: 1.2; stroke-dasharray: 2 3; }
+    .leg   { fill: #59636e; font-size: 12px; dominant-baseline: central; }
+    @media (prefers-color-scheme: dark) {
+      .band  { fill: #161b22; }
+      .name  { fill: #e6edf3; }
+      .sub, .group, .leg, .tp { fill: #9da7b3; }
+      .box   { fill: #0d1117; stroke: #6e7681; }
+      .plan  { stroke: #6e7681; }
+      .t     { fill: #e6edf3; }
+      .seam  { fill: #10264a; stroke: #4c8df6; }
+      .st    { fill: #a8c7fa; }
+    }
+  </style>
+
+  <!-- 1. Клиенты -->
+  <rect class="band" x="10" y="10" width="980" height="70" rx="8"/>
+  <text class="name" x="26" y="40">Клиенты</text>
+  <text class="sub" x="26" y="59">всё, что говорит по HTTP</text>
+  <rect class="box" x="210" y="25" width="146" height="40" rx="6"/><text class="t" x="283" y="45">CLI voicy</text>
+  <rect class="box" x="366" y="25" width="146" height="40" rx="6"/><text class="t" x="439" y="45">веб-консоль</text>
+  <rect class="box" x="522" y="25" width="146" height="40" rx="6"/><text class="t" x="595" y="45">клиент OpenAI</text>
+  <rect class="box" x="678" y="25" width="146" height="40" rx="6"/><text class="t" x="751" y="45">код-агенты</text>
+  <rect class="box" x="834" y="25" width="146" height="40" rx="6"/><text class="t" x="907" y="45">голосовой агент</text>
+
+  <!-- шов 1 -->
+  <line class="line" x1="10" y1="95" x2="990" y2="95"/>
+  <rect class="seam" x="300" y="83" width="400" height="24" rx="12"/>
+  <text class="st" x="500" y="95">HTTP и WebSocket · API как у OpenAI</text>
+
+  <!-- 2. Сервер -->
+  <rect class="band" x="10" y="110" width="980" height="110" rx="8"/>
+  <text class="name" x="26" y="140">Сервер</text>
+  <text class="sub" x="26" y="159">общее для любых моделей</text>
+  <rect class="box" x="210" y="122" width="120" height="40" rx="6"/><text class="t" x="270" y="142"><tspan x="270" dy="-7">очередь</tspan><tspan x="270" dy="15">и задания</tspan></text>
+  <rect class="box" x="340" y="122" width="120" height="40" rx="6"/><text class="t" x="400" y="142">webhook</text>
+  <rect class="box" x="470" y="122" width="120" height="40" rx="6"/><text class="t" x="530" y="142">ключ доступа</text>
+  <rect class="box" x="600" y="122" width="120" height="40" rx="6"/><text class="t" x="660" y="142"><tspan x="660" dy="-7">подготовка</tspan><tspan x="660" dy="15">текста</tspan></text>
+  <rect class="box" x="730" y="122" width="120" height="40" rx="6"/><text class="t" x="790" y="142">синтез потоком</text>
+  <rect class="box" x="860" y="122" width="120" height="40" rx="6"/><text class="t" x="920" y="142">живая речь</text>
+  <text class="group" x="210" y="189">реализация:</text>
+  <rect class="box" x="290" y="172" width="200" height="34" rx="6"/><text class="t" x="390" y="189">Python · FastAPI</text>
+  <rect class="plan" x="500" y="172" width="200" height="34" rx="6"/><text class="tp" x="600" y="189">Rust · axum</text>
+
+  <!-- шов 2 -->
+  <line class="line" x1="10" y1="235" x2="990" y2="235"/>
+  <rect class="seam" x="300" y="223" width="400" height="24" rx="12"/>
+  <text class="st" x="500" y="235">контракт движков · engines/base.py</text>
+
+  <!-- 3. Движки -->
+  <rect class="band" x="10" y="250" width="980" height="100" rx="8"/>
+  <text class="name" x="26" y="280">Движки</text>
+  <text class="sub" x="26" y="299">модель выбирается</text>
+  <text class="sub" x="26" y="315">переменной *_ENGINE</text>
+  <text class="group" x="210" y="273">синтез</text>
+  <rect class="box" x="210" y="284" width="140" height="40" rx="6"/><text class="t" x="280" y="304">Qwen3-TTS</text>
+  <rect class="box" x="360" y="284" width="140" height="40" rx="6"/><text class="t" x="430" y="304">ESpeech</text>
+  <text class="group" x="520" y="273">распознавание</text>
+  <rect class="box" x="520" y="284" width="150" height="40" rx="6"/><text class="t" x="595" y="304">Whisper</text>
+  <text class="group" x="680" y="273">конец реплики</text>
+  <rect class="box" x="680" y="284" width="140" height="40" rx="6"/><text class="t" x="750" y="304">Smart Turn</text>
+  <text class="group" x="830" y="273">детектор голоса</text>
+  <rect class="box" x="830" y="284" width="150" height="40" rx="6"/><text class="t" x="905" y="304">Silero VAD</text>
+
+  <!-- шов 3 -->
+  <line class="line" x1="10" y1="365" x2="990" y2="365"/>
+  <rect class="seam" x="300" y="353" width="400" height="24" rx="12"/>
+  <text class="st" x="500" y="365">движок сам выбирает, на чём исполняться</text>
+
+  <!-- 4. Среда исполнения -->
+  <rect class="band" x="10" y="380" width="980" height="80" rx="8"/>
+  <text class="name" x="26" y="410">Среда исполнения</text>
+  <text class="sub" x="26" y="429">чем считается модель</text>
+  <rect class="box" x="210" y="400" width="146" height="40" rx="6"/><text class="t" x="283" y="420">PyTorch</text>
+  <rect class="box" x="366" y="400" width="146" height="40" rx="6"/><text class="t" x="439" y="420">CTranslate2</text>
+  <rect class="box" x="522" y="400" width="146" height="40" rx="6"/><text class="t" x="595" y="420">ONNX Runtime</text>
+  <rect class="plan" x="678" y="400" width="146" height="40" rx="6"/><text class="tp" x="751" y="420">GGML</text>
+  <rect class="plan" x="834" y="400" width="146" height="40" rx="6"/><text class="tp" x="907" y="420">OpenVINO</text>
+
+  <!-- шов 4 -->
+  <line class="line" x1="10" y1="475" x2="990" y2="475"/>
+  <rect class="seam" x="300" y="463" width="400" height="24" rx="12"/>
+  <text class="st" x="500" y="475">устройство выбирается при запуске</text>
+
+  <!-- 5. Железо -->
+  <rect class="band" x="10" y="490" width="980" height="80" rx="8"/>
+  <text class="name" x="26" y="520">Железо</text>
+  <text class="sub" x="26" y="539">где это работает</text>
+  <rect class="box" x="210" y="510" width="185" height="40" rx="6"/><text class="t" x="302" y="530">NVIDIA · CUDA</text>
+  <rect class="box" x="405" y="510" width="185" height="40" rx="6"/><text class="t" x="497" y="530">процессор x86-64</text>
+  <rect class="plan" x="600" y="510" width="185" height="40" rx="6"/><text class="tp" x="692" y="530">процессор ARM64</text>
+  <rect class="plan" x="795" y="510" width="185" height="40" rx="6"/><text class="tp" x="887" y="530">Intel Arc</text>
+
+  <!-- легенда -->
+  <rect class="box" x="210" y="592" width="34" height="20" rx="4"/>
+  <text class="leg" x="252" y="602">работает и проверено</text>
+  <rect class="plan" x="420" y="592" width="34" height="20" rx="4"/>
+  <text class="leg" x="462" y="602">план или не проверено</text>
+  <rect class="seam" x="640" y="592" width="34" height="20" rx="10"/>
+  <text class="leg" x="682" y="602">шов: слой по обе стороны меняется отдельно</text>
+</svg>
