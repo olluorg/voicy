@@ -30,6 +30,11 @@ class JobCancelled(Exception):
     """Raised from inside a progress callback to abandon the work."""
 
 
+class BadInput(Exception):
+    """The job failed because of what it was given, not because of the server.
+    Reaches the client as 400 rather than 500."""
+
+
 @dataclass
 class Job:
     id: str
@@ -40,6 +45,7 @@ class Job:
     state: str = "queued"           # queued | running | done | error | cancelled
     result: Any = None
     error: str | None = None
+    error_status: int = 500         # 400, если виноват вход (BadInput)
     last: dict = field(default_factory=dict)
     loop: asyncio.AbstractEventLoop | None = None
     base_url: str = ""

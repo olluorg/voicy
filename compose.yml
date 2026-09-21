@@ -27,6 +27,10 @@ services:
       STT_MODEL: ${STT_MODEL:-large-v3-turbo}
       # зеркало Hugging Face помогает, когда загрузка идёт медленно
       HF_ENDPOINT: ${HF_ENDPOINT:-https://huggingface.co}
+      # ключ доступа к /v1/: без него сервер открыт всем, кто видит порт
+      VOICY_API_KEY: ${VOICY_API_KEY:-}
+      # адрес снаружи, если сервер за обратным прокси: https://example.com/voicy
+      VOICY_PUBLIC_URL: ${VOICY_PUBLIC_URL:-}
       # FORCE_CPU: "1"        # запустить без GPU (медленно, но работает)
     deploy:
       resources:

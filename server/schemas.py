@@ -7,6 +7,8 @@ is invisible there, and every request silently degrades to query parameters.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -21,6 +23,8 @@ class SpeechRequest(BaseModel):
     prepare: bool = Field(default=False, description="применить словарь произношений")
     legato: bool = Field(default=False, description="убрать запятые внутри коротких фраз")
     seed: int | None = None
+    # как у OpenAI: "audio" — байты по мере синтеза, "sse" — события с base64
+    stream_format: Literal["audio", "sse"] | None = None
 
 
 class JobSpeechRequest(SpeechRequest):

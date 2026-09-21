@@ -29,15 +29,20 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import audio_io
 import contexts
 import progress as progress_mod
+import speak
 import textprep
 import transcripts
-import voices as voice_registry
 import webhooks
-from progress import Job
+from progress import BadInput, Job
 from schemas import JobSpeechRequest, SpeechRequest
 from workqueue import QueueFull, queue
 
 _engines: dict = {}
+
+# Адрес, под которым сервер виден снаружи, — для ссылок в сводке задания
+# и в webhook. За обратным прокси адрес запроса — внутренний
+# (http://127.0.0.1:8080), и получатель webhook по нему не достучится.
+PUBLIC_URL = os.environ.get("VOICY_PUBLIC_URL", "").rstrip("/")
 
 
 # ------------------------------------------------------------------ задания
@@ -48,7 +53,7 @@ def _create(kind: str, request: Request, webhook_url: str | None) -> Job:
             webhooks.validate(webhook_url)
         except ValueError as e:
             raise HTTPException(400, str(e)) from None
-    job = progress_mod.registry.create(kind, base_url=str(request.base_url))
+    job = progress_mod.registry.create(kind, base_url=PUBLIC_URL or str(request.base_url))
     if webhook_url:
         job.webhook = {"url": webhook_url, "attempts": 0, "delivered": None, "error": None}
     return job
@@ -67,11 +72,7 @@ def submit_speech(req: SpeechRequest, request: Request,
                   webhook_url: str | None = None) -> tuple[Job, float]:
     if not req.input.strip():
         raise HTTPException(400, "input is empty")
-    v = voice_registry.get(req.voice) if req.voice else voice_registry.default()
-    if v is None:
-        raise HTTPException(400, "no voice available — add one via /v1/voices")
-    if not v.text:
-        raise HTTPException(400, f"voice '{v.name}' has no reference transcript")
+    v = speak.pick_voice(req.voice)
 
     text = req.input
     if req.prepare or req.legato:
@@ -129,10 +130,14 @@ def submit_transcription(raw: bytes, filename: str | None, request: Request, *,
                 job.emit(stage="recognition", position=round(pos, 2),
                          total=round(total, 2), text=ctx.fix(text))
 
-            tr = stt.transcribe(path, language=language, prompt=ctx.prompt,
-                                hotwords=ctx.hotwords, temperature=temperature,
-                                word_timestamps=word_timestamps, task=task,
-                                on_segment=on_segment)
+            import av
+            try:
+                tr = stt.transcribe(path, language=language, prompt=ctx.prompt,
+                                    hotwords=ctx.hotwords, temperature=temperature,
+                                    word_timestamps=word_timestamps, task=task,
+                                    on_segment=on_segment)
+            except av.error.FFmpegError as e:     # не звук или битый файл — вина входа
+                raise BadInput(f"cannot decode audio: {e}") from None
         job.result = {**transcripts.to_dict(tr, ctx.fix), "task": task}
         return {"position": tr.duration, "total": tr.duration, "language": tr.language}
 
@@ -180,7 +185,7 @@ def _get(job_id: str) -> Job:
 def _finished(job_id: str) -> Job:
     job = _get(job_id)
     if job.state == "error":
-        raise HTTPException(500, job.error or "failed")
+        raise HTTPException(job.error_status, job.error or "failed")
     if job.state == "cancelled":
         raise HTTPException(410, "job was cancelled")
     if job.state != "done":
@@ -192,7 +197,7 @@ async def wait(job: Job) -> Job:
     """For the synchronous routes: wait, then fail the way a plain call would."""
     await job.wait()
     if job.state == "error":
-        raise HTTPException(500, job.error or "failed")
+        raise HTTPException(job.error_status, job.error or "failed")
     if job.state == "cancelled":
         raise HTTPException(409, "job was cancelled")
     return job

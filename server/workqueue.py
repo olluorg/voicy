@@ -18,7 +18,7 @@ from collections import deque
 from typing import Callable
 
 import webhooks
-from progress import Job, JobCancelled
+from progress import BadInput, Job, JobCancelled
 
 MAX_PENDING = int(os.environ.get("VOICY_QUEUE_MAX", "32"))
 
@@ -103,6 +103,7 @@ class WorkQueue:
                 job.finish("cancelled")
             except Exception as e:                  # noqa: BLE001 — уходит клиенту
                 job.error = str(e) or type(e).__name__
+                job.error_status = 400 if isinstance(e, BadInput) else 500
                 job.finish("error", error=job.error)
             finally:
                 with self._cv:

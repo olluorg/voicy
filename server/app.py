@@ -21,9 +21,12 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 import audio_io
+import auth
 import contexts
+import errors
 import jobs
 import live
+import speak
 import textprep
 import transcripts
 from schemas import SpeechRequest
@@ -37,7 +40,7 @@ HERE = Path(__file__).parent
 TTS_MODEL = os.environ.get("TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
 STT_MODEL = os.environ.get("STT_MODEL", "large-v3-turbo")
 
-app = FastAPI(title="voicy", version="1.1.0",
+app = FastAPI(title="voicy", version="1.2.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
 tts = QwenTTS(TTS_MODEL)
 stt = WhisperSTT(STT_MODEL)
@@ -48,9 +51,12 @@ turn = SmartTurn()
 #
 # Совместимые маршруты тоже становятся заданиями и ждут в общей очереди —
 # снаружи они по-прежнему синхронны, а id задания приходит в X-Job-Id.
+# Исключение — синтез с stream_format: он идёт кусками мимо очереди (speak.py).
 
 @app.post("/v1/audio/speech")
 async def speech(req: SpeechRequest, request: Request):
+    if req.stream_format:
+        return speak.http_stream(tts, req)
     job, _ = jobs.submit_speech(req, request)
     await jobs.wait(job)
     r = job.result
@@ -260,6 +266,9 @@ def prepare_text(payload: dict):
 
 jobs.attach(app, tts, stt)
 live.attach(app, stt, turn)
+speak.attach(app, tts)
+errors.attach(app)
+app.add_middleware(auth.Middleware)
 
 
 @app.get("/health")
@@ -271,6 +280,7 @@ def health():
             "turn": {"model": f"{turn.repo}/{turn.filename}", "loaded": turn.loaded,
                      "device": "cpu"},
             "cuda": has_cuda(),
+            "auth": auth.enabled(),
             "device": describe(),
             "voices": [v.name for v in voice_registry.list_voices()],
             "queue": {"pending": jobs.queue.pending(), "max": jobs.queue.max_pending,

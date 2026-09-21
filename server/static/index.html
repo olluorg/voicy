@@ -239,7 +239,7 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
 
 <script>
 const $ = s => document.querySelector(s);
-const base = location.origin;
+const base = new URL('.', location.href).href.replace(/\/$/, '');   // с префиксом прокси, если он есть
 
 /* ------------------------------------------------------------------ режимы */
 function setMode(m){
@@ -273,7 +273,7 @@ async function health(){
 
 async function loadContexts(){
   try{
-    const r = await (await fetch('/v1/contexts')).json();
+    const r = await (await fetch('v1/contexts')).json();
     const sel = $('#stt-ctx'), cur = sel.value;
     sel.innerHTML = '<option value="">без контекста</option>' + r.data.map(c =>
       `<option value="${esc(c.name)}">${esc(c.name)} — ${c.hotwords.length} терм.</option>`).join('');
@@ -281,7 +281,7 @@ async function loadContexts(){
   }catch(e){}
 }
 async function loadVoices(){
-  const r = await (await fetch('/v1/voices')).json();
+  const r = await (await fetch('v1/voices')).json();
   const sel = $('#voice');
   sel.innerHTML = '';
   for (const v of r.data){
@@ -300,6 +300,40 @@ async function loadVoices(){
 }
 const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
+/* Ключ доступа. Если сервер запущен с VOICY_API_KEY, маршруты /v1/ отвечают 401:
+   консоль спрашивает ключ один раз, запоминает его в браузере и дальше
+   подставляет сама — в fetch заголовком, в поток событий и WebSocket
+   параметром: им заголовок из браузера не передать. */
+let apiKey = '';
+try { apiKey = localStorage.getItem('voicy-key') || ''; } catch {}
+const rawFetch = window.fetch.bind(window);
+window.fetch = async (url, opts = {}) => {
+  if (!String(url).startsWith('v1/')) return rawFetch(url, opts);
+  const go = () => rawFetch(url, {...opts, headers: {...(opts.headers || {}),
+    ...(apiKey ? {Authorization: 'Bearer ' + apiKey} : {})}});
+  let res = await go();
+  if (res.status === 401){
+    const k = prompt(apiKey ? 'Ключ не подошёл. Ключ доступа (VOICY_API_KEY):'
+                            : 'Сервер требует ключ доступа (VOICY_API_KEY):', '');
+    if (k && k.trim()){
+      apiKey = k.trim();
+      try { localStorage.setItem('voicy-key', apiKey); } catch {}
+      res = await go();
+    }
+  }
+  return res;
+};
+/* Пути относительные: консоль работает и за обратным прокси под префиксом,
+   например https://example.com/voicy/ — запросы уходят в /voicy/v1/…, а не в /v1/…. */
+const wsUrl = path => { const u = new URL(path, location.href);
+  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:'; return u.href; };
+const withKey = u => apiKey ? `${u}${u.includes('?') ? '&' : '?'}api_key=${encodeURIComponent(apiKey)}` : u;
+/* Ошибки приходят в формате OpenAI: {"error": {"message": ...}} */
+const errText = async res => {
+  try { const j = await res.json(); return (j.error && j.error.message) || j.detail || res.statusText; }
+  catch { return res.statusText; }
+};
+
 /* ------------------------------------------------------------------ прогресс
 
    Числа приходят с сервера и ничего не выдумывают. У синтеза измеряется
@@ -310,7 +344,7 @@ const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'
 
 function follow(id, onEvent){
   return new Promise((resolve, reject) => {
-    const es = new EventSource(`/v1/jobs/${id}/events`);
+    const es = new EventSource(withKey(`v1/jobs/${id}/events`));
     es.onmessage = e => {
       let d; try { d = JSON.parse(e.data); } catch { return; }
       onEvent(d);
@@ -359,9 +393,9 @@ async function synth(){
   $('#tts-msg').textContent = 'готовлю…';
   try{
     const t0 = performance.now();
-    const start = await fetch('/v1/jobs/speech', {
+    const start = await fetch('v1/jobs/speech', {
       method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
-    if (!start.ok) throw new Error((await start.json()).detail || start.statusText);
+    if (!start.ok) throw new Error(await errText(start));
     const {id, expected_seconds} = await start.json();
 
     await follow(id, d => {
@@ -378,7 +412,7 @@ async function synth(){
     });
     $('#tts-bar').style.width = '100%';
 
-    const res = await fetch(`/v1/jobs/${id}/audio`);
+    const res = await fetch(`v1/jobs/${id}/audio`);
     if (!res.ok) throw new Error(res.statusText);
     lastFmt = body.response_format;
     lastBlob = await res.blob();
@@ -478,7 +512,8 @@ async function liveStart(){
   if (hint) q.set('prompt', hint);
   if ($('#stt-ctx').value) q.set('context', $('#stt-ctx').value);
   if ($('#hotwords').value.trim()) q.set('hotwords', $('#hotwords').value.trim());
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/v1/audio/transcriptions/stream?${q}`);
+  if (apiKey) q.set('api_key', apiKey);
+  const ws = new WebSocket(wsUrl(`v1/audio/transcriptions/stream?${q}`));
   ws.binaryType = 'arraybuffer';
   let pending = [], size = 0, turns = [[]], draft = '', note = '';
   const show = () => {
@@ -575,8 +610,8 @@ $('#asr').onclick = async () => {
       if ($('#hotwords').value.trim()) fd2.append('hotwords', $('#hotwords').value.trim());
       if ($('#words').checked) fd2.append('word_timestamps', 'true');
     }
-    const start = await fetch('/v1/jobs/transcribe', {method:'POST', body: fd2});
-    if (!start.ok) throw new Error((await start.json()).detail || start.statusText);
+    const start = await fetch('v1/jobs/transcribe', {method:'POST', body: fd2});
+    if (!start.ok) throw new Error(await errText(start));
     const {id} = await start.json();
     let partial = '';
     await follow(id, d => {
@@ -592,7 +627,7 @@ $('#asr').onclick = async () => {
     });
     $('#stt-bar').style.width = '100%';
 
-    const res = await fetch(`/v1/jobs/${id}/result`);
+    const res = await fetch(`v1/jobs/${id}/result`);
     const ct = res.headers.get('content-type') || '';
     if (!res.ok) throw new Error(res.statusText);
     if (ct.includes('json')){
@@ -626,8 +661,8 @@ $('#v-add').onclick = async () => {
   fd.append('file', f); fd.append('name', name); fd.append('text', $('#v-text').value.trim());
   const btn = $('#v-add'); btn.disabled = true; btn.textContent = 'Добавляю…';
   try{
-    const res = await fetch('/v1/voices', {method:'POST', body: fd});
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    const res = await fetch('v1/voices', {method:'POST', body: fd});
+    if (!res.ok) throw new Error(await errText(res));
     $('#v-name').value = ''; $('#v-text').value = ''; $('#v-file').value = '';
     await loadVoices(); await health();
   }catch(e){ $('#v-err').textContent = 'Не вышло: ' + e.message; }

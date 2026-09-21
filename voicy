@@ -33,6 +33,9 @@ from uuid import uuid4
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_URL = os.environ.get("VOICY_URL", "http://localhost:8080")
+# Ключ, если сервер его требует; тот же, что задан серверу в VOICY_API_KEY.
+# Серверу можно дать несколько через запятую — клиенту нужен один.
+API_KEY = os.environ.get("VOICY_API_KEY", "").split(",")[0].strip()
 
 # Форматы синтеза, которые принимает сервер; opus по умолчанию — он компактный
 # и его понимает всё, что умеет читать аудио.
@@ -74,6 +77,8 @@ def request(url: str, path: str, *, data: bytes | None = None,
                                  method=method or ("POST" if data else "GET"))
     if content_type:
         req.add_header("Content-Type", content_type)
+    if API_KEY:
+        req.add_header("Authorization", f"Bearer {API_KEY}")
     try:
         with _opener(url).open(req, timeout=timeout) as r:
             # ASGI приводит имена заголовков к нижнему регистру, и через uvicorn
@@ -83,9 +88,13 @@ def request(url: str, path: str, *, data: bytes | None = None,
         body = e.read()
         detail = ""
         try:
-            detail = json.loads(body).get("detail", "")
+            err = json.loads(body)
+            detail = (err.get("error") or {}).get("message") or err.get("detail", "")
         except Exception:
             detail = body[:300].decode("utf-8", "replace")
+        if e.code == 401:
+            hint = ("сервер требует ключ: VOICY_API_KEY=... " + sys.argv[0] + " ..."
+                    if not API_KEY else "ключ в VOICY_API_KEY не подходит")
         die(f"сервер ответил {e.code}: {detail or e.reason}"
             + (f"\n       {hint}" if hint else ""))
     except urllib.error.URLError as e:
@@ -583,7 +592,10 @@ def up_docker(a, port: int) -> None:
         # без видеокарты запуск падает ещё до того, как FORCE_CPU кто-то прочтёт.
         cmd = ["docker", "run", "-d", "--name", "voicy", "--restart", "unless-stopped",
                "-p", f"{port}:8080", "-e", "FORCE_CPU=1",
+               *[x for v in ("VOICY_API_KEY", "VOICY_PUBLIC_URL") if os.environ.get(v)
+                 for x in ("-e", v)],
                "-v", "voicy-models:/cache", "-v", "voicy-voices:/app/server/voices",
+               "-v", "voicy-contexts:/app/server/contexts",
                IMAGE]
         env = dict(os.environ)
     else:
