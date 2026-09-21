@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 725" width="1000" height="725" font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
   <title>Слои voicy</title>
-  <desc>Пять слоёв: клиенты, сервер, движки, среда исполнения, железо. Между слоями — швы, по которым любой слой меняется отдельно: HTTP API, контракт движков, выбор среды исполнения движком, выбор устройства при запуске. Сплошная рамка — работает и проверено, пунктир — план или не проверено.</desc>
+  <desc>Пять слоёв: клиенты, сервер, движки, среда исполнения, железо; под ними — системы, на которых всё это работает. Между слоями — швы, по которым любой слой меняется отдельно: HTTP API, контракт движков, выбор среды исполнения движком, выбор устройства при запуске. Сплошная рамка — работает и проверено, пунктир — план или не проверено.</desc>
   <style>
     .band  { fill: #f5f6f8; }
     .name  { fill: #1f2328; font-size: 15px; font-weight: 600; }
@@ -99,16 +99,27 @@
   <rect class="band" x="10" y="490" width="980" height="80" rx="8"/>
   <text class="name" x="26" y="520">Железо</text>
   <text class="sub" x="26" y="539">где это работает</text>
-  <rect class="box" x="210" y="510" width="185" height="40" rx="6"/><text class="t" x="302" y="530">NVIDIA · CUDA</text>
-  <rect class="box" x="405" y="510" width="185" height="40" rx="6"/><text class="t" x="497" y="530">процессор x86-64</text>
-  <rect class="plan" x="600" y="510" width="185" height="40" rx="6"/><text class="tp" x="692" y="530">процессор ARM64</text>
-  <rect class="plan" x="795" y="510" width="185" height="40" rx="6"/><text class="tp" x="887" y="530">Intel Arc</text>
+  <rect class="box" x="210" y="510" width="146" height="40" rx="6"/><text class="t" x="283" y="530">NVIDIA · CUDA</text>
+  <rect class="plan" x="366" y="510" width="146" height="40" rx="6"/><text class="tp" x="439" y="530">Intel Arc</text>
+  <rect class="plan" x="522" y="510" width="146" height="40" rx="6"/><text class="tp" x="595" y="530">Apple · Metal</text>
+  <rect class="box" x="678" y="510" width="146" height="40" rx="6"/><text class="t" x="751" y="530">процессор x86-64</text>
+  <rect class="plan" x="834" y="510" width="146" height="40" rx="6"/><text class="tp" x="907" y="530">процессор ARM64</text>
+
+  <!-- 6. Системы -->
+  <rect class="band" x="10" y="580" width="980" height="80" rx="8"/>
+  <text class="name" x="26" y="610">Системы</text>
+  <text class="sub" x="26" y="629">где запускается</text>
+  <rect class="box" x="210" y="600" width="146" height="40" rx="6"/><text class="t" x="283" y="620">Linux x86-64</text>
+  <rect class="plan" x="366" y="600" width="146" height="40" rx="6"/><text class="tp" x="439" y="620">Linux ARM64</text>
+  <rect class="plan" x="522" y="600" width="146" height="40" rx="6"/><text class="tp" x="595" y="620">Windows x86-64</text>
+  <rect class="plan" x="678" y="600" width="146" height="40" rx="6"/><text class="tp" x="751" y="620">Windows ARM64</text>
+  <rect class="plan" x="834" y="600" width="146" height="40" rx="6"/><text class="tp" x="907" y="620">macOS</text>
 
   <!-- легенда -->
-  <rect class="box" x="210" y="592" width="34" height="20" rx="4"/>
-  <text class="leg" x="252" y="602">работает и проверено</text>
-  <rect class="plan" x="420" y="592" width="34" height="20" rx="4"/>
-  <text class="leg" x="462" y="602">план или не проверено</text>
-  <rect class="seam" x="640" y="592" width="34" height="20" rx="10"/>
-  <text class="leg" x="682" y="602">шов: слой по обе стороны меняется отдельно</text>
+  <rect class="box" x="210" y="682" width="34" height="20" rx="4"/>
+  <text class="leg" x="252" y="692">работает и проверено</text>
+  <rect class="plan" x="420" y="682" width="34" height="20" rx="4"/>
+  <text class="leg" x="462" y="692">план или не проверено</text>
+  <rect class="seam" x="640" y="682" width="34" height="20" rx="10"/>
+  <text class="leg" x="682" y="692">шов: слой по обе стороны меняется отдельно</text>
 </svg>
