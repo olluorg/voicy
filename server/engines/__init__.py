@@ -10,7 +10,8 @@ import importlib
 import os
 
 REGISTRY = {
-    "tts": {"qwen3-tts": "engines.tts_qwen:QwenTTS"},
+    "tts": {"qwen3-tts": "engines.tts_qwen:QwenTTS",
+            "espeech": "engines.tts_espeech:ESpeechTTS"},
     "stt": {"faster-whisper": "engines.stt_whisper:WhisperSTT"},
     "turn": {"smart-turn": "engines.turn_smart:SmartTurn"},
     "vad": {"silero": "engines.vad_silero:SileroVAD"},

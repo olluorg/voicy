@@ -1,0 +1,4 @@
+# Необязательный движок синтеза ESpeech (TTS_ENGINE=espeech), поверх requirements.txt.
+# Веса (~1.3 ГБ) и вокодер Vocos качаются при первой загрузке.
+f5-tts
+ruaccent

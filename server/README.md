@@ -57,6 +57,7 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080 --app-dir server
 | `HF_HOME` | `/cache/huggingface` | куда складывать веса |
 | `VOICY_QUEUE_MAX` | `32` | сколько заданий может ждать; дальше — 429 |
 | `VOICY_JOB_TTL` | `1800` | сколько секунд помнить готовое задание |
+| `ESPEECH_NFE_STEP` | `32` | шагов решателя у `espeech`: больше — чище, медленнее |
 | `TTS_FAST` | `1` | `0` — синтез без CUDA graphs, как в 1.2.0: ×0.55 вместо ×1.5 |
 | `VOICY_API_KEY` | — | ключ доступа к `/v1/`; несколько — через запятую |
 | `VOICY_PUBLIC_URL` | — | адрес снаружи за обратным прокси, для ссылок в заданиях и webhook |
@@ -84,10 +85,16 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080 --app-dir server
 
 | Вид | Движки | Выбор |
 |---|---|---|
-| синтез | `qwen3-tts` | `TTS_ENGINE`, веса — `TTS_MODEL` |
+| синтез | `qwen3-tts`, `espeech` | `TTS_ENGINE`, веса — `TTS_MODEL` |
 | распознавание | `faster-whisper` | `STT_ENGINE`, веса — `STT_MODEL` |
 | конец реплики | `smart-turn` | `TURN_ENGINE` |
 | детектор голоса | `silero` | `VAD_ENGINE` |
+
+`espeech` — ESpeech RL-V2 на F5-TTS, прежний движок voicy: только русский,
+образец голоса до 12 с. При той же разборчивости быстрее (×2.5 против ×1.4)
+и легче Qwen, но с паузами хуже (ADR 0014). Зависимости — отдельно:
+`uv pip install -r server/requirements-espeech.txt`, запуск —
+`TTS_ENGINE=espeech ./voicy up`. Сравнение — [experiments/19](../experiments/19-second-engine/README.md).
 
 Новая модель — это модуль в `engines/` с классом по интерфейсу и строка
 в `engines/__init__.py`. Движок объявляет, что умеет: распознаватель —
@@ -356,9 +363,13 @@ curl -s localhost:8080/v1/jobs/speech -H 'Content-Type: application/json' \
 {"stage":"synthesis","produced":9.92,"expected":13.1,"expected_exact":false,"elapsed":36.1}
 ```
 
-Движок, который назначает длину до начала работы, готовых секунд по ходу
-не имеет — он сообщает долю сделанной работы (`done`), а длительность у него
-не оценка, а факт (`expected_exact: true`).
+Движок, который назначает длину до начала работы (`espeech`), готовых секунд
+по ходу не имеет — он сообщает долю сделанной работы, а длительность у него
+не оценка, а факт:
+
+```json
+{"stage":"synthesis","done":0.406,"expected":14.0,"expected_exact":true,"elapsed":1.9}
+```
 
 `produced` и `done` — измерения. `expected` — оценка по числу слогов, если
 движок длительность заранее не знает (`expected_exact: false`). В консоли полоса
