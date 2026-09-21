@@ -40,7 +40,7 @@ HERE = Path(__file__).parent
 TTS_MODEL = os.environ.get("TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
 STT_MODEL = os.environ.get("STT_MODEL", "large-v3-turbo")
 
-app = FastAPI(title="voicy", version="1.2.0",
+app = FastAPI(title="voicy", version="1.3.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
 tts = QwenTTS(TTS_MODEL)
 stt = WhisperSTT(STT_MODEL)

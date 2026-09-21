@@ -58,6 +58,23 @@ class QwenTTS:
                     self.model_id, device_map=self.device, dtype=dtype
                 )
                 self._install_step_hook()
+                self._install_fast_path()
+
+    def _install_fast_path(self) -> None:
+        """Code predictor from CUDA graphs: ×0.55 → ×1.5 on an RTX 3080 (tts_fast.py).
+
+        Graphs are recorded here, at load, so the first request is not the one
+        that pays for it. TTS_FAST=0 keeps the original path.
+        """
+        import os
+
+        self.fast = None
+        if os.environ.get("TTS_FAST", "1") == "0" or not self.device.startswith("cuda"):
+            return
+        from .tts_fast import install
+
+        self.fast = install(self._model)
+        self.fast.capture()
 
     def _install_step_hook(self) -> None:
         from transformers import LogitsProcessor, LogitsProcessorList

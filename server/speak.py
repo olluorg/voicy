@@ -1,20 +1,20 @@
 """Speech as it is synthesised, for a voice agent that should not go silent.
 
-Qwen3-TTS returns a sentence only once the whole of it is generated, and on the
-cards measured here generation is slower than real time: 5.1 s of audio took
-9.5 s, a three-sentence answer took 26 s. Waiting for the whole answer is the
-worst case, so the text is cut into pieces and each piece is sent as soon as it
-is ready.
+Qwen3-TTS returns a sentence only once the whole of it is generated. Waiting for
+the whole answer makes the listener wait for its last sentence before hearing
+the first, so the text is cut into pieces and each piece is sent as soon as it
+is ready. On an RTX 3080 synthesis runs at ×1.5 (tts_fast.py), so after the
+first piece the next one is ready before the current one finishes playing.
 
-The cuts go where a listener expects a pause anyway. Generation is slower than
-playback, so there will be gaps; at sentence boundaries they sound like
+The cuts still go where a listener expects a pause. On a card slower than real
+time there will be gaps between pieces; at sentence boundaries they sound like
 breathing, in the middle of a phrase they sound like a stutter. So:
 
   - the first piece ends at the first clause boundary (a comma after three
     words or more) — the first sound is what the listener waits for;
   - every later piece ends at the end of a sentence;
   - a short sentence is joined to the next one when both are already known,
-    because each call has a fixed cost ("Да." takes 1.45 s for 0.64 s of sound);
+    because each call has a fixed cost;
   - a sentence longer than MAX_CHUNK is cut at its last clause boundary.
 
 Two ways in:

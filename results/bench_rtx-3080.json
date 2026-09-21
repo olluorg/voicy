@@ -14,11 +14,11 @@
   }
  },
  "tts": {
-  "load_s": 8.4,
-  "vram_after_load_gb": 4.06,
-  "vram_peak_gb": 5.72,
-  "torch_allocated_peak_gb": 4.7,
-  "torch_reserved_peak_gb": 5.71,
+  "load_s": 7.8,
+  "vram_after_load_gb": 4.41,
+  "vram_peak_gb": 6.12,
+  "torch_allocated_peak_gb": 4.72,
+  "torch_reserved_peak_gb": 5.79,
   "ram_peak_gb": 4.56,
   "texts": {
    "short": {
@@ -26,15 +26,15 @@
     "runs": [
      {
       "audio_s": 2.48,
-      "synth_s": 4.71,
-      "speed": 0.53,
-      "ms_per_step": 147
+      "synth_s": 1.77,
+      "speed": 1.4,
+      "ms_per_step": 55
      },
      {
       "audio_s": 2.48,
-      "synth_s": 4.57,
-      "speed": 0.54,
-      "ms_per_step": 143
+      "synth_s": 1.69,
+      "speed": 1.46,
+      "ms_per_step": 53
      }
     ]
    },
@@ -42,16 +42,16 @@
     "chars": 65,
     "runs": [
      {
-      "audio_s": 5.04,
-      "synth_s": 9.37,
-      "speed": 0.54,
-      "ms_per_step": 146
+      "audio_s": 4.72,
+      "synth_s": 3.11,
+      "speed": 1.52,
+      "ms_per_step": 52
      },
      {
-      "audio_s": 5.04,
-      "synth_s": 8.69,
-      "speed": 0.58,
-      "ms_per_step": 136
+      "audio_s": 4.72,
+      "synth_s": 3.04,
+      "speed": 1.55,
+      "ms_per_step": 51
      }
     ]
    },
@@ -60,15 +60,15 @@
     "runs": [
      {
       "audio_s": 13.52,
-      "synth_s": 24.2,
-      "speed": 0.56,
-      "ms_per_step": 142
+      "synth_s": 8.98,
+      "speed": 1.51,
+      "ms_per_step": 53
      },
      {
       "audio_s": 13.52,
-      "synth_s": 25.08,
-      "speed": 0.54,
-      "ms_per_step": 148
+      "synth_s": 9.01,
+      "speed": 1.5,
+      "ms_per_step": 53
      }
     ]
    },
@@ -76,89 +76,89 @@
     "chars": 597,
     "runs": [
      {
-      "audio_s": 41.52,
-      "synth_s": 74.83,
-      "speed": 0.55,
-      "ms_per_step": 144
+      "audio_s": 44.08,
+      "synth_s": 28.39,
+      "speed": 1.55,
+      "ms_per_step": 51
      },
      {
-      "audio_s": 41.52,
-      "synth_s": 72.21,
-      "speed": 0.58,
-      "ms_per_step": 139
+      "audio_s": 44.08,
+      "synth_s": 27.83,
+      "speed": 1.58,
+      "ms_per_step": 50
      }
     ]
    }
   },
   "stream": {
    "chunk": "Сейчас я проверю расписание поездов на завтра и сразу вам отвечу.",
-   "first_audio_s": 8.74,
-   "whole_s": 25.08
+   "first_audio_s": 3.19,
+   "whole_s": 9.01
   }
  },
  "tts-min": {
-  "weights_gb": 3.95,
-  "overhead_gb": 0.27,
+  "weights_gb": 3.97,
+  "overhead_gb": 0.34,
   "texts": {
    "long": {
     "chars": 181,
-    "torch_min_gb": 4.49,
-    "vram_min_gb": 4.76,
+    "torch_min_gb": 4.56,
+    "vram_min_gb": 4.9,
     "search": [
      {
-      "limit_gb": 4.97,
-      "fits": true
-     },
-     {
-      "limit_gb": 4.46,
-      "fits": false
-     },
-     {
-      "limit_gb": 4.71,
-      "fits": true
-     },
-     {
-      "limit_gb": 4.59,
-      "fits": true
-     },
-     {
-      "limit_gb": 4.52,
+      "limit_gb": 5.01,
       "fits": true
      },
      {
       "limit_gb": 4.49,
+      "fits": false
+     },
+     {
+      "limit_gb": 4.75,
       "fits": true
+     },
+     {
+      "limit_gb": 4.62,
+      "fits": true
+     },
+     {
+      "limit_gb": 4.56,
+      "fits": true
+     },
+     {
+      "limit_gb": 4.52,
+      "fits": false
      }
     ]
    },
    "xlong": {
     "chars": 597,
-    "torch_min_gb": 4.86,
-    "vram_min_gb": 5.13,
+    "torch_min_gb": 4.67,
+    "vram_min_gb": 5.01,
     "search": [
      {
-      "limit_gb": 5.66,
+      "limit_gb": 5.58,
       "fits": true
      },
      {
-      "limit_gb": 4.8,
+      "limit_gb": 4.77,
+      "fits": true
+     },
+     {
+      "limit_gb": 4.37,
       "fits": false
      },
      {
-      "limit_gb": 5.23,
+      "limit_gb": 4.57,
+      "fits": false
+     },
+     {
+      "limit_gb": 4.67,
       "fits": true
      },
      {
-      "limit_gb": 5.02,
-      "fits": true
-     },
-     {
-      "limit_gb": 4.91,
-      "fits": true
-     },
-     {
-      "limit_gb": 4.86,
-      "fits": true
+      "limit_gb": 4.62,
+      "fits": false
      }
     ]
    }
@@ -226,11 +226,11 @@
   "similarity_to_float16": 1.0
  },
  "both": {
-  "vram_peak_gb": 8.09,
+  "vram_peak_gb": 8.03,
   "ram_peak_gb": 4.55,
-  "turn_ms": 38.6
+  "turn_ms": 31.3
  },
- "tts-min_date": "2026-09-21",
+ "tts-min_date": "2026-09-22",
  "fit": [
   {
    "card_gb": 8.0,
@@ -258,5 +258,7 @@
    "skipped": "драйвер отдаёт системную память сверх объёма карты — выключите Sysmem Fallback в панели NVIDIA и повторите"
   }
  ],
- "fit_date": "2026-09-21"
+ "fit_date": "2026-09-21",
+ "tts_date": "2026-09-22",
+ "both_date": "2026-09-22"
 }
