@@ -1,7 +1,12 @@
-//! Typed calls to the engines in the host process, and what they said about
-//! themselves at start (the `info` operation).
+//! Typed calls to the engines, and what they said about themselves at start.
+//!
+//! Most engines live in the Python host process (host.rs). Synthesis may run
+//! here instead, without Python (native/qwen.rs): chosen when its libraries and
+//! converted model are in the cache, or asked for with TTS_ENGINE=qwen3-tts-gguf.
 
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use serde_json::{Value, json};
 
@@ -11,6 +16,67 @@ use crate::host::{Host, HostError, Msg, f32_from};
 pub struct Engines {
     pub host: Arc<Host>,
     pub info: Value,
+    native: Option<NativeTts>,
+}
+
+/// Qwen3-TTS in-process: loaded on first use, as the Python engines are.
+struct NativeTts {
+    files: crate::native::qwen::Files,
+    engine: tokio::sync::OnceCell<Arc<crate::native::qwen::Qwen>>,
+    variant: String,
+}
+
+impl NativeTts {
+    /// The converted model and the runtime libraries, if they are there.
+    fn find() -> Option<NativeTts> {
+        let wanted = std::env::var("TTS_ENGINE").unwrap_or_default();
+        if !wanted.is_empty() && wanted != "qwen3-tts-gguf" {
+            return None;
+        }
+        let dir = std::env::var_os("VOICY_TTS_GGUF_DIR").map(PathBuf::from).unwrap_or_else(|| {
+            crate::native::cache_dir().join("models").join("qwen3-tts-12hz-1.7b-base-gguf")
+        });
+        // q5_k: та же разборчивость и то же сходство голоса, что у f16 и torch, при 2.4 ГБ (experiments/20)
+        let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
+        let files = crate::native::qwen::Files {
+            talker: format!("qwen3_tts_talker.{variant}.gguf"),
+            predictor: "qwen3_tts_predictor.q8_0.gguf".into(),
+            dir,
+        };
+        let ready = files.dir.join(&files.talker).is_file() && crate::native::lib_dir().is_ok();
+        if !ready && wanted == "qwen3-tts-gguf" {
+            eprintln!("voicy: TTS_ENGINE=qwen3-tts-gguf, but no model in {} or no engine libraries", files.dir.display());
+        }
+        ready.then(|| NativeTts { files, engine: tokio::sync::OnceCell::new(), variant })
+    }
+
+    async fn get(&self) -> Result<Arc<crate::native::qwen::Qwen>, HostError> {
+        self.engine
+            .get_or_try_init(|| async {
+                let files = crate::native::qwen::Files {
+                    dir: self.files.dir.clone(),
+                    talker: self.files.talker.clone(),
+                    predictor: self.files.predictor.clone(),
+                };
+                tokio::task::spawn_blocking(move || crate::native::qwen::Qwen::load(&files, true))
+                    .await
+                    .map_err(|e| HostError { kind: "internal".into(), message: e.to_string() })?
+                    .map(Arc::new)
+                    .map_err(|e| HostError { kind: "internal".into(), message: format!("{e:#}") })
+            })
+            .await
+            .cloned()
+    }
+
+    fn status(&self) -> Value {
+        json!({"engine": "qwen3-tts", "model": format!("Qwen/Qwen3-TTS-12Hz-1.7B-Base ({})", self.variant),
+               "runtime": "llama.cpp + onnxruntime", "loaded": self.engine.initialized(),
+               "device": self.engine.get().map_or("cuda".into(), |e| e.device.clone())})
+    }
+}
+
+fn unsupported(message: String) -> HostError {
+    HostError { kind: "unsupported".into(), message }
 }
 
 pub enum Stop {
@@ -35,8 +101,18 @@ pub struct Speech {
 
 impl Engines {
     pub async fn start(host: Arc<Host>) -> anyhow::Result<Self> {
-        let (info, _) = host.run("info", json!({}), &[]).await.map_err(|e| anyhow::anyhow!(e.message))?;
-        Ok(Engines { host, info })
+        let (mut info, _) = host.run("info", json!({}), &[]).await.map_err(|e| anyhow::anyhow!(e.message))?;
+        let native = NativeTts::find();
+        if let Some(n) = &native {
+            let mut tts = n.status();
+            tts["sample_rate"] = json!(crate::native::qwen::SAMPLE_RATE);
+            tts["needs_reference_text"] = json!(true);
+            tts["reference_seconds"] = json!([3.0, 60.0]);
+            tts["reference_best"] = json!([8.0, 14.0]);
+            info["tts"] = tts;
+            eprintln!("voicy: synthesis in-process (llama.cpp + onnxruntime), talker {}", n.variant);
+        }
+        Ok(Engines { host, info, native })
     }
 
     pub fn tts_rate(&self) -> u32 {
@@ -89,6 +165,9 @@ impl Engines {
     }
 
     pub async fn status(&self, kind: &str) -> Value {
+        if let (Some(n), "tts") = (&self.native, kind) {
+            return n.status();
+        }
         match self.host.run("status", json!({"kind": kind}), &[]).await {
             Ok((v, _)) => v,
             Err(e) => json!({"engine": self.info[kind]["engine"], "error": e.message}),
@@ -96,17 +175,36 @@ impl Engines {
     }
 
     pub async fn load(&self, kind: &str) -> Result<(), ApiError> {
+        if let (Some(n), "tts") = (&self.native, kind) {
+            return n.get().await.map(|_| ()).map_err(Into::into);
+        }
         self.host.run("load", json!({"kind": kind}), &[]).await.map(|_| ()).map_err(Into::into)
     }
 
     /// The engine checks the language before anything is queued.
     pub async fn language(&self, code: Option<&str>) -> Result<String, ApiError> {
+        if self.native.is_some() {
+            let code = code.map(str::trim).filter(|c| !c.is_empty()).unwrap_or("ru");
+            return match crate::native::qwen::LANGUAGES.iter().find(|(iso, name, _)| {
+                *iso == code.to_lowercase() || *name == code.to_lowercase()
+            }) {
+                Some((iso, _, _)) => Ok(iso.to_string()),
+                None => {
+                    let all: Vec<&str> = crate::native::qwen::LANGUAGES.iter().map(|l| l.0).collect();
+                    Err(unsupported(format!("language '{code}' is not supported by qwen3-tts; supported: {}",
+                                            all.join(", "))).into())
+                }
+            };
+        }
         let (v, _) = self.host.run("tts.language", json!({"code": code}), &[]).await?;
         Ok(v["language"].as_str().unwrap_or("ru").to_string())
     }
 
     /// Synthesis. `on_progress` sees every progress event and returns false to stop.
     pub async fn speak(&self, args: Value, mut on_progress: impl FnMut(&Value) -> bool) -> Result<Speech, Stop> {
+        if let Some(n) = &self.native {
+            return Self::speak_native(n, args, on_progress).await;
+        }
         let mut call = self.host.call("tts.speak", args, &[]).await;
         let mut stopping = false;
         loop {
@@ -129,6 +227,40 @@ impl Engines {
                 Msg::Error(e) if e.kind == "cancelled" => return Err(Stop::Cancelled),
                 Msg::Error(e) => return Err(Stop::Failed(e)),
             }
+        }
+    }
+
+    async fn speak_native(n: &NativeTts, args: Value, mut on_progress: impl FnMut(&Value) -> bool)
+                          -> Result<Speech, Stop> {
+        let engine = n.get().await.map_err(Stop::Failed)?;
+        let stop = Arc::new(AtomicBool::new(false));
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<usize>();
+        let flag = stop.clone();
+        let text = args["text"].as_str().unwrap_or_default().to_string();
+        let wav = PathBuf::from(args["ref_audio"].as_str().unwrap_or_default());
+        let ref_text = args["ref_text"].as_str().unwrap_or_default().to_string();
+        let lang = args["language"].as_str().and_then(crate::native::qwen::language_id);
+        let seed = args["seed"].as_i64().map(|s| s as u32);
+        let job = tokio::task::spawn_blocking(move || {
+            engine.speak(&text, &wav, &ref_text, lang, seed, |p| {
+                let _ = tx.send(p.frames);
+                !flag.load(Ordering::Relaxed)
+            })
+        });
+        let frame = crate::native::qwen::SAMPLES_PER_FRAME as f64 / crate::native::qwen::SAMPLE_RATE as f64;
+        while let Some(frames) = rx.recv().await {
+            // кадр — ровно 80 мс готового звука
+            if !stop.load(Ordering::Relaxed) && !on_progress(&json!({"produced": frames as f64 * frame})) {
+                stop.store(true, Ordering::Relaxed);
+            }
+        }
+        match job.await {
+            Ok(Ok(Some(audio))) if !stop.load(Ordering::Relaxed) => {
+                Ok(Speech { audio, sample_rate: crate::native::qwen::SAMPLE_RATE })
+            }
+            Ok(Ok(_)) => Err(Stop::Cancelled),
+            Ok(Err(e)) => Err(Stop::Failed(HostError { kind: "internal".into(), message: format!("{e:#}") })),
+            Err(e) => Err(Stop::Failed(HostError { kind: "internal".into(), message: e.to_string() })),
         }
     }
 

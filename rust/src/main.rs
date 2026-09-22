@@ -16,6 +16,7 @@ mod errors;
 mod host;
 mod jobs;
 mod live;
+mod native;
 mod speak;
 mod textprep;
 mod transcripts;
@@ -66,6 +67,17 @@ enum Command {
         /// Python с зависимостями движков; по умолчанию .venv рядом с репозиторием
         #[arg(long, env = "VOICY_PYTHON")]
         python: Option<PathBuf>,
+    },
+    /// Замер родного синтеза: фразы из JSON [{"text", "seed", "file"}], голос — wav и расшифровка
+    #[command(hide = true)]
+    BenchTts {
+        jobs: PathBuf,
+        voice: PathBuf,
+        voice_text: String,
+        #[arg(long, default_value = "q5_k")]
+        talker: String,
+        #[arg(long, default_value = "ru")]
+        language: String,
     },
 }
 
@@ -173,9 +185,41 @@ async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<Pa
     Ok(())
 }
 
+fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, language: String) -> anyhow::Result<()> {
+    use std::time::Instant;
+    let files = native::qwen::Files {
+        dir: native::cache_dir().join("models").join("qwen3-tts-12hz-1.7b-base-gguf"),
+        talker: format!("qwen3_tts_talker.{talker}.gguf"),
+        predictor: "qwen3_tts_predictor.q8_0.gguf".into(),
+    };
+    let t = Instant::now();
+    let q = native::qwen::Qwen::load(&files, true)?;
+    eprintln!("loaded in {:.1} s", t.elapsed().as_secs_f64());
+    let lang = native::qwen::language_id(&language);
+    q.speak("Прогрев.", &voice, &voice_text, lang, Some(0), |_| true)?;
+    let mut rows: Vec<serde_json::Value> = serde_json::from_slice(&std::fs::read(&jobs)?)?;
+    let (mut ta, mut tt) = (0.0, 0.0);
+    for r in rows.iter_mut() {
+        let text = r["text"].as_str().unwrap_or_default().to_string();
+        let t = Instant::now();
+        let audio = q.speak(&text, &voice, &voice_text, lang, r["seed"].as_u64().map(|s| s as u32), |_| true)?.unwrap_or_default();
+        let dt = t.elapsed().as_secs_f64();
+        let secs = audio.len() as f64 / 24000.0;
+        std::fs::write(r["file"].as_str().unwrap_or("out.wav"), audio::to_wav(&audio, 24000))?;
+        r["audio_s"] = serde_json::json!(jobs::round(secs, 2));
+        r["synth_s"] = serde_json::json!(jobs::round(dt, 3));
+        ta += secs;
+        tt += dt;
+        eprintln!("{secs:5.2} s за {dt:5.2} s  {}", text.chars().take(40).collect::<String>());
+    }
+    println!("{}", serde_json::json!({"rows": rows, "speed": jobs::round(ta / tt, 2)}));
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
+        Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),
     }
 }

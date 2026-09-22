@@ -14,8 +14,14 @@ bytes = "1"
 clap = { version = "4", features = ["derive", "env"] }
 fancy-regex = "0.19"
 futures = "0.3"
+half = "2"
 hex = "0.4"
 hmac = "0.12"
+libloading = "0.9"
+matrixmultiply = "0.3"
+memmap2 = "0.9"
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-24", "half", "cuda"] }
+realfft = "3"
 regex = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
@@ -24,6 +30,7 @@ serde_path_to_error = "0.1"
 sha2 = "0.10"
 soxr-sys = "0.1"
 tempfile = "3"
+tokenizers = { version = "=0.22.2", default-features = false, features = ["onig"] }
 tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 tower-http = { version = "0.6", features = ["fs", "catch-panic"] }
