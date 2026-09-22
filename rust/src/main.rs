@@ -19,6 +19,7 @@ mod host;
 mod jobs;
 mod live;
 mod native;
+mod setup;
 mod speak;
 mod textprep;
 mod transcripts;
@@ -79,6 +80,12 @@ enum Command {
     /// Вероятности детектора голоса и конца реплики для wav 16 кГц — сверка с Python
     #[command(hide = true)]
     ProbeListen { wav: PathBuf },
+    /// Скачать библиотеки и модели для движков в процессе сервера (~/.cache/voicy)
+    Setup {
+        /// libs, models или всё сразу
+        #[arg(default_value = "all", value_parser = ["all", "libs", "models"])]
+        what: String,
+    },
     /// Родное распознавание faster-whisper: задания из JSON [{"file", "language", "prompt",
     /// "hotwords", "word_timestamps", "live", "draft"}], по строке JSON на задание — сверка с Python
     #[command(hide = true)]
@@ -327,6 +334,7 @@ fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, 
 async fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
+        Command::Setup { what } => setup::run(&what).await,
         Command::ProbeListen { wav } => probe_listen(wav),
         Command::ProbeStt { jobs, model } => probe_stt(jobs, model),
         Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),

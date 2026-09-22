@@ -148,7 +148,7 @@ api! {
 
 unsafe extern "C" fn quiet(_level: i32, _text: *const c_char, _data: *mut c_void) {}
 
-fn lib_name(stem: &str) -> String {
+pub fn lib_name(stem: &str) -> String {
     if cfg!(windows) {
         format!("{stem}.dll")
     } else if cfg!(target_os = "macos") {

@@ -206,20 +206,32 @@ silicon идёт под эмуляцией x86-64 и для работы неп�
 другие платформы есть, сборки и замеры — впереди.
 
 ```bash
-sudo apt install build-essential ffmpeg           # g++ для обёртки над CTranslate2
+sudo apt install build-essential ffmpeg           # g++ — для обёртки над CTranslate2
 curl https://sh.rustup.rs -sSf | sh               # Rust
-uv venv --python 3.12 .venv                       # Python нужен один раз — перевести Qwen3-TTS
-uv pip install --python .venv torch torchaudio --index-url https://download.pytorch.org/whl/cu128
-uv pip install --python .venv -r server/requirements.txt onnx onnxscript gguf
-.venv/bin/python scripts/native_setup.py all      # библиотеки и модели в ~/.cache/voicy
 cargo build --release --manifest-path rust/Cargo.toml
+rust/target/release/voicy setup                   # библиотеки и модели в ~/.cache/voicy
 rust/target/release/voicy serve --port 8080
 ```
 
-`native_setup.py` качает готовые llama.cpp, CTranslate2 и ONNX Runtime
-и один раз переводит Qwen3-TTS в GGUF и ONNX. Для этого ему нужен Python
-с torch; самому серверу он не нужен. CLI `./voicy` работает с этим сервером
-так же, как с Python-сервером. Подробности — [`rust/README.md`](rust/README.md).
+`voicy setup` сам качает готовые llama.cpp, CTranslate2 и ONNX Runtime,
+модели Whisper, Silero и Smart Turn и собирает обёртку над CTranslate2 —
+около 7 ГБ. Python на этом пути не нужен.
+
+Кроме одного: Qwen3-TTS надо перевести в GGUF, а для этого нужны PyTorch
+и официальные веса. Пока готовые файлы не выложены, это делается один раз
+руками:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv torch torchaudio --index-url https://download.pytorch.org/whl/cu128
+uv pip install --python .venv -r server/requirements.txt onnx onnxscript gguf
+.venv/bin/python scripts/convert_qwen.py
+```
+
+Без этого шага синтез пойдёт через движок Python, а распознавание, детектор
+голоса и конец реплики — уже в процессе сервера. CLI `./voicy` работает
+с этим сервером так же, как с Python-сервером. Подробности —
+[`rust/README.md`](rust/README.md).
 
 ## Модели
 

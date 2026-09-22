@@ -286,7 +286,11 @@ impl Engines {
             None
         } else {
             let dir = server_dir.ok_or_else(|| anyhow::anyhow!(
-                "some engines need the Python host (server/engines), and the repository is not found"))?;
+                "some engines need the Python host (server/engines), and the repository is not found.\n\
+                 To run them here instead: voicy setup"))?;
+            if native::lib_dir().is_err() {
+                eprintln!("voicy: движков в процессе нет — библиотеки не скачаны (voicy setup)");
+            }
             eprintln!("voicy: engines via {}", python.display());
             let host = Host::spawn(python, dir).await?;
             let (i, _) = host.run("info", json!({}), &[]).await.map_err(|e| anyhow::anyhow!(e.message))?;

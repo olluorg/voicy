@@ -7,9 +7,14 @@ Python-движки в дочернем процессе. Как и почему
 
 ```bash
 cargo build --release                         # rust/target/release/voicy
-python scripts/native_setup.py all            # библиотеки и модели в ~/.cache/voicy (один раз)
-rust/target/release/voicy serve --port 8080
+target/release/voicy setup                    # библиотеки и модели в ~/.cache/voicy (один раз)
+target/release/voicy serve --port 8080
 ```
+
+`setup` качает готовые библиотеки и модели и собирает обёртку над CTranslate2;
+Python ему не нужен. Единственное, чего он не умеет, — перевести Qwen3-TTS
+в GGUF: это PyTorch и официальные веса, `python scripts/convert_qwen.py`
+(один раз, пока готовые файлы не выложены).
 
 ## Что где исполняется
 
@@ -38,9 +43,10 @@ Python не запускается. `/health` показывает, кто гд�
   (раскладка структур сверена с их заголовками). Собирается одно —
   `ct2shim/`, C-обёртка над C++ API CTranslate2 (`g++`, одна страница кода).
 - **Модели** — `~/.cache/voicy/models/`. Whisper — те файлы CTranslate2,
-  что качает faster-whisper. Qwen3-TTS переводится из официальных
-  весов скриптами HaujetZhao/Qwen3-TTS-GGUF — это единственный шаг, которому
-  нужен Python с torch.
+  что качает faster-whisper; Silero — из колеса faster-whisper, файл в файл.
+  Qwen3-TTS переводится из официальных весов скриптами HaujetZhao/Qwen3-TTS-GGUF
+  (`scripts/convert_qwen.py`) — это единственный шаг, которому нужен Python
+  с torch.
 - **Голоса, словарь произношений, консоль** — внутри бинарника; рядом
   с репозиторием берутся его файлы, без него голоса живут в `~/.cache/voicy/voices`.
 

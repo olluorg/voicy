@@ -52,10 +52,20 @@ pub fn trim_heap() {
     }
 }
 
+/// Where the libraries for this platform go; `lib_dir` is this, once it exists.
+pub fn lib_dir_path() -> PathBuf {
+    std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from).unwrap_or_else(|| cache_dir().join("lib").join(platform()))
+}
+
 pub fn lib_dir() -> anyhow::Result<PathBuf> {
-    let dir = std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from).unwrap_or_else(|| cache_dir().join("lib").join(platform()));
-    anyhow::ensure!(dir.is_dir(), "no engine libraries in {}", dir.display());
+    let dir = lib_dir_path();
+    anyhow::ensure!(dir.is_dir(), "no engine libraries in {} — voicy setup", dir.display());
     Ok(dir)
+}
+
+/// libfoo.so, foo.dll or libfoo.dylib, whichever this platform names it.
+pub fn lib_file(stem: &str) -> String {
+    llama::lib_name(stem)
 }
 
 /// The CUDA provider of ONNX Runtime has no search path of its own: the CUDA

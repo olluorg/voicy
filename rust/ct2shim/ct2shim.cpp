@@ -6,8 +6,9 @@
 // library, same weights: the recogniser is faster-whisper's, only the Python
 // around it is gone (rust/src/native/fwhisper.rs).
 //
-// Build: rust/ct2shim/build.sh. Errors come back as text in `err`; every
-// function that allocates has its matching free.
+// Built by `voicy setup`, which fetches CTranslate2's headers at the same tag
+// (src/setup.rs). Errors come back as text in `err`; every function that
+// allocates has its matching free.
 
 #include <cstring>
 #include <memory>
