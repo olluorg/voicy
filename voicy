@@ -536,11 +536,30 @@ def install_deps() -> Path:
     else:
         if not venv.exists():
             run_step([sys.executable, "-m", "venv", str(venv)])
-        pip = str(venv / "bin" / "pip")
+        pip = str(venv / ("Scripts/pip.exe" if os.name == "nt" else "bin/pip"))
         run_step([pip, "install", "-U", "pip"])
         run_step([pip, "install", "torch", "torchaudio", "--index-url", idx])
         run_step([pip, "install", "-r", str(HERE / "server" / "requirements.txt")])
     return interpreter()
+
+
+def alive(pid: int) -> bool:
+    if os.name == "nt":
+        # os.kill(pid, 0) на Windows не проверяет процесс, а завершает его
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        code = ctypes.c_ulong()
+        ok = k.GetExitCodeProcess(h, ctypes.byref(code))
+        k.CloseHandle(h)
+        return bool(ok) and code.value == 259  # STILL_ACTIVE
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
 
 
 def read_pid() -> int | None:
@@ -548,11 +567,7 @@ def read_pid() -> int | None:
         pid = int(PID_FILE.read_text().strip())
     except (OSError, ValueError):
         return None
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return None
-    return pid
+    return pid if alive(pid) else None
 
 
 def up_source(a, port: int) -> None:
@@ -568,7 +583,8 @@ def up_source(a, port: int) -> None:
 
     if not shutil.which("ffmpeg"):
         log("ffmpeg не найден: синтез в opus/mp3/flac/aac и изменение темпа откажут, "
-            "wav и распознавание — нет. Поставить: sudo apt install ffmpeg")
+            "wav и распознавание — нет. Поставить: sudo apt install ffmpeg, "
+            "brew install ffmpeg или winget install Gyan.FFmpeg")
 
     RUNTIME_DIR.mkdir(exist_ok=True)
     env = dict(os.environ)
@@ -580,8 +596,10 @@ def up_source(a, port: int) -> None:
     with open(LOG_FILE, "ab") as logf:
         logf.write(f"\n=== {time.strftime('%F %T')} запуск ===\n".encode())
         # Отдельная сессия — чтобы сервер пережил завершение этой команды.
+        detach = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS}
+                  if os.name == "nt" else {"start_new_session": True})
         proc = subprocess.Popen(cmd, cwd=HERE, env=env, stdout=logf, stderr=logf,
-                                stdin=subprocess.DEVNULL, start_new_session=True)
+                                stdin=subprocess.DEVNULL, **detach)
     PID_FILE.write_text(str(proc.pid))
     log(f"процесс {proc.pid}, журнал — {LOG_FILE}")
 
@@ -644,7 +662,7 @@ def cmd_down(a) -> int:
                 break
             time.sleep(0.2)
         if read_pid() is not None:
-            os.kill(pid, signal.SIGKILL)
+            os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
         PID_FILE.unlink(missing_ok=True)
         stopped = True
     if docker_available():
