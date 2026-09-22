@@ -26,13 +26,18 @@ fn mel_to_hz(m: f64) -> f64 {
     if m >= min_log_mel { min_log_hz * (logstep * (m - min_log_mel)).exp() } else { f_sp * m }
 }
 
-/// Slaney-normalised filter bank, [N_MELS][N_FFT/2+1], built in f64 and kept in f32.
 fn basis() -> Vec<Vec<f32>> {
-    let n_bins = N_FFT / 2 + 1;
-    let fft: Vec<f64> = (0..n_bins).map(|i| i as f64 * (SR / 2.0) / (n_bins - 1) as f64).collect();
-    let (lo, hi) = (hz_to_mel(0.0), hz_to_mel(FMAX));
-    let mels: Vec<f64> = (0..N_MELS + 2).map(|i| mel_to_hz(lo + (hi - lo) * i as f64 / (N_MELS + 1) as f64)).collect();
-    (0..N_MELS)
+    slaney_basis(SR, N_FFT, N_MELS, FMAX)
+}
+
+/// Slaney-normalised filter bank, [n_mels][n_fft/2+1], built in f64 and kept in
+/// f32 — librosa's and transformers' `mel_filter_bank(norm="slaney", mel_scale="slaney")`.
+pub fn slaney_basis(sr: f64, n_fft: usize, n_mels: usize, fmax: f64) -> Vec<Vec<f32>> {
+    let n_bins = n_fft / 2 + 1;
+    let fft: Vec<f64> = (0..n_bins).map(|i| i as f64 * (sr / 2.0) / (n_bins - 1) as f64).collect();
+    let (lo, hi) = (hz_to_mel(0.0), hz_to_mel(fmax));
+    let mels: Vec<f64> = (0..n_mels + 2).map(|i| mel_to_hz(lo + (hi - lo) * i as f64 / (n_mels + 1) as f64)).collect();
+    (0..n_mels)
         .map(|i| {
             let (l, c, u) = (mels[i], mels[i + 1], mels[i + 2]);
             let enorm = 2.0 / (u - l);

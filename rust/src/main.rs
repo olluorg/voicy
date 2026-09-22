@@ -68,6 +68,9 @@ enum Command {
         #[arg(long, env = "VOICY_PYTHON")]
         python: Option<PathBuf>,
     },
+    /// Вероятности детектора голоса и конца реплики для wav 16 кГц — сверка с Python
+    #[command(hide = true)]
+    ProbeListen { wav: PathBuf },
     /// Замер родного синтеза: фразы из JSON [{"text", "seed", "file"}], голос — wav и расшифровка
     #[command(hide = true)]
     BenchTts {
@@ -185,6 +188,24 @@ async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<Pa
     Ok(())
 }
 
+fn probe_listen(wav: PathBuf) -> anyhow::Result<()> {
+    let lib = native::lib_dir()?;
+    native::init_onnx(&lib)?;
+    let m = native::cache_dir().join("models");
+    let vad = native::listen::Vad::load(&m.join("vad").join("silero_vad_v6.onnx"))?;
+    let turn = native::listen::Turn::load(&m.join("turn").join("smart-turn-v3.2-cpu.onnx"))?;
+    let (audio, _) = audio::read_wav(&std::fs::read(wav)?).ok_or_else(|| anyhow::anyhow!("not a wav"))?;
+    let mut stream = native::listen::VadStream::default();
+    let mut probs = vec![];
+    for chunk in audio.chunks(1600) {
+        probs.extend(stream.feed(&vad, chunk)?);
+    }
+    let t = std::time::Instant::now();
+    let p = turn.probability(&audio)?;
+    println!("{}", serde_json::json!({"vad": probs, "turn": p, "turn_ms": t.elapsed().as_secs_f64() * 1000.0}));
+    Ok(())
+}
+
 fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, language: String) -> anyhow::Result<()> {
     use std::time::Instant;
     let files = native::qwen::Files {
@@ -220,6 +241,7 @@ fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, 
 async fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
+        Command::ProbeListen { wav } => probe_listen(wav),
         Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),
     }
 }

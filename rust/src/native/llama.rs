@@ -91,8 +91,8 @@ pub struct Batch {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct ChainParams {
-    no_perf: bool,
+pub struct ChainParams {
+    pub no_perf: bool,
 }
 
 type P = *mut c_void;
@@ -122,14 +122,11 @@ api! {
     llama_model_default_params: fn() -> ModelParams;
     llama_context_default_params: fn() -> ContextParams;
     llama_model_load_from_file: fn(*const c_char, ModelParams) -> P;
-    llama_model_free: fn(P);
     llama_model_get_vocab: fn(P) -> P;
     llama_model_n_embd: fn(P) -> i32;
     llama_vocab_n_tokens: fn(P) -> i32;
     llama_init_from_model: fn(P, ContextParams) -> P;
-    llama_free: fn(P);
     llama_batch_init: fn(i32, i32, i32) -> Batch;
-    llama_batch_free: fn(Batch);
     llama_decode: fn(P, Batch) -> i32;
     llama_get_logits_ith: fn(P, i32) -> *mut f32;
     llama_get_embeddings: fn(P) -> *mut f32;
@@ -198,9 +195,9 @@ impl Api {
     }
 }
 
+// Модели и контексты живут, пока жив сервер: освобождать их некому.
 pub struct Model {
     pub ptr: P,
-    pub vocab: P,
     pub n_embd: usize,
     pub n_vocab: usize,
 }
@@ -221,7 +218,6 @@ impl Model {
             let vocab = (api.llama_model_get_vocab)(ptr);
             Ok(Model {
                 ptr,
-                vocab,
                 n_embd: (api.llama_model_n_embd)(ptr) as usize,
                 n_vocab: (api.llama_vocab_n_tokens)(vocab) as usize,
             })

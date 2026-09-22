@@ -26,7 +26,7 @@ use crate::App;
 use crate::audio::Resampler;
 use crate::contexts::Resolved;
 use crate::errors::ApiError;
-use crate::host::{f32_bytes, f32_from};
+use crate::host::f32_bytes;
 use crate::jobs::round;
 
 const SR: usize = 16000;
@@ -140,7 +140,7 @@ struct Session {
     threshold: f64,
     min_pause: f64,
     max_pause: f64,
-    vad: u64,
+    vad: crate::engines::VadHandle,
     frame: usize,
 }
 
@@ -170,8 +170,8 @@ impl Session {
             s.audio.extend_from_slice(&x);
             s.total += x.len();
         }
-        let (r, bin) = self.app.engines.host.run("vad.feed", json!({"stream": self.vad}), &f32_bytes(&x)).await?;
-        self.endpoint(&f32_from(&bin), r["pending"].as_u64().unwrap_or(0) as usize);
+        let (probs, pending) = self.app.engines.vad_feed(&self.vad, &x).await?;
+        self.endpoint(&probs, pending);
         let mut s = self.s.lock().unwrap();
         if !s.turn.active {
             // тишина между репликами: окно чтения идёт следом, с запасом PRE_ROLL
@@ -245,10 +245,7 @@ impl Session {
         };
         let rate = self.app.engines.turn_rate();
         let audio = if rate as usize != SR { Resampler::whole(SR as u32, rate, &audio) } else { audio };
-        let Ok((r, _)) = self.app.engines.host.run("turn.probability", json!({}), &f32_bytes(&audio)).await else {
-            return;
-        };
-        let p = r["probability"].as_f64().unwrap_or(0.0);
+        let Some(p) = self.app.engines.turn_probability(audio).await else { return };
         let complete = p >= self.threshold;
         let now = self.s.lock().unwrap().total;
         self.send(json!({"type": "turn_check", "at": round(now as f64 / SR as f64, 2),
@@ -491,8 +488,8 @@ pub async fn socket(app: Arc<App>, q: LiveQuery, ws: WebSocket) {
             return;
         }
     };
-    let (vad, frame) = match app.engines.host.run("vad.open", json!({}), &[]).await {
-        Ok((v, _)) => (v["stream"].as_u64().unwrap_or(0), v["frame"].as_u64().unwrap_or(512) as usize),
+    let (vad, frame) = match app.engines.vad_open().await {
+        Ok(v) => v,
         Err(e) => {
             let _ = out_tx.send(Some((0, json!({"type": "error", "error": e.message}))));
             let _ = out_tx.send(Some((1011, Value::Null)));
@@ -581,7 +578,7 @@ pub async fn socket(app: Arc<App>, q: LiveQuery, ws: WebSocket) {
     for h in std::mem::take(&mut *session.tasks.lock().unwrap()) {
         h.abort();
     }
-    let _ = app.engines.host.run("vad.close", json!({"stream": vad}), &[]).await;
+    app.engines.vad_close(&session.vad).await;
     drop(out_tx);
     drop(session);
     let _ = writer.await;

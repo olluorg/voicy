@@ -17,6 +17,34 @@ pub struct Engines {
     pub host: Arc<Host>,
     pub info: Value,
     native: Option<NativeTts>,
+    vad: Option<Arc<crate::native::listen::Vad>>,
+    turn: Option<Arc<crate::native::listen::Turn>>,
+}
+
+/// One live session's voice detector: in the host process or in this one.
+pub enum VadHandle {
+    Host(u64),
+    Native(std::sync::Mutex<crate::native::listen::VadStream>),
+}
+
+/// Silero and Smart Turn in-process, when their models are in the cache and no
+/// other engine is asked for — the same ONNX files the Python engines run.
+fn native_listen() -> (Option<Arc<crate::native::listen::Vad>>, Option<Arc<crate::native::listen::Turn>>) {
+    let Ok(lib) = crate::native::lib_dir() else { return (None, None) };
+    if crate::native::init_onnx(&lib).is_err() {
+        return (None, None);
+    }
+    let m = crate::native::cache_dir().join("models");
+    let allowed = |var: &str, name: &str| std::env::var(var).map_or(true, |v| v.is_empty() || v == name);
+    let vad = m.join("vad").join("silero_vad_v6.onnx");
+    let turn = m.join("turn").join("smart-turn-v3.2-cpu.onnx");
+    let vad = (allowed("VAD_ENGINE", "silero") && vad.is_file())
+        .then(|| crate::native::listen::Vad::load(&vad).map(Arc::new).map_err(|e| eprintln!("voicy: vad: {e:#}")).ok())
+        .flatten();
+    let turn = (allowed("TURN_ENGINE", "smart-turn") && turn.is_file())
+        .then(|| crate::native::listen::Turn::load(&turn).map(Arc::new).map_err(|e| eprintln!("voicy: turn: {e:#}")).ok())
+        .flatten();
+    (vad, turn)
 }
 
 /// Qwen3-TTS in-process: loaded on first use, as the Python engines are.
@@ -112,7 +140,55 @@ impl Engines {
             info["tts"] = tts;
             eprintln!("voicy: synthesis in-process (llama.cpp + onnxruntime), talker {}", n.variant);
         }
-        Ok(Engines { host, info, native })
+        let (vad, turn) = native_listen();
+        if vad.is_some() {
+            info["vad"] = json!({"engine": "silero", "sample_rate": 16000, "runtime": "onnxruntime"});
+        }
+        if turn.is_some() {
+            info["turn"] = json!({"engine": "smart-turn", "model": "pipecat-ai/smart-turn-v3/smart-turn-v3.2-cpu.onnx",
+                                  "loaded": true, "device": "cpu", "runtime": "onnxruntime", "sample_rate": 16000});
+        }
+        Ok(Engines { host, info, native, vad, turn })
+    }
+
+    pub async fn vad_open(&self) -> Result<(VadHandle, usize), HostError> {
+        if self.vad.is_some() {
+            return Ok((VadHandle::Native(Default::default()), crate::native::listen::VAD_FRAME));
+        }
+        let (v, _) = self.host.run("vad.open", json!({}), &[]).await?;
+        Ok((VadHandle::Host(v["stream"].as_u64().unwrap_or(0)), v["frame"].as_u64().unwrap_or(512) as usize))
+    }
+
+    /// Probabilities of the frames completed by `x`, and how many samples wait.
+    pub async fn vad_feed(&self, h: &VadHandle, x: &[f32]) -> Result<(Vec<f32>, usize), ApiError> {
+        match h {
+            VadHandle::Native(s) => {
+                let vad = self.vad.as_ref().expect("native vad");
+                let mut s = s.lock().unwrap();
+                let probs = s.feed(vad, x).map_err(|e| ApiError::internal(format!("{e:#}")))?;
+                Ok((probs, s.pending()))
+            }
+            VadHandle::Host(id) => {
+                let (r, bin) = self.host.run("vad.feed", json!({"stream": id}), &crate::host::f32_bytes(x)).await?;
+                Ok((f32_from(&bin), r["pending"].as_u64().unwrap_or(0) as usize))
+            }
+        }
+    }
+
+    pub async fn vad_close(&self, h: &VadHandle) {
+        if let VadHandle::Host(id) = h {
+            let _ = self.host.run("vad.close", json!({"stream": id}), &[]).await;
+        }
+    }
+
+    /// Has the speaker finished? None if the detector failed.
+    pub async fn turn_probability(&self, audio: Vec<f32>) -> Option<f64> {
+        if let Some(t) = &self.turn {
+            let t = t.clone();
+            return tokio::task::spawn_blocking(move || t.probability(&audio)).await.ok()?.ok().map(|p| p as f64);
+        }
+        let (r, _) = self.host.run("turn.probability", json!({}), &crate::host::f32_bytes(&audio)).await.ok()?;
+        r["probability"].as_f64()
     }
 
     pub fn tts_rate(&self) -> u32 {
@@ -168,6 +244,9 @@ impl Engines {
         if let (Some(n), "tts") = (&self.native, kind) {
             return n.status();
         }
+        if kind == "turn" && self.turn.is_some() {
+            return self.info["turn"].clone();
+        }
         match self.host.run("status", json!({"kind": kind}), &[]).await {
             Ok((v, _)) => v,
             Err(e) => json!({"engine": self.info[kind]["engine"], "error": e.message}),
@@ -177,6 +256,9 @@ impl Engines {
     pub async fn load(&self, kind: &str) -> Result<(), ApiError> {
         if let (Some(n), "tts") = (&self.native, kind) {
             return n.get().await.map(|_| ()).map_err(Into::into);
+        }
+        if kind == "turn" && self.turn.is_some() {
+            return Ok(());
         }
         self.host.run("load", json!({"kind": kind}), &[]).await.map(|_| ()).map_err(Into::into)
     }

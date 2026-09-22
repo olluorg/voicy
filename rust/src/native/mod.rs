@@ -5,6 +5,7 @@
 //! `~/.cache/voicy/lib/<platform>`. Nothing here is compiled for a GPU; which
 //! GPU is used is a matter of which libraries lie in that directory.
 
+pub mod listen;
 pub mod llama;
 pub mod mel;
 pub mod npy;
