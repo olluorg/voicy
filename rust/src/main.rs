@@ -79,6 +79,14 @@ enum Command {
     /// Вероятности детектора голоса и конца реплики для wav 16 кГц — сверка с Python
     #[command(hide = true)]
     ProbeListen { wav: PathBuf },
+    /// Родное распознавание faster-whisper: задания из JSON [{"file", "language", "prompt",
+    /// "hotwords", "word_timestamps", "live", "draft"}], по строке JSON на задание — сверка с Python
+    #[command(hide = true)]
+    ProbeStt {
+        jobs: PathBuf,
+        /// Каталог модели CTranslate2
+        model: PathBuf,
+    },
     /// Замер родного синтеза: фразы из JSON [{"text", "seed", "file"}], голос — wav и расшифровка
     #[command(hide = true)]
     BenchTts {
@@ -252,6 +260,38 @@ fn probe_listen(wav: PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn probe_stt(jobs: PathBuf, model: PathBuf) -> anyhow::Result<()> {
+    use std::time::Instant;
+    let vad = native::cache_dir().join("models").join("vad").join("silero_vad_v6.onnx");
+    let t = Instant::now();
+    let w = native::fwhisper::FasterWhisper::load(&model, Some(&vad), true)?;
+    eprintln!("loaded in {:.1} s", t.elapsed().as_secs_f64());
+    let rows: Vec<serde_json::Value> = serde_json::from_slice(&std::fs::read(&jobs)?)?;
+    for row in rows {
+        let file = row["file"].as_str().unwrap_or_default();
+        let mut audio = native::decode::decode(&std::fs::read(file)?, 16000).map_err(|e| anyhow::anyhow!(e))?;
+        native::fwhisper::through_s16(&mut audio);
+        let hot: Option<Vec<String>> =
+            row["hotwords"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect());
+        let req = native::whisper::Request {
+            language: row["language"].as_str(),
+            prompt: row["prompt"].as_str(),
+            hotwords: hot.as_deref(),
+            temperature: 0.0,
+            word_timestamps: row["word_timestamps"].as_bool().unwrap_or(false),
+            translate: false,
+            live: row["live"].as_bool().unwrap_or(false),
+            draft: row["draft"].as_bool().unwrap_or(false),
+        };
+        let t = Instant::now();
+        let mut out = w.transcribe(&audio, &req, &mut |_, _, _| true)?.unwrap_or_default();
+        out["file"] = serde_json::json!(file);
+        out["seconds"] = serde_json::json!(t.elapsed().as_secs_f64());
+        println!("{out}");
+    }
+    Ok(())
+}
+
 fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, language: String) -> anyhow::Result<()> {
     use std::time::Instant;
     let files = native::qwen::Files {
@@ -288,6 +328,7 @@ async fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
         Command::ProbeListen { wav } => probe_listen(wav),
+        Command::ProbeStt { jobs, model } => probe_stt(jobs, model),
         Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),
     }
 }

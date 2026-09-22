@@ -82,6 +82,41 @@ impl VadStream {
     }
 }
 
+impl Vad {
+    /// Frame probabilities of a whole recording, as faster-whisper's SileroVADModel
+    /// computes them before transcribing: zero-padded to whole frames, batches of
+    /// 10 000 frames, the model's state carried from batch to batch.
+    pub fn probs_whole(&self, audio: &[f32]) -> anyhow::Result<Vec<f32>> {
+        let mut x = audio.to_vec();
+        x.resize(audio.len() + VAD_FRAME - audio.len() % VAD_FRAME, 0.0);
+        let frames = x.len() / VAD_FRAME;
+        let (mut h, mut c) = (vec![0f32; 128], vec![0f32; 128]);
+        let mut probs = Vec::with_capacity(frames);
+        let mut s = self.session.lock().unwrap();
+        for from in (0..frames).step_by(10000) {
+            let to = (from + 10000).min(frames);
+            let mut batch = Vec::with_capacity((to - from) * (VAD_CONTEXT + VAD_FRAME));
+            for f in from..to {
+                if f == 0 {
+                    batch.extend_from_slice(&[0.0; VAD_CONTEXT]);
+                } else {
+                    batch.extend_from_slice(&x[f * VAD_FRAME - VAD_CONTEXT..f * VAD_FRAME]);
+                }
+                batch.extend_from_slice(&x[f * VAD_FRAME..(f + 1) * VAD_FRAME]);
+            }
+            let out = s.run(ort::inputs![
+                "input" => Tensor::from_array((vec![(to - from) as i64, (VAD_CONTEXT + VAD_FRAME) as i64], batch))?,
+                "h" => Tensor::from_array((vec![1i64, 1, 128], h))?,
+                "c" => Tensor::from_array((vec![1i64, 1, 128], c))?,
+            ])?;
+            probs.extend_from_slice(out["speech_probs"].try_extract_tensor::<f32>()?.1);
+            h = out["hn"].try_extract_tensor::<f32>()?.1.to_vec();
+            c = out["cn"].try_extract_tensor::<f32>()?.1.to_vec();
+        }
+        Ok(probs)
+    }
+}
+
 // --------------------------------------------------------------- конец реплики
 
 const TURN_SR: usize = 16000;

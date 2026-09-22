@@ -6,6 +6,7 @@
 //! GPU is used is a matter of which libraries lie in that directory.
 
 pub mod decode;
+pub mod fwhisper;
 pub mod listen;
 pub mod llama;
 pub mod mel;
@@ -37,6 +38,18 @@ pub fn cache_dir() -> PathBuf {
         .or_else(|| std::env::var_os(if cfg!(windows) { "LOCALAPPDATA" } else { "HOME" })
             .map(|h| if cfg!(windows) { PathBuf::from(h).join("voicy") } else { PathBuf::from(h).join(".cache").join("voicy") }))
         .unwrap_or_else(|| PathBuf::from(".voicy-cache"))
+}
+
+/// Weights are read into process memory on their way to the GPU, and glibc
+/// keeps what was freed until asked to give it back: 1.5 GB for Whisper alone.
+pub fn trim_heap() {
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
+    unsafe {
+        unsafe extern "C" {
+            fn malloc_trim(pad: usize) -> i32;
+        }
+        malloc_trim(0);
+    }
 }
 
 pub fn lib_dir() -> anyhow::Result<PathBuf> {

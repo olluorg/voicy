@@ -304,6 +304,7 @@ impl Qwen {
             codec_enc: super::session(&files.dir.join("qwen3_tts_codec_encoder.fp32.onnx"), false)?,
             spk_enc: super::session(&files.dir.join("qwen3_tts_speaker_encoder.fp32.onnx"), false)?,
         };
+        super::trim_heap();
         Ok(Qwen {
             device: if gpu { "cuda".into() } else { "cpu".into() },
             api,

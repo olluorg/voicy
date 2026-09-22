@@ -1,13 +1,13 @@
 //! The engines behind the server, and what they said about themselves at start.
 //!
 //! Each kind runs in this process when it can — Qwen3-TTS on llama.cpp and ONNX
-//! Runtime, Whisper on whisper.cpp, Silero and Smart Turn on ONNX Runtime
-//! (native/) — and otherwise in the Python host process (host.rs), as the
-//! Python server runs them. In-process is chosen when the runtime libraries
-//! and the model are in the cache and no other engine is asked for by
-//! TTS_ENGINE, STT_ENGINE, TURN_ENGINE or VAD_ENGINE — except recognition:
-//! whisper.cpp is less accurate than faster-whisper and runs only when asked
-//! for (STT_ENGINE=whisper.cpp). When all four are in-process, Python is not
+//! Runtime, Whisper as faster-whisper runs it on CTranslate2, Silero and Smart
+//! Turn on ONNX Runtime (native/) — and otherwise in the Python host process
+//! (host.rs), as the Python server runs them. In-process is chosen when the
+//! runtime libraries and the model are in the cache and no other engine is
+//! asked for by TTS_ENGINE, STT_ENGINE, TURN_ENGINE or VAD_ENGINE. Whisper on
+//! whisper.cpp is less accurate and runs only when asked for
+//! (STT_ENGINE=whisper.cpp). When all four are in-process, Python is not
 //! started at all.
 
 use std::path::{Path, PathBuf};
@@ -141,52 +141,106 @@ impl NativeTts {
 
 const STT_FEATURES: [&str; 4] = ["hotwords", "prompt", "translate", "word_timestamps"];
 
-/// Whisper large-v3-turbo on whisper.cpp: loaded on first use.
+/// Whisper large-v3-turbo in-process, loaded on first use: as faster-whisper
+/// runs it — CTranslate2 and a port of its Python (native/fwhisper.rs) — or,
+/// when asked for, on whisper.cpp.
 struct NativeStt {
-    model: PathBuf,
-    vad: PathBuf,
-    engine: OnceCell<Arc<native::whisper::Whisper>>,
+    kind: SttKind,
+    name: String,
+    engine: OnceCell<Arc<SttModel>>,
+}
+
+#[derive(Clone)]
+enum SttKind {
+    /// CTranslate2 model directory and Silero for live speech.
+    Ct2 { dir: PathBuf, vad: PathBuf },
+    /// ggml model and whisper.cpp's own Silero.
+    Cpp { model: PathBuf, vad: PathBuf },
+}
+
+enum SttModel {
+    Ct2(native::fwhisper::FasterWhisper),
+    Cpp(native::whisper::Whisper),
+}
+
+fn stt_gpu() -> bool {
+    std::env::var("FORCE_CPU").as_deref() != Ok("1") && std::env::var("STT_DEVICE").map_or(true, |d| d.starts_with("cuda"))
 }
 
 impl NativeStt {
-    /// Only when asked for: less accurate than faster-whisper (experiments/21).
+    /// faster-whisper when its library and model are in the cache — the same
+    /// recogniser as in Python (experiments/22); whisper.cpp only when asked
+    /// for: less accurate (experiments/21).
     fn find() -> Option<NativeStt> {
-        let explicit = wanted("STT_ENGINE", &["whisper.cpp"])?;
-        if !explicit {
-            return None;
-        }
-        let dir = models().join("whisper");
         let name = std::env::var("STT_MODEL").unwrap_or_else(|_| "large-v3-turbo".into());
-        let model = dir.join(format!("ggml-{name}.bin"));
-        let lib_ok = native::lib_dir().is_ok_and(|d| d.join(if cfg!(windows) { "whisper.dll" } else { "libwhisper.so" }).exists()
-            || d.join("libwhisper.dylib").exists());
-        let ready = model.is_file() && lib_ok;
-        if !ready && explicit {
-            eprintln!("voicy: STT_ENGINE=whisper.cpp, but no {} or no libwhisper", model.display());
-        }
-        ready.then(|| NativeStt { model, vad: dir.join("ggml-silero-v6.2.0.bin"), engine: OnceCell::new() })
+        let dir = models().join("whisper");
+        let lib = native::lib_dir().ok();
+        let has = |stem: &str| lib.as_ref().is_some_and(|d| {
+            [format!("lib{stem}.so"), format!("{stem}.dll"), format!("lib{stem}.dylib")].iter().any(|n| d.join(n).exists())
+        });
+        let kind = match std::env::var("STT_ENGINE").unwrap_or_default().as_str() {
+            "whisper.cpp" => {
+                let model = dir.join(format!("ggml-{name}.bin"));
+                if !(model.is_file() && has("whisper")) {
+                    eprintln!("voicy: STT_ENGINE=whisper.cpp, but no {} or no libwhisper", model.display());
+                    return None;
+                }
+                SttKind::Cpp { model, vad: dir.join("ggml-silero-v6.2.0.bin") }
+            }
+            "" | "faster-whisper" => {
+                let ct2 = dir.join(format!("faster-whisper-{name}"));
+                if !(ct2.join("model.bin").is_file() && has("ct2shim")) {
+                    return None;
+                }
+                SttKind::Ct2 { dir: ct2, vad: models().join("vad").join("silero_vad_v6.onnx") }
+            }
+            _ => return None,
+        };
+        Some(NativeStt { kind, name, engine: OnceCell::new() })
     }
 
-    async fn get(&self) -> Result<Arc<native::whisper::Whisper>, HostError> {
+    async fn get(&self) -> Result<Arc<SttModel>, HostError> {
         self.engine
             .get_or_try_init(|| async {
-                let (model, vad) = (self.model.clone(), self.vad.clone());
-                tokio::task::spawn_blocking(move || native::whisper::Whisper::load(&model, Some(vad), true))
-                    .await
-                    .map_err(|e| err("internal", e.to_string()))?
-                    .map(Arc::new)
-                    .map_err(|e| err("internal", format!("{e:#}")))
+                let kind = self.kind.clone();
+                tokio::task::spawn_blocking(move || match kind {
+                    SttKind::Ct2 { dir, vad } => {
+                        native::fwhisper::FasterWhisper::load(&dir, Some(&vad), stt_gpu()).map(SttModel::Ct2)
+                    }
+                    SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), true).map(SttModel::Cpp),
+                })
+                .await
+                .map_err(|e| err("internal", e.to_string()))?
+                .map(Arc::new)
+                .map_err(|e| err("internal", format!("{e:#}")))
             })
             .await
             .cloned()
     }
 
+    fn runtime(&self) -> &'static str {
+        match self.kind {
+            SttKind::Ct2 { .. } => "ctranslate2",
+            SttKind::Cpp { .. } => "whisper.cpp",
+        }
+    }
+
     fn status(&self) -> Value {
-        json!({"engine": "whisper.cpp",
-               "model": self.model.file_stem().map(|s| s.to_string_lossy().trim_start_matches("ggml-").to_string()),
-               "runtime": "whisper.cpp", "loaded": self.engine.initialized(),
-               "device": self.engine.get().map_or("cuda".into(), |e| e.device.clone()),
-               "features": STT_FEATURES})
+        let engine = match self.kind {
+            SttKind::Ct2 { .. } => "faster-whisper",
+            SttKind::Cpp { .. } => "whisper.cpp",
+        };
+        let mut v = json!({"engine": engine, "model": self.name, "runtime": self.runtime(),
+                           "loaded": self.engine.initialized(), "features": STT_FEATURES});
+        match self.engine.get().map(|e| &**e) {
+            Some(SttModel::Ct2(w)) => {
+                v["device"] = json!(w.device);
+                v["compute_type"] = json!(w.compute_type);
+            }
+            Some(SttModel::Cpp(w)) => v["device"] = json!(w.device),
+            None => v["device"] = json!(if stt_gpu() { "cuda" } else { "cpu" }),
+        }
+        v
     }
 }
 
@@ -245,7 +299,7 @@ impl Engines {
         }
         if let Some(n) = &stt {
             info["stt"] = n.status();
-            eprintln!("voicy: recognition in-process (whisper.cpp)");
+            eprintln!("voicy: recognition in-process ({})", n.runtime());
         }
         if vad.is_some() {
             info["vad"] = json!({"engine": "silero", "sample_rate": 16000, "runtime": "onnxruntime"});
@@ -450,10 +504,14 @@ impl Engines {
         let samples = match args["path"].as_str() {
             Some(p) => {
                 let raw = tokio::fs::read(p).await.map_err(|e| Stop::Failed(err("internal", e.to_string())))?;
-                tokio::task::spawn_blocking(move || native::decode::decode(&raw, 16000))
+                let mut x = tokio::task::spawn_blocking(move || native::decode::decode(&raw, 16000))
                     .await
                     .map_err(|e| Stop::Failed(err("internal", e.to_string())))?
-                    .map_err(|e| Stop::Failed(err("bad_audio", e)))?
+                    .map_err(|e| Stop::Failed(err("bad_audio", e)))?;
+                if let SttModel::Ct2(_) = &*engine {
+                    native::fwhisper::through_s16(&mut x);
+                }
+                x
             }
             None => f32_from(audio),
         };
@@ -476,10 +534,14 @@ impl Engines {
                 live: args["live"].as_bool().unwrap_or(false),
                 draft: args["draft"].as_bool().unwrap_or(false),
             };
-            engine.transcribe(&samples, &req, &mut |pos, total, text| {
+            let mut on = |pos: f64, total: f64, text: &str| {
                 let _ = tx.send(json!({"position": pos, "total": total, "text": text}));
                 !flag.load(Ordering::Relaxed)
-            })
+            };
+            match &*engine {
+                SttModel::Ct2(w) => w.transcribe(&samples, &req, &mut on),
+                SttModel::Cpp(w) => w.transcribe(&samples, &req, &mut on),
+            }
         });
         while let Some(seg) = rx.recv().await {
             if !stop.load(Ordering::Relaxed) && !on_segment(&seg) {

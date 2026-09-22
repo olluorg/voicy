@@ -1,19 +1,25 @@
 """Prepare what the Rust server runs natively: runtime libraries and models.
 
-    python scripts/native_setup.py libs        # llama.cpp, whisper.cpp, ONNX Runtime, CUDA
-    python scripts/native_setup.py models      # Qwen3-TTS → GGUF/ONNX, Silero, Smart Turn
+    python scripts/native_setup.py libs        # llama.cpp, CTranslate2, ONNX Runtime, CUDA
+    python scripts/native_setup.py models      # Qwen3-TTS → GGUF/ONNX, Whisper, Silero, Smart Turn
     python scripts/native_setup.py all
 
 Everything goes into the cache the server reads (VOICY_CACHE, by default
-~/.cache/voicy): lib/<platform>/ and models/. Nothing here is compiled.
+~/.cache/voicy): lib/<platform>/ and models/. The one thing compiled here is
+rust/ct2shim — a C face for CTranslate2's C++ API, a page of code; it needs g++.
 
   libs    prebuilt llama.cpp (b11090) and whisper.cpp (b5130) from their GitHub
-          releases; ONNX Runtime with its CUDA provider and the CUDA and cuDNN
-          libraries it needs, taken out of the wheels NVIDIA and Microsoft
-          publish on PyPI. Linux x86-64 with CUDA 13 for now — the platform
-          this was measured on; the other targets get their own archives.
+          releases; CTranslate2 4.8.2 — the library faster-whisper ships, from
+          its wheel — with cuBLAS 12 it opens, and the shim built against
+          CTranslate2's headers at the same tag; ONNX Runtime with its CUDA
+          provider and the CUDA and cuDNN libraries it needs, taken out of the
+          wheels NVIDIA and Microsoft publish on PyPI. Linux x86-64 with CUDA
+          13 for now — the platform this was measured on; the other targets get
+          their own archives.
 
-  models  Qwen3-TTS-12Hz-1.7B-Base converted with the scripts of
+  models  Whisper large-v3-turbo in CTranslate2's format, the files
+          faster-whisper downloads (mobiuslabsgmbh/faster-whisper-large-v3-turbo).
+          Qwen3-TTS-12Hz-1.7B-Base converted with the scripts of
           HaujetZhao/Qwen3-TTS-GGUF (MIT) at a pinned commit: the talker and
           the predictor to GGUF, the codec and speaker encoder to ONNX, the
           embedding tables to .npy. This one step needs Python with torch and
@@ -22,7 +28,7 @@ Everything goes into the cache the server reads (VOICY_CACHE, by default
           predictor to q8_0. Silero and Smart Turn are the ONNX files the
           Python engines use.
 
-Needs: git, gh or network access to github.com and pypi.org, and for models
+Needs: g++, network access to github.com and pypi.org, and for models
 the server's .venv (qwen-tts, torch) plus onnx, onnxscript, gguf.
 """
 from __future__ import annotations
@@ -50,10 +56,14 @@ CONVERTER_COMMIT = "74feb581bc8cefb835fc608107e857036d7580a1"
 QWEN = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 
 # Из колёс PyPI: ONNX Runtime с провайдером CUDA и то, что этому провайдеру нужно.
+# CTranslate2 — та же сборка, что у faster-whisper, и cuBLAS 12, который она открывает.
+CT2 = "4.8.2"
 WHEELS = ["onnxruntime-gpu==1.30.0", "nvidia-cudnn-cu13", "nvidia-curand", "nvidia-cufft",
-          "nvidia-nvjitlink", "nvidia-cuda-nvrtc"]
+          "nvidia-nvjitlink", "nvidia-cuda-nvrtc", f"ctranslate2=={CT2}", "nvidia-cublas-cu12==12.8.4.1"]
 WANTED = ("libonnxruntime.so", "libonnxruntime_providers_cuda.so", "libonnxruntime_providers_shared.so",
-          "libcudnn", "libcurand.so", "libcufft.so", "libnvJitLink.so", "libnvrtc")
+          "libcudnn", "libcurand.so", "libcufft.so", "libnvJitLink.so", "libnvrtc",
+          "libctranslate2", "libgomp", "libcublas.so.12", "libcublasLt.so.12")
+WHISPER_CT2 = "mobiuslabsgmbh/faster-whisper-large-v3-turbo"
 
 
 def say(msg: str) -> None:
@@ -118,12 +128,23 @@ def libs() -> None:
                     base = Path(n).name
                     if ".so" in base and base.startswith(WANTED):
                         (LIB / base).write_bytes(z.read(n))
+        say(f"заголовки CTranslate2 v{CT2} и обёртка над ними")
+        src = release_source("OpenNMT/CTranslate2", f"v{CT2}", tmp)
+        subprocess.run(["sh", str(ROOT / "rust" / "ct2shim" / "build.sh"), str(src / "include"), str(LIB)], check=True)
     so = LIB / "libonnxruntime.so"
     if not so.exists():
         versioned = sorted(LIB.glob("libonnxruntime.so.*"))
         if versioned:
             so.symlink_to(versioned[-1].name)
     say(f"библиотеки — {LIB} ({len(list(LIB.iterdir()))} файлов)")
+
+
+def release_source(repo: str, tag: str, tmp: Path) -> Path:
+    """The source tree of `repo` at `tag`, unpacked; its only use here is headers."""
+    arc = download(f"https://github.com/{repo}/archive/refs/tags/{tag}.tar.gz", tmp / f"{tag}.tar.gz")
+    with tarfile.open(arc) as t:
+        t.extractall(tmp / "src", filter="data")
+    return next((tmp / "src").iterdir())
 
 
 def run(cmd: list[str], cwd: Path) -> None:
@@ -138,6 +159,10 @@ def models() -> None:
     import faster_whisper
     shutil.copy(Path(faster_whisper.__file__).parent / "assets" / "silero_vad_v6.onnx", MODELS / "vad")
     shutil.copy(hf_hub_download("pipecat-ai/smart-turn-v3", "smart-turn-v3.2-cpu.onnx"), MODELS / "turn")
+    whisper = MODELS / "whisper" / "faster-whisper-large-v3-turbo"
+    if not (whisper / "model.bin").exists():
+        say(f"Whisper — {WHISPER_CT2}")
+        shutil.copytree(snapshot_download(WHISPER_CT2), whisper, dirs_exist_ok=True)
 
     out = MODELS / "qwen3-tts-12hz-1.7b-base-gguf"
     if (out / "qwen3_tts_talker.q5_k.gguf").exists():
