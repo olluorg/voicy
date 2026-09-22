@@ -11,10 +11,11 @@ target/release/voicy setup                    # библиотеки и моде
 target/release/voicy serve --port 8080
 ```
 
-`setup` качает готовые библиотеки и модели и собирает обёртку над CTranslate2;
-Python ему не нужен. Единственное, чего он не умеет, — перевести Qwen3-TTS
-в GGUF: это PyTorch и официальные веса, `python scripts/convert_qwen.py`
-(один раз, пока готовые файлы не выложены).
+`setup` качает готовые библиотеки и модели (7.3 ГБ) и собирает обёртку над
+CTranslate2. Python не нужен: Qwen3-TTS берётся уже переведённым —
+[sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf),
+свой репозиторий задаётся через `VOICY_TTS_GGUF_REPO`. Перевести официальные
+веса самому — `scripts/convert_qwen.py`, вот там нужен PyTorch.
 
 ## Что где исполняется
 
@@ -44,9 +45,9 @@ Python не запускается. `/health` показывает, кто гд�
   `ct2shim/`, C-обёртка над C++ API CTranslate2 (`g++`, одна страница кода).
 - **Модели** — `~/.cache/voicy/models/`. Whisper — те файлы CTranslate2,
   что качает faster-whisper; Silero — из колеса faster-whisper, файл в файл.
-  Qwen3-TTS переводится из официальных весов скриптами HaujetZhao/Qwen3-TTS-GGUF
-  (`scripts/convert_qwen.py`) — это единственный шаг, которому нужен Python
-  с torch.
+  Qwen3-TTS — GGUF и ONNX, переведённые из официальных весов скриптами
+  HaujetZhao/Qwen3-TTS-GGUF (`scripts/convert_qwen.py`; этому шагу нужен Python
+  с torch, и он уже сделан — файлы выложены).
 - **Голоса, словарь произношений, консоль** — внутри бинарника; рядом
   с репозиторием берутся его файлы, без него голоса живут в `~/.cache/voicy/voices`.
 

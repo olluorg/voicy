@@ -114,10 +114,12 @@ Python-сервер, только если не медленнее его. Не 
     Процесс с синтезом и распознаванием — 2.6 ГБ памяти и 5.7 ГБ видеопамяти
     всей карты (Python-сервер: 9.3 ГБ видеопамяти).
 - **Шаг 7 наполовину:** библиотеки и модели ставит сам бинарник — `voicy setup`
-  качает llama.cpp, CTranslate2, ONNX Runtime, Whisper, Silero и Smart Turn
-  и собирает обёртку над CTranslate2 (нужен g++). Python остался в одном месте:
-  перевод Qwen3-TTS в GGUF (`scripts/convert_qwen.py`) — пока готовые файлы
-  не выложены.
+  качает llama.cpp, CTranslate2, ONNX Runtime, Whisper, Silero, Smart Turn
+  и Qwen3-TTS в GGUF и собирает обёртку над CTranslate2 (нужен g++).
+  Переведённые веса Qwen3-TTS выложены отдельно
+  (sknyazev/qwen3-tts-12hz-1.7b-base-gguf, Apache-2.0), так что Python на пути
+  установки не нужен вовсе; `scripts/convert_qwen.py` остаётся для тех, кто
+  хочет перевести веса сам.
 - **Шаги 2, 7** — впереди: слой устройств, прогон на Arc, сборки под другие
   платформы и CLI в том же бинарнике.
 

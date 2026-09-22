@@ -8,9 +8,8 @@
 //!
 //! Nothing is built here except `ct2shim`, a page of C++ over CTranslate2's C++
 //! API, and only when a compiler is at hand. The one thing this cannot do is
-//! turn Qwen3-TTS into GGUF: that needs PyTorch and the official weights
-//! (`scripts/convert_qwen.py`), or those files from somewhere else
-//! (`VOICY_TTS_GGUF_DIR`).
+//! Qwen3-TTS comes already converted; making those files from the official
+//! weights is the one step that needs PyTorch (`scripts/convert_qwen.py`).
 
 use std::fs;
 use std::io::Read;
@@ -28,6 +27,9 @@ const CT2: &str = "4.8.2";
 const ORT: &str = "1.30.0";
 const CUBLAS12: &str = "12.8.4.1";
 const WHISPER_MODEL: &str = "mobiuslabsgmbh/faster-whisper-large-v3-turbo";
+/// Qwen3-TTS в GGUF и ONNX: те же официальные веса, переведённые
+/// scripts/convert_qwen.py. Свой репозиторий — VOICY_TTS_GGUF_REPO.
+const QWEN_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-base-gguf";
 const TURN_MODEL: &str = "pipecat-ai/smart-turn-v3";
 /// Silero — из колеса faster-whisper: тот же файл, что слышит движок Python.
 const FASTER_WHISPER: &str = "1.2.1";
@@ -297,7 +299,7 @@ async fn hf(repo: &str, file: &str, to: &Path) -> anyhow::Result<()> {
     if to.join(file).exists() {
         return Ok(());
     }
-    fs::create_dir_all(to)?;
+    fs::create_dir_all(to.join(file).parent().unwrap_or(to))?;
     let url = format!("https://huggingface.co/{repo}/resolve/main/{file}?download=true");
     say(format!("скачиваю {repo}/{file}"));
     fetch(&url, &to.join(file)).await
@@ -323,13 +325,29 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
         unzip(&wheel, &vad, |n| n == "silero_vad_v6.onnx")?;
     }
 
-    let gguf = models.join("qwen3-tts-12hz-1.7b-base-gguf");
-    if !gguf.join("qwen3_tts_talker.q5_k.gguf").exists() {
-        say("Qwen3-TTS в GGUF здесь не получить: перевод требует PyTorch и официальных весов.");
-        say("  перевести самому: python scripts/convert_qwen.py");
-        say(format!("  либо положить готовые файлы в {} (или указать свой каталог в VOICY_TTS_GGUF_DIR)",
-                    gguf.display()));
-        say("  без них синтез пойдёт через движок Python, остальное — в процессе сервера");
+    // Qwen3-TTS: говорящая часть в том варианте, который попросили (q5_k по умолчанию)
+    let repo = std::env::var("VOICY_TTS_GGUF_REPO").unwrap_or_else(|_| QWEN_MODEL.into());
+    let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
+    let gguf = std::env::var_os("VOICY_TTS_GGUF_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| models.join("qwen3-tts-12hz-1.7b-base-gguf"));
+    let mut files = vec![
+        "tokenizer.json".to_string(),
+        format!("qwen3_tts_talker.{variant}.gguf"),
+        "qwen3_tts_predictor.q8_0.gguf".into(),
+        "qwen3_tts_decoder.fp16.onnx".into(),
+        "qwen3_tts_codec_encoder.fp32.onnx".into(),
+        "qwen3_tts_codec_encoder.fp32.onnx.data".into(),
+        "qwen3_tts_speaker_encoder.fp32.onnx".into(),
+        "qwen3_tts_speaker_encoder.fp32.onnx.data".into(),
+        "embeddings/proj_bias.npy".into(),
+        "embeddings/proj_weight.npy".into(),
+        "embeddings/text_embedding_projected.npy".into(),
+    ];
+    files.extend((0..16).map(|i| format!("embeddings/codec_embedding_{i}.npy")));
+    fs::create_dir_all(gguf.join("embeddings"))?;
+    for f in files {
+        hf(&repo, &f, &gguf).await?;
     }
     say(format!("модели — {}", models.display()));
     Ok(())

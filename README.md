@@ -209,29 +209,19 @@ silicon идёт под эмуляцией x86-64 и для работы неп�
 sudo apt install build-essential ffmpeg           # g++ — для обёртки над CTranslate2
 curl https://sh.rustup.rs -sSf | sh               # Rust
 cargo build --release --manifest-path rust/Cargo.toml
-rust/target/release/voicy setup                   # библиотеки и модели в ~/.cache/voicy
+rust/target/release/voicy setup                   # библиотеки и модели, 7.3 ГБ
 rust/target/release/voicy serve --port 8080
 ```
 
-`voicy setup` сам качает готовые llama.cpp, CTranslate2 и ONNX Runtime,
-модели Whisper, Silero и Smart Turn и собирает обёртку над CTranslate2 —
-около 7 ГБ. Python на этом пути не нужен.
+`voicy setup` качает всё сам: готовые llama.cpp, CTranslate2 и ONNX Runtime,
+модели Whisper, Silero, Smart Turn и Qwen3-TTS, переведённый в GGUF и ONNX
+([sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf)),
+— и собирает обёртку над CTranslate2. Python не нужен ни на одном шаге.
 
-Кроме одного: Qwen3-TTS надо перевести в GGUF, а для этого нужны PyTorch
-и официальные веса. Пока готовые файлы не выложены, это делается один раз
-руками:
-
-```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv torch torchaudio --index-url https://download.pytorch.org/whl/cu128
-uv pip install --python .venv -r server/requirements.txt onnx onnxscript gguf
-.venv/bin/python scripts/convert_qwen.py
-```
-
-Без этого шага синтез пойдёт через движок Python, а распознавание, детектор
-голоса и конец реплики — уже в процессе сервера. CLI `./voicy` работает
-с этим сервером так же, как с Python-сервером. Подробности —
-[`rust/README.md`](rust/README.md).
+Перевести веса самому (например, другую модель Qwen или другой вариант
+квантования) — `scripts/convert_qwen.py`: вот ему нужны PyTorch и официальные
+веса. CLI `./voicy` работает с этим сервером так же, как с Python-сервером.
+Подробности — [`rust/README.md`](rust/README.md).
 
 ## Модели
 
