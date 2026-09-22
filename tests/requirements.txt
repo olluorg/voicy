@@ -1,0 +1,11 @@
+# Проверки API с учебными движками: сервер без моделей и клиент WebSocket.
+# Ни torch, ни весов — ставится за секунды на любой системе.
+fastapi
+uvicorn[standard]
+python-multipart
+numpy
+soundfile
+soxr
+scipy
+av
+websockets>=15

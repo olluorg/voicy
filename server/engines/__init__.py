@@ -11,11 +11,16 @@ import os
 
 REGISTRY = {
     "tts": {"qwen3-tts": "engines.tts_qwen:QwenTTS",
-            "espeech": "engines.tts_espeech:ESpeechTTS"},
-    "stt": {"faster-whisper": "engines.stt_whisper:WhisperSTT"},
-    "turn": {"smart-turn": "engines.turn_smart:SmartTurn"},
-    "vad": {"silero": "engines.vad_silero:SileroVAD"},
+            "espeech": "engines.tts_espeech:ESpeechTTS",
+            "tone": "engines.fake:ToneTTS"},
+    "stt": {"faster-whisper": "engines.stt_whisper:WhisperSTT",
+            "script": "engines.fake:ScriptSTT"},
+    "turn": {"smart-turn": "engines.turn_smart:SmartTurn",
+             "pause": "engines.fake:PauseTurn"},
+    "vad": {"silero": "engines.vad_silero:SileroVAD",
+            "energy": "engines.fake:EnergyVAD"},
 }
+# tone, script, pause, energy — учебные движки для проверок (engines/fake.py)
 DEFAULT = {"tts": "qwen3-tts", "stt": "faster-whisper", "turn": "smart-turn", "vad": "silero"}
 MODEL_ENV = {"tts": "TTS_MODEL", "stt": "STT_MODEL"}
 

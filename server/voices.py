@@ -17,11 +17,13 @@ the name is checked before it becomes a path.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
-VOICES_DIR = Path(__file__).parent / "voices"
+# Каталог меняется окружением — для проверок, чтобы не писать в репозиторий.
+VOICES_DIR = Path(os.environ.get("VOICY_VOICES_DIR") or Path(__file__).parent / "voices")
 INDEX = VOICES_DIR / "voices.json"
 SAMPLE_RATE = 24000
 

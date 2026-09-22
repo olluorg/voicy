@@ -19,6 +19,7 @@ are the terms of the pronunciation dictionary (data/pronunciation.json).
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
@@ -27,7 +28,7 @@ from pathlib import Path
 import textprep
 from voices import NAME
 
-CONTEXTS_DIR = Path(__file__).parent / "contexts"
+CONTEXTS_DIR = Path(os.environ.get("VOICY_CONTEXTS_DIR") or Path(__file__).parent / "contexts")
 INDEX = CONTEXTS_DIR / "contexts.json"
 BUILTIN = "engineering"
 
