@@ -18,11 +18,13 @@ pub struct Term {
 
 static TERMS: OnceLock<Vec<Term>> = OnceLock::new();
 
-pub fn load(dict: &Path) {
-    let raw: Value = std::fs::read(dict)
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or(Value::Null);
+/// The dictionary shipped inside the binary; data/pronunciation.json when the
+/// repository is at hand — that is where it is edited.
+pub const BUILTIN: &str = include_str!("../../data/pronunciation.json");
+
+pub fn load(dict: Option<&Path>) {
+    let bytes = dict.and_then(|d| std::fs::read(d).ok()).unwrap_or_else(|| BUILTIN.as_bytes().to_vec());
+    let raw: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
     let mut items: Vec<(String, String)> = raw["terms"]
         .as_object()
         .map(|m| {

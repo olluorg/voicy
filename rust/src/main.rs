@@ -2,10 +2,12 @@
 //!
 //!     voicy serve [--host 127.0.0.1] [--port 8080]
 //!
-//! The server is Rust; the models still run as the Python engines they are
-//! (server/engines), in a child process it starts and talks to over pipes
-//! (host.rs). The HTTP API is the same as the Python server's, checked by the
-//! same suite (tests/). One binary is meant to take the CLI's commands too.
+//! One binary: the console, the pronunciation dictionary and the default voices
+//! are inside it, and the models run in this process (native/) on prebuilt
+//! llama.cpp, whisper.cpp and ONNX Runtime libraries from the cache. What has
+//! no native engine yet runs as the Python engine it is (server/engines), in a
+//! child process (host.rs). The HTTP API is the Python server's, checked by the
+//! same suite (tests/).
 
 mod api;
 mod audio;
@@ -33,7 +35,13 @@ use axum::routing::{get, post};
 use axum::{Router, middleware};
 use clap::{Parser, Subcommand};
 use tower_http::catch_panic::CatchPanicLayer;
-use tower_http::services::ServeDir;
+
+const INDEX_HTML: &str = include_str!("../../server/static/index.html");
+const DEFAULT_VOICES: [(&str, &[u8]); 3] = [
+    ("turgenev.wav", include_bytes!("../../server/voices/turgenev.wav")),
+    ("dostoevsky.wav", include_bytes!("../../server/voices/dostoevsky.wav")),
+    ("voices.json", include_bytes!("../../server/voices/voices.json")),
+];
 
 pub struct App {
     pub engines: engines::Engines,
@@ -43,7 +51,7 @@ pub struct App {
     pub contexts: contexts::Contexts,
     pub public_url: String,
     pub keys: Vec<String>,
-    pub static_dir: PathBuf,
+    pub static_dir: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -84,21 +92,35 @@ enum Command {
     },
 }
 
-fn find_home(given: Option<PathBuf>) -> anyhow::Result<PathBuf> {
+/// The repository, if the binary runs from one: then voices, contexts, the
+/// console and the dictionary are its files, as for the Python server.
+fn find_home(given: Option<PathBuf>) -> anyhow::Result<Option<PathBuf>> {
     let is_home = |p: &Path| p.join("server").join("engines").join("host.py").is_file();
     if let Some(p) = given {
         anyhow::ensure!(is_home(&p), "{} has no server/engines/host.py", p.display());
-        return Ok(p);
+        return Ok(Some(p));
     }
     let starts = [std::env::current_dir().ok(), std::env::current_exe().ok()];
     for start in starts.into_iter().flatten() {
         for dir in start.ancestors() {
             if is_home(dir) {
-                return Ok(dir.to_path_buf());
+                return Ok(Some(dir.to_path_buf()));
             }
         }
     }
-    anyhow::bail!("cannot find the voicy repository (server/engines/host.py); pass --home or VOICY_HOME")
+    Ok(None)
+}
+
+/// Without the repository: voices live in the cache, seeded with the two that ship.
+fn seed_voices(dir: &Path) -> std::io::Result<()> {
+    if dir.join("voices.json").exists() {
+        return Ok(());
+    }
+    std::fs::create_dir_all(dir)?;
+    for (name, data) in DEFAULT_VOICES {
+        std::fs::write(dir.join(name), data)?;
+    }
+    Ok(())
 }
 
 fn find_python(home: &Path, given: Option<PathBuf>) -> PathBuf {
@@ -121,9 +143,23 @@ fn env_or(name: &str, default: impl FnOnce() -> PathBuf) -> PathBuf {
 }
 
 async fn index(axum::extract::State(app): axum::extract::State<Arc<App>>) -> Response {
-    match tokio::fs::read(app.static_dir.join("index.html")).await {
-        Ok(b) => ([(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")], b).into_response(),
-        Err(e) => errors::ApiError::internal(e.to_string()).into_response(),
+    let page = match &app.static_dir {
+        Some(d) => tokio::fs::read_to_string(d.join("index.html")).await.unwrap_or_else(|_| INDEX_HTML.into()),
+        None => INDEX_HTML.into(),
+    };
+    ([(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")], page).into_response()
+}
+
+async fn static_file(axum::extract::State(app): axum::extract::State<Arc<App>>,
+                     axum::extract::Path(name): axum::extract::Path<String>) -> Response {
+    let found = match &app.static_dir {
+        Some(d) if !name.contains("..") => tokio::fs::read(d.join(&name)).await.ok(),
+        _ => None,
+    };
+    match found {
+        Some(b) => b.into_response(),
+        None if name == "index.html" => INDEX_HTML.into_response(),
+        None => errors::ApiError::new(404, "Not Found").into_response(),
     }
 }
 
@@ -149,7 +185,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/v1/audio/transcriptions/stream", get(live_socket))
         .route("/health", get(health))
         .route("/", get(index))
-        .nest_service("/static", ServeDir::new(app.static_dir.clone()))
+        .route("/static/{*name}", get(static_file))
         .fallback(not_found)
         .method_not_allowed_fallback(method_not_allowed)
         .layer(middleware::from_fn_with_state(app.clone(), auth::guard))
@@ -162,23 +198,33 @@ fn router(app: Arc<App>) -> Router {
 
 async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<PathBuf>) -> anyhow::Result<()> {
     let home = find_home(home)?;
-    let python = find_python(&home, python);
-    let server_dir = home.join("server");
-    textprep::load(&home.join("data").join("pronunciation.json"));
+    let server_dir = home.as_ref().map(|h| h.join("server"));
+    let python = find_python(home.as_deref().unwrap_or(Path::new(".")), python);
+    textprep::load(home.as_ref().map(|h| h.join("data").join("pronunciation.json")).as_deref());
+    let cache = native::cache_dir();
+    let voices_dir = env_or("VOICY_VOICES_DIR", || match &server_dir {
+        Some(s) => s.join("voices"),
+        None => cache.join("voices"),
+    });
+    if server_dir.is_none() && std::env::var_os("VOICY_VOICES_DIR").is_none() {
+        seed_voices(&voices_dir)?;
+    }
+    let contexts_dir = env_or("VOICY_CONTEXTS_DIR", || match &server_dir {
+        Some(s) => s.join("contexts"),
+        None => cache.join("contexts"),
+    });
 
-    eprintln!("voicy: engines via {}", python.display());
-    let host_proc = host::Host::spawn(&python, &server_dir).await?;
-    let engines = engines::Engines::start(host_proc).await?;
+    let engines = engines::Engines::start(&python, server_dir.as_deref()).await?;
     let var = |n: &str| std::env::var(n).unwrap_or_default();
     let app = Arc::new(App {
         engines,
         registry: jobs::Registry::new(var("VOICY_JOB_TTL").parse().unwrap_or(1800.0)),
         queue: jobs::Queue::start(var("VOICY_QUEUE_MAX").parse().unwrap_or(32), var("VOICY_WEBHOOK_SECRET")),
-        voices: voices::Voices { dir: env_or("VOICY_VOICES_DIR", || server_dir.join("voices")) },
-        contexts: contexts::Contexts { dir: env_or("VOICY_CONTEXTS_DIR", || server_dir.join("contexts")) },
+        voices: voices::Voices { dir: voices_dir },
+        contexts: contexts::Contexts { dir: contexts_dir },
         public_url: var("VOICY_PUBLIC_URL").trim_end_matches('/').to_string(),
         keys: var("VOICY_API_KEY").split(',').map(|k| k.trim().to_string()).filter(|k| !k.is_empty()).collect(),
-        static_dir: server_dir.join("static"),
+        static_dir: server_dir.as_ref().map(|s| s.join("static")),
     });
     let listener = tokio::net::TcpListener::bind((host.as_str(), port))
         .await

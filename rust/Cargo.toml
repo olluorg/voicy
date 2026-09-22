@@ -29,6 +29,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 sha2 = "0.10"
 soxr-sys = "0.1"
+symphonia = { version = "0.5", features = ["all"] }
 tempfile = "3"
 tokenizers = { version = "=0.22.2", default-features = false, features = ["onig"] }
 tokio = { version = "1", features = ["full"] }

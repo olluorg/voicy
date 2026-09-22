@@ -172,18 +172,34 @@ fn open(path: &Path) -> anyhow::Result<Library> {
     unsafe { Library::new(path) }.with_context(|| format!("cannot load {}", path.display()))
 }
 
+/// ggml and its backends, once per process: llama.cpp and whisper.cpp share them.
+pub fn ggml(dir: &Path) -> anyhow::Result<()> {
+    static DONE: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    if DONE.get().is_some() {
+        return Ok(());
+    }
+    let base = open(&dir.join(lib_name("ggml-base")))?;
+    let ggml = open(&dir.join(lib_name("ggml")))?;
+    let dir_c = CString::new(dir.to_string_lossy().as_bytes())?;
+    unsafe {
+        let load_all: libloading::Symbol<unsafe extern "C" fn(*const c_char)> =
+            ggml.get(b"ggml_backend_load_all_from_path\0")?;
+        load_all(dir_c.as_ptr());
+    }
+    std::mem::forget((base, ggml)); // на всё время работы
+    let _ = DONE.set(());
+    Ok(())
+}
+
+pub fn open_lib(dir: &Path, stem: &str) -> anyhow::Result<Library> {
+    open(&dir.join(lib_name(stem)))
+}
+
 impl Api {
-    /// Load ggml and llama from `dir` and let ggml find its backends there.
+    /// Load llama from `dir`; ggml finds its backends there.
     pub fn load(dir: &Path) -> anyhow::Result<Api> {
-        let base = open(&dir.join(lib_name("ggml-base")))?;
-        let ggml = open(&dir.join(lib_name("ggml")))?;
+        ggml(dir)?;
         let llama = open(&dir.join(lib_name("llama")))?;
-        let dir_c = CString::new(dir.to_string_lossy().as_bytes())?;
-        unsafe {
-            let load_all: libloading::Symbol<unsafe extern "C" fn(*const c_char)> =
-                ggml.get(b"ggml_backend_load_all_from_path\0")?;
-            load_all(dir_c.as_ptr());
-        }
         let api = unsafe { Api::bind(&llama, vec![])? };
         unsafe {
             if std::env::var_os("VOICY_LLAMA_LOG").is_none() {
@@ -191,7 +207,7 @@ impl Api {
             }
             (api.llama_backend_init)();
         }
-        Ok(Api { _libs: vec![base, ggml, llama], ..api })
+        Ok(Api { _libs: vec![llama], ..api })
     }
 }
 
