@@ -18,6 +18,10 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# Какой сервер проверять: python (server/) или rust (rust/, собранный заранее).
+IMPL = os.environ.get("VOICY_IMPL", "python")
+RUST_BIN = Path(os.environ.get("VOICY_RUST_BIN") or ROOT / "rust" / "target" / "release" /
+                ("voicy.exe" if sys.platform == "win32" else "voicy"))
 FAKE = {"TTS_ENGINE": "tone", "STT_ENGINE": "script",
         "TURN_ENGINE": "pause", "VAD_ENGINE": "energy"}
 
@@ -46,10 +50,14 @@ class Server:
         if "VOICY_API_KEY" not in self.env:
             env.pop("VOICY_API_KEY", None)          # ключ из окружения — не для этих проверок
         self.url = f"http://127.0.0.1:{port}"
-        self.proc = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1",
-             "--port", str(port), "--app-dir", str(ROOT / "server"), "--log-level", "warning"],
-            env=env, stdout=self.log.open("wb"), stderr=subprocess.STDOUT)
+        if IMPL == "rust":
+            # сервер на Rust; движки — в дочернем Python того же окружения, что у проверок
+            env.update(VOICY_HOME=str(ROOT), VOICY_PYTHON=sys.executable)
+            cmd = [str(RUST_BIN), "serve", "--host", "127.0.0.1", "--port", str(port)]
+        else:
+            cmd = [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1",
+                   "--port", str(port), "--app-dir", str(ROOT / "server"), "--log-level", "warning"]
+        self.proc = subprocess.Popen(cmd, env=env, stdout=self.log.open("wb"), stderr=subprocess.STDOUT)
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:

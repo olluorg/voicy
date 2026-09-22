@@ -1,0 +1,34 @@
+[package]
+name = "voicy"
+version = "0.1.0"
+edition = "2024"
+description = "Local speech server with an OpenAI-compatible audio API"
+license = "MIT"
+publish = false
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["ws", "multipart"] }
+base64 = "0.22"
+bytes = "1"
+clap = { version = "4", features = ["derive", "env"] }
+fancy-regex = "0.19"
+futures = "0.3"
+hex = "0.4"
+hmac = "0.12"
+regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_path_to_error = "0.1"
+sha2 = "0.10"
+soxr-sys = "0.1"
+tempfile = "3"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+tower-http = { version = "0.6", features = ["fs", "catch-panic"] }
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 4

@@ -19,7 +19,7 @@ class Hook(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         body = self.rfile.read(int(self.headers["Content-Length"]))
-        Hook.received.append((dict(self.headers), body))
+        Hook.received.append((self.headers, body))      # заголовки без учёта регистра
         self.send_response(204)
         self.end_headers()
 
