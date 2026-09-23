@@ -1,14 +1,16 @@
 # voicy на Rust
 
 Тот же сервер, что `server/`, — те же маршруты, тот же набор проверок (`tests/`), —
-одним бинарником. Модели исполняются в нём самом, на готовых библиотеках
-llama.cpp, CTranslate2 и ONNX Runtime; чего нет в родном виде, идёт через
-Python-движки в дочернем процессе. Как и почему — [ADR 0022](../docs/adr/0022-rust-migration-and-hardware.md).
+одним бинарником, и в нём же команды CLI. Модели исполняются в самом процессе,
+на готовых библиотеках llama.cpp, CTranslate2 и ONNX Runtime; чего нет в родном
+виде, идёт через Python-движки в дочернем процессе. Как и почему —
+[ADR 0022](../docs/adr/0022-rust-migration-and-hardware.md).
 
 ```bash
 cargo build --release                         # rust/target/release/voicy
 target/release/voicy setup                    # библиотеки и модели в ~/.cache/voicy (один раз)
-target/release/voicy serve --port 8080
+target/release/voicy up                       # поднять и прогреть
+target/release/voicy say "Проверка." out.wav  # тот же бинарник — и клиент
 ```
 
 `setup` качает готовые библиотеки и модели (7.3 ГБ) и собирает обёртку над
@@ -16,6 +18,19 @@ CTranslate2. Python не нужен: Qwen3-TTS берётся уже перев�
 [sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf),
 свой репозиторий задаётся через `VOICY_TTS_GGUF_REPO`. Перевести официальные
 веса самому — `scripts/convert_qwen.py`, вот там нужен PyTorch.
+
+## Команды
+
+`serve` и `setup` — своё; остальное повторяет Python-CLI, те же флаги и тот же
+договор: аудио не пишется в stdout, в stdout идёт результат — путь, расшифровка
+или id задания, всё прочее в stderr.
+
+```
+say hear job jobs cancel contexts voices add-voice prepare up down status warm
+```
+
+`up` поднимает сервер этим же бинарником отдельным процессом: pid и журнал —
+в `<кэш>/run/`, останавливает его `down`. Адрес — `--url` или `VOICY_URL`.
 
 ## Что где исполняется
 
@@ -53,11 +68,17 @@ Python не запускается. `/health` показывает, кто гд�
 
 Кэш переносится переменной `VOICY_CACHE`.
 
-## Сейчас только
+## Где проверено
 
-Linux x86-64 с NVIDIA — где мерилось. Библиотеки под Intel Arc (SYCL, Vulkan),
-Apple (Metal) и процессоры x86-64 и ARM64 у llama.cpp и ONNX Runtime есть;
-их сборка и замеры — следующий шаг.
+Linux x86-64 и Windows x86-64, оба с NVIDIA. На Windows: синтез 5.04 с звука
+за 1.17 с, распознавание верное, 45 из 45 проверок (16 пропущено — форматы,
+которым нужен ffmpeg). Четыре особенности Windows, из-за которых это не
+работало сразу, описаны в коде рядом с их решениями: экспорт функций из DLL,
+имя в `LIBRARY` импортной библиотеки, `localhost` как IPv6 и два OpenMP
+в одном процессе.
+
+Библиотеки под Intel Arc (SYCL, Vulkan), Apple (Metal) и процессоры x86-64
+и ARM64 у llama.cpp и ONNX Runtime есть; их сборка и замеры — следующий шаг.
 
 ## Проверки
 

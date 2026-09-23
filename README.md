@@ -66,10 +66,11 @@ docker compose up -d
   и без неё.
 
 Пунктиром на схеме — то, чего ещё нет или что не проверялось. С настоящими
-моделями сервер проверен на Linux x86-64 (в том числе под WSL2 на Windows)
-с NVIDIA и без видеокарты. На Windows, macOS и ARM64 он запускается и проходит
-проверки с учебными движками (CI), с моделями там не гонялся. Цель — Windows,
-Linux и macOS на x86-64 и ARM64, видеокарты NVIDIA, Intel Arc и Apple silicon.
+моделями проверены Linux x86-64 с NVIDIA (и без видеокарты) и Windows x86-64
+с NVIDIA — последний бинарником на Rust. На macOS и ARM64 сервер запускается
+и проходит проверки с учебными движками (CI), с моделями там не гонялся.
+Цель — Windows, Linux и macOS на x86-64 и ARM64, видеокарты NVIDIA,
+Intel Arc и Apple silicon.
 На каждом железе — свой самый быстрый путь: охват не покупается скоростью
 там, где она уже есть. Как туда идти — [ADR 0022](docs/adr/0022-rust-migration-and-hardware.md).
 
@@ -122,13 +123,13 @@ docker — образ, нет — исходники. Явно — `--docker` и
 
 Что где проверено:
 
-| | docker | из исходников |
-|---|---|---|
-| Linux x86-64, NVIDIA | проверено | проверено |
-| Linux x86-64, без видеокарты | работает, скорость не мерилась | работает, скорость не мерилась |
-| Windows x86-64, NVIDIA, через WSL2 | не проверялось | проверено |
-| Windows x86-64, напрямую | — | не проверялось с моделями |
-| macOS, Apple silicon | эмуляция x86-64, очень медленно | не проверялось с моделями, только процессор |
+| | docker | из исходников (Python) | бинарник на Rust |
+|---|---|---|---|
+| Linux x86-64, NVIDIA | проверено | проверено | проверено |
+| Linux x86-64, без видеокарты | работает, скорость не мерилась | работает, скорость не мерилась | не проверялось |
+| Windows x86-64, NVIDIA | не проверялось | не проверялось с моделями | **проверено** |
+| Windows x86-64, через WSL2 | не проверялось | проверено | проверено (как Linux) |
+| macOS, Apple silicon | эмуляция x86-64, очень медленно | не проверялось с моделями, только процессор | сборки пока нет |
 
 ### Docker — любая система
 
@@ -166,12 +167,31 @@ git clone https://github.com/olluorg/voicy && cd voicy
 
 ### Windows
 
-Проще и проверено — через **WSL2**: `wsl --install -d Ubuntu`, дальше внутри
-Ubuntu всё как в разделе Linux. Видеокарта NVIDIA видна из WSL2 с обычным
-драйвером Windows. Консоль и API открываются из Windows по
-`http://localhost:8080`.
+**Бинарник на Rust** — то, что проверено на Windows с настоящими моделями:
+один файл, который сам ставит всё остальное. Синтез и распознавание считаются
+в его процессе, Python не нужен. Собирается он пока сам — готовых сборок ещё
+нет, и для сборки нужны Rust и «Build Tools for Visual Studio» с компонентом C++:
 
-Напрямую, без WSL — в PowerShell:
+```powershell
+winget install Rustlang.Rustup Git.Git Microsoft.VisualStudio.2022.BuildTools
+git clone https://github.com/olluorg/voicy; cd voicy
+cargo build --release --manifest-path rust\Cargo.toml
+rust\target\release\voicy.exe setup            @rem библиотеки и модели, 7.3 ГБ
+rust\target\release\voicy.exe up               @rem поднять и прогреть
+rust\target\release\voicy.exe say @текст.txt out.wav
+```
+
+Замеры на RTX 3080: синтез 5.04 с звука за 1.17 с, распознавание — как
+faster-whisper, 45 из 45 проверок. `ffmpeg` на Windows не обязателен для `wav`,
+но без него откажут `opus`, `mp3`, `flac`, `aac` и изменение темпа:
+`winget install Gyan.FFmpeg`.
+
+**Python-сервер** тоже запускается — через **WSL2** это проверенный путь:
+`wsl --install -d Ubuntu`, дальше внутри Ubuntu всё как в разделе Linux.
+Видеокарта NVIDIA видна из WSL2 с обычным драйвером Windows, консоль и API
+открываются из Windows по `http://localhost:8080`.
+
+Напрямую, без WSL, — в PowerShell:
 
 ```powershell
 winget install Python.Python.3.12 Git.Git astral-sh.uv Gyan.FFmpeg
@@ -180,9 +200,9 @@ python voicy up --source --install
 python voicy say "Проверка связи." out.opus
 ```
 
-CLI — Python-скрипт, поэтому на Windows он запускается как `python voicy …`.
 Так сервер стартует и проходит проверки с учебными движками, но с настоящими
-моделями на Windows он ещё не гонялся: если что-то не так, пишите в issues.
+моделями по этому пути на Windows он не гонялся: с моделями проверен бинарник.
+CLI — Python-скрипт, поэтому запускается как `python voicy …`.
 
 ### macOS
 
@@ -200,10 +220,12 @@ silicon идёт под эмуляцией x86-64 и для работы неп�
 ### Сервер на Rust — одним бинарником
 
 Тот же API без Python во время работы: все модели исполняются в самом
-процессе. На RTX 3080 синтез почти втрое быстрее (×3.8 к реальному времени
-против ×1.4), распознавание с той же точностью, видеопамяти 5.7 ГБ вместо 9.3
-(experiments/20, 22). Пока **только Linux x86-64 с NVIDIA**: библиотеки под
-другие платформы есть, сборки и замеры — впереди.
+процессе, и команды CLI — в том же файле (`voicy say`, `hear`, `up`, `status`…).
+На RTX 3080 синтез почти втрое быстрее (×3.8 к реальному времени против ×1.4),
+распознавание с той же точностью, видеопамяти 5.7 ГБ вместо 9.3
+(experiments/20, 22). Проверено на **Linux x86-64 и Windows x86-64 с NVIDIA**;
+библиотеки под ARM64, Intel Arc (SYCL) и Apple (Metal) есть, сборки и замеры —
+впереди.
 
 ```bash
 sudo apt install build-essential ffmpeg           # g++ — для обёртки над CTranslate2
@@ -216,7 +238,9 @@ rust/target/release/voicy serve --port 8080
 `voicy setup` качает всё сам: готовые llama.cpp, CTranslate2 и ONNX Runtime,
 модели Whisper, Silero, Smart Turn и Qwen3-TTS, переведённый в GGUF и ONNX
 ([sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf)),
-— и собирает обёртку над CTranslate2. Python не нужен ни на одном шаге.
+— и собирает обёртку над CTranslate2: у неё C++-интерфейс, и на это нужен
+компилятор (`build-essential` на Linux, Build Tools на Windows). Python
+не нужен ни на одном шаге.
 
 Перевести веса самому (например, другую модель Qwen или другой вариант
 квантования) — `scripts/convert_qwen.py`: вот ему нужны PyTorch и официальные
@@ -274,7 +298,7 @@ CER обратного распознавания снизился с 25.3% до
 voicy         CLI: весь сервер одной командой
 AGENTS.md     инструкция для код-агентов
 server/       сервер: app.py — маршруты, engines/ — модели, static/ — консоль
-rust/         тот же сервер на Rust, одним бинарником
+rust/         тот же сервер на Rust — и CLI в том же бинарнике
 data/         словарь произношений и тексты экспериментов
 docs/adr/     почему сделано именно так — читать до того, как менять поведение
 docs/research.md  исследование, с которого всё началось
