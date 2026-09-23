@@ -19,6 +19,13 @@
 
 using namespace ctranslate2;
 
+// Windows не выносит ничего наружу без явной пометки, unix выносит всё
+#ifdef _WIN32
+#define CT2W __declspec(dllexport)
+#else
+#define CT2W
+#endif
+
 namespace {
 void set_err(char* err, size_t len, const std::string& msg) {
   if (err && len) {
@@ -46,7 +53,7 @@ struct ct2w_gen_opts {
   size_t max_initial_timestamp_index;
 };
 
-void* ct2w_load(const char* path, int cuda, int device_index, const char* compute_type,
+CT2W void* ct2w_load(const char* path, int cuda, int device_index, const char* compute_type,
                 size_t intra_threads, size_t inter_threads, char* err, size_t errlen) {
   try {
     ReplicaPoolConfig cfg;
@@ -62,13 +69,13 @@ void* ct2w_load(const char* path, int cuda, int device_index, const char* comput
   }
 }
 
-void ct2w_free(void* m) { delete static_cast<models::Whisper*>(m); }
+CT2W void ct2w_free(void* m) { delete static_cast<models::Whisper*>(m); }
 
-int ct2w_is_multilingual(void* m) { return static_cast<models::Whisper*>(m)->is_multilingual(); }
-size_t ct2w_n_mels(void* m) { return static_cast<models::Whisper*>(m)->n_mels(); }
+CT2W int ct2w_is_multilingual(void* m) { return static_cast<models::Whisper*>(m)->is_multilingual(); }
+CT2W size_t ct2w_n_mels(void* m) { return static_cast<models::Whisper*>(m)->n_mels(); }
 
 // features: [n_mels][n_frames] float32, row-major, one item.
-void* ct2w_encode(void* m, const float* features, size_t n_mels, size_t n_frames, char* err, size_t errlen) {
+CT2W void* ct2w_encode(void* m, const float* features, size_t n_mels, size_t n_frames, char* err, size_t errlen) {
   try {
     std::vector<float> data(features, features + n_mels * n_frames);
     StorageView sv({1, (dim_t)n_mels, (dim_t)n_frames}, data);
@@ -80,10 +87,10 @@ void* ct2w_encode(void* m, const float* features, size_t n_mels, size_t n_frames
   }
 }
 
-void ct2w_free_sv(void* sv) { delete static_cast<StorageView*>(sv); }
+CT2W void ct2w_free_sv(void* sv) { delete static_cast<StorageView*>(sv); }
 
 // The best hypothesis: its ids (malloc'd), score and the no-speech probability.
-int ct2w_generate(void* m, void* encoded, const size_t* prompt, size_t n_prompt, const ct2w_gen_opts* o,
+CT2W int ct2w_generate(void* m, void* encoded, const size_t* prompt, size_t n_prompt, const ct2w_gen_opts* o,
                   size_t** ids, size_t* n_ids, float* score, float* no_speech_prob, char* err, size_t errlen) {
   try {
     models::WhisperOptions opts;
@@ -117,10 +124,10 @@ int ct2w_generate(void* m, void* encoded, const size_t* prompt, size_t n_prompt,
   }
 }
 
-void ct2w_free_buf(void* p) { std::free(p); }
+CT2W void ct2w_free_buf(void* p) { std::free(p); }
 
 // Languages as "<|ru|>\n<|en|>\n…" (malloc'd) and their probabilities, most likely first.
-int ct2w_detect_language(void* m, void* encoded, char** tokens, float** probs, size_t* n, char* err, size_t errlen) {
+CT2W int ct2w_detect_language(void* m, void* encoded, char** tokens, float** probs, size_t* n, char* err, size_t errlen) {
   try {
     auto r = static_cast<models::Whisper*>(m)->detect_language(*static_cast<StorageView*>(encoded))[0].get();
     std::string joined;
@@ -140,7 +147,7 @@ int ct2w_detect_language(void* m, void* encoded, char** tokens, float** probs, s
 }
 
 // Alignment pairs (text index, time index) flattened, and the text token probabilities.
-int ct2w_align(void* m, void* encoded, const size_t* start, size_t n_start, const size_t* text, size_t n_text,
+CT2W int ct2w_align(void* m, void* encoded, const size_t* start, size_t n_start, const size_t* text, size_t n_text,
                size_t num_frames, long median_filter_width, long long** pairs, size_t* n_pairs,
                float** probs, size_t* n_probs, char* err, size_t errlen) {
   try {

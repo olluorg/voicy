@@ -32,7 +32,9 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_URL = os.environ.get("VOICY_URL", "http://localhost:8080")
+# 127.0.0.1, а не localhost: на Windows это имя разрешается сначала в IPv6 ::1,
+# где сервер не слушает, и клиент получает отказ вместо ответа.
+DEFAULT_URL = os.environ.get("VOICY_URL", "http://127.0.0.1:8080")
 # Ключ, если сервер его требует; тот же, что задан серверу в VOICY_API_KEY.
 # Серверу можно дать несколько через запятую — клиенту нужен один.
 API_KEY = os.environ.get("VOICY_API_KEY", "").split(",")[0].strip()

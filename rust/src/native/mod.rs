@@ -25,7 +25,7 @@ fn platform() -> &'static str {
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("linux", "x86_64") => "linux-x64-cuda13",
         ("linux", "aarch64") => "linux-arm64",
-        ("windows", "x86_64") => "windows-x64",
+        ("windows", "x86_64") => "windows-x64-cuda13",
         ("windows", "aarch64") => "windows-arm64",
         ("macos", _) => "macos-arm64",
         _ => "unknown",
@@ -60,7 +60,29 @@ pub fn lib_dir_path() -> PathBuf {
 pub fn lib_dir() -> anyhow::Result<PathBuf> {
     let dir = lib_dir_path();
     anyhow::ensure!(dir.is_dir(), "no engine libraries in {} — voicy setup", dir.display());
+    search_here(&dir);
     Ok(dir)
+}
+
+/// Windows ищет зависимости загружаемой библиотеки где угодно, только не рядом
+/// с ней: каталог движков добавляется в список поиска один раз на процесс.
+fn search_here(dir: &Path) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        static DONE: OnceLock<()> = OnceLock::new();
+        if DONE.set(()).is_err() {
+            return;
+        }
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn SetDllDirectoryW(path: *const u16) -> i32;
+        }
+        let wide: Vec<u16> = dir.as_os_str().encode_wide().chain(std::iter::once(0)).collect();
+        unsafe { SetDllDirectoryW(wide.as_ptr()) };
+    }
+    #[cfg(not(windows))]
+    let _ = dir;
 }
 
 /// libfoo.so, foo.dll or libfoo.dylib, whichever this platform names it.

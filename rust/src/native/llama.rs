@@ -169,7 +169,12 @@ fn open(path: &Path) -> anyhow::Result<Library> {
 
 #[cfg(windows)]
 fn open(path: &Path) -> anyhow::Result<Library> {
-    unsafe { Library::new(path) }.with_context(|| format!("cannot load {}", path.display()))
+    use libloading::os::windows::{LOAD_WITH_ALTERED_SEARCH_PATH, Library as W};
+    // Windows ищет зависимости библиотеки не рядом с ней, а по своему списку:
+    // без этого флага ggml-base.dll не находит libomp.dll, лежащую в том же каталоге
+    let lib = unsafe { W::load_with_flags(path, LOAD_WITH_ALTERED_SEARCH_PATH) }
+        .with_context(|| format!("cannot load {}", path.display()))?;
+    Ok(lib.into())
 }
 
 /// ggml and its backends, once per process: llama.cpp and whisper.cpp share them.

@@ -10,6 +10,7 @@
 //! same suite (tests/).
 
 mod api;
+mod cli;
 mod audio;
 mod auth;
 mod contexts;
@@ -58,6 +59,9 @@ pub struct App {
 #[derive(Parser)]
 #[command(name = "voicy", version, about = "Локальный речевой сервер с OpenAI-совместимым API")]
 struct Cli {
+    /// Адрес сервера (по умолчанию VOICY_URL или http://localhost:8080)
+    #[arg(long, global = true)]
+    url: Option<String>,
     #[command(subcommand)]
     command: Command,
 }
@@ -80,6 +84,122 @@ enum Command {
     /// Вероятности детектора голоса и конца реплики для wav 16 кГц — сверка с Python
     #[command(hide = true)]
     ProbeListen { wav: PathBuf },
+    /// Текст → аудиофайл
+    Say {
+        /// текст, либо @файл, либо - для stdin
+        text: String,
+        /// куда писать; расширение задаёт формат
+        out: Option<PathBuf>,
+        #[arg(long)]
+        voice: Option<String>,
+        #[arg(long, default_value = "opus", value_parser = ["opus", "wav", "mp3", "flac", "aac", "pcm"])]
+        format: String,
+        /// 0.8–1.2, растяжением готового звука
+        #[arg(long, default_value_t = 1.0)]
+        speed: f64,
+        #[arg(long)]
+        language: Option<String>,
+        #[arg(long)]
+        seed: Option<i64>,
+        /// применить словарь произношений
+        #[arg(long)]
+        prepare: bool,
+        /// убрать запятые внутри коротких фраз
+        #[arg(long)]
+        legato: bool,
+        /// не ждать: напечатать id задания и выйти
+        #[arg(long)]
+        detach: bool,
+        /// POST сюда, когда готово (подразумевает --detach)
+        #[arg(long, value_name = "URL")]
+        webhook: Option<String>,
+    },
+    /// Аудиофайл → текст
+    Hear {
+        file: PathBuf,
+        #[arg(long)]
+        language: Option<String>,
+        #[arg(long, default_value = "json", value_parser = ["json", "text", "verbose_json", "srt", "vtt"])]
+        format: String,
+        /// подсказка контекста: термины, имена
+        #[arg(long)]
+        prompt: Option<String>,
+        #[arg(long, default_value_t = 0.0)]
+        temperature: f64,
+        /// отметки времени по словам
+        #[arg(long)]
+        words: bool,
+        /// профиль контекста: термины и замены (см. contexts)
+        #[arg(long)]
+        context: Option<String>,
+        /// термины через запятую: Kafka, Grafana, Helm
+        #[arg(long)]
+        hotwords: Option<String>,
+        #[arg(long)]
+        detach: bool,
+        #[arg(long, value_name = "URL")]
+        webhook: Option<String>,
+    },
+    /// Состояние задания; готовое — в файл или stdout
+    Job {
+        id: String,
+        /// куда писать звук, если это синтез
+        out: Option<PathBuf>,
+        /// дождаться конца
+        #[arg(long)]
+        wait: bool,
+        #[arg(long, default_value = "json", value_parser = ["json", "text", "verbose_json", "srt", "vtt"])]
+        format: String,
+    },
+    /// Задания и очередь
+    Jobs,
+    /// Отменить задание
+    Cancel { id: String },
+    /// Профили контекста распознавания
+    Contexts,
+    /// Список голосов
+    Voices,
+    /// Добавить голос из образца 8–14 с
+    AddVoice {
+        file: PathBuf,
+        name: String,
+        /// расшифровка; по умолчанию распознаётся сервером
+        #[arg(long)]
+        text: Option<String>,
+        /// пометка для списка
+        #[arg(long)]
+        note: Option<String>,
+        /// перезаписать голос с тем же именем
+        #[arg(long)]
+        replace: bool,
+    },
+    /// Словарь произношений и снятие запятых
+    Prepare {
+        /// текст, либо @файл, либо -
+        text: String,
+        #[arg(long)]
+        no_dictionary: bool,
+        #[arg(long)]
+        legato: bool,
+    },
+    /// Поднять сервер этим же бинарником и дождаться готовности
+    Up {
+        /// сколько ждать готовности, с
+        #[arg(long, default_value_t = 3600.0)]
+        wait: f64,
+        /// не прогревать модели
+        #[arg(long)]
+        no_warm: bool,
+        /// без GPU
+        #[arg(long)]
+        cpu: bool,
+    },
+    /// Остановить сервер
+    Down,
+    /// Состояние моделей и устройства
+    Status,
+    /// Загрузить модели заранее
+    Warm,
     /// Скачать библиотеки и модели для движков в процессе сервера (~/.cache/voicy)
     Setup {
         /// libs, models или всё сразу
@@ -332,9 +452,26 @@ fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, 
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    match Cli::parse().command {
+    let cli = Cli::parse();
+    let url = cli.url.clone().unwrap_or_else(cli::default_url);
+    match cli.command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
         Command::Setup { what } => setup::run(&what).await,
+        Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, detach, webhook } =>
+            cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, detach, webhook).await,
+        Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>
+            cli::hear(&url, file, language, format, prompt, temperature, words, context, hotwords, detach, webhook).await,
+        Command::Job { id, out, wait, format } => cli::job(&url, id, out, wait, format).await,
+        Command::Jobs => cli::jobs(&url).await,
+        Command::Cancel { id } => cli::cancel(&url, id).await,
+        Command::Contexts => cli::contexts(&url).await,
+        Command::Voices => cli::voices(&url).await,
+        Command::AddVoice { file, name, text, note, replace } => cli::add_voice(&url, file, name, text, note, replace).await,
+        Command::Prepare { text, no_dictionary, legato } => cli::prepare(&url, &text, no_dictionary, legato).await,
+        Command::Up { wait, no_warm, cpu } => cli::up(&url, wait, !no_warm, cpu).await,
+        Command::Down => cli::down(&url).await,
+        Command::Status => cli::status(&url).await,
+        Command::Warm => cli::warm(&url).await,
         Command::ProbeListen { wav } => probe_listen(wav),
         Command::ProbeStt { jobs, model } => probe_stt(jobs, model),
         Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),
