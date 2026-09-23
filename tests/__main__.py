@@ -106,6 +106,10 @@ def machine() -> dict:
 
 
 def main() -> int:
+    # консоль Windows по умолчанию в cp1252: кириллица в итогах роняла прогон,
+    # в котором все тесты прошли
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(prog="python -m tests", description=__doc__.split("\n\n")[0])
     ap.add_argument("--url", help="уже запущенный сервер; без него — свои с учебными движками")
     ap.add_argument("--key", default=os.environ.get("VOICY_API_KEY"),
