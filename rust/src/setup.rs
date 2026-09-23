@@ -314,7 +314,9 @@ fn openmp_bridge(lib: &Path, tmp: &Path) -> anyhow::Result<()> {
         return Ok(());
     }
     let Some(vcvars) = vcvars() else {
-        say("нет компилятора C++ — два OpenMP в одном процессе не развести; сервер упадёт на распознавании");
+        // без компилятора остаётся ключ, который понимают оба рантайма (main::allow_two_openmp):
+        // по замерам скорость та же, но Intel называет это неподдерживаемым (experiments/23)
+        say("нет компилятора C++ — OpenMP останется в двух экземплярах, их разводит ключ KMP_DUPLICATE_LIB_OK");
         return Ok(());
     };
     let script = tmp.join("build_omp.bat");
