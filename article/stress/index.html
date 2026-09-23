@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ударение по знаку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=PT+Serif:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --ink:#17201D; --muted:#5B6763; --line:#D8DEDB;
+  --accent:#2D5BA8; --ok:#1F7A55; --miss:#A4453A; --na:#7A8480;
+  --ok-bg:#E3F1EA; --miss-bg:#F6E5E2; --na-bg:#ECEFEE;
+  --serif:"PT Serif", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111614; --surface:#19201D; --ink:#E3E9E6; --muted:#9AA6A1; --line:#2A3430;
+    --accent:#86A8E6; --ok:#5CC08E; --miss:#E07A6D; --na:#8C9692;
+    --ok-bg:#16301F; --miss-bg:#361D19; --na-bg:#212926;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111614; --surface:#19201D; --ink:#E3E9E6; --muted:#9AA6A1; --line:#2A3430;
+  --accent:#86A8E6; --ok:#5CC08E; --miss:#E07A6D; --na:#8C9692;
+  --ok-bg:#16301F; --miss-bg:#361D19; --na-bg:#212926;
+}
+html{color-scheme:light;}
+body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 var(--sans); padding:0 16px;}
+.wrap{max-width:880px; margin:0 auto; padding-block:40px 64px; display:grid; gap:40px;}
+h1{font:700 clamp(28px,5vw,40px)/1.15 var(--serif); margin:0; text-wrap:balance;}
+h2{font:700 22px/1.25 var(--serif); margin:0; text-wrap:balance;}
+p{margin:0; max-width:65ch;}
+.lede{display:grid; gap:14px;}
+.muted{color:var(--muted);}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+.stat{background:var(--surface); padding:14px 16px; display:grid; gap:2px;}
+.stat b{font:500 26px/1.1 var(--mono); font-variant-numeric:tabular-nums;}
+.stat span{font-size:13px; color:var(--muted);}
+.stat.hl b{color:var(--accent);}
+section{display:grid; gap:16px;}
+.list{display:grid; gap:0; border-top:1px solid var(--line);}
+.row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:16px 24px; padding:18px 0; border-bottom:1px solid var(--line); align-items:start;}
+@media (max-width:640px){ .row{grid-template-columns:1fr;} }
+.word{font:400 26px/1.2 var(--serif);}
+.word .acc{color:var(--accent);}
+.meta{font:13px/1.5 var(--mono); color:var(--muted); display:grid; gap:2px; margin-top:6px;}
+.sent{font-size:14px; color:var(--muted); margin-top:6px;}
+.takes{display:grid; gap:10px;}
+.take{display:grid; grid-template-columns:118px minmax(0,1fr); gap:6px 12px; align-items:center;}
+@media (max-width:420px){ .take{grid-template-columns:1fr;} }
+.take label{font:500 12px/1.3 var(--sans); letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
+.take .line{display:flex; flex-wrap:wrap; gap:8px; align-items:center; min-width:0;}
+audio{width:100%; max-width:320px; height:36px;}
+.chip{font:12px/1 var(--mono); padding:5px 8px; border-radius:999px; white-space:nowrap;}
+.chip.ok{background:var(--ok-bg); color:var(--ok);}
+.chip.miss{background:var(--miss-bg); color:var(--miss);}
+.chip.na{background:var(--na-bg); color:var(--na);}
+.note{font-size:14px; color:var(--muted); border-left:2px solid var(--line); padding-left:12px;}
+code{font:13px var(--mono);}
+.para{font:400 20px/1.6 var(--serif); max-width:65ch;}
+.para .acc{color:var(--accent);}
+</style>
+
+</head>
+<body>
+<main class="wrap">
+  <header class="lede">
+    <h1>Ударение по знаку</h1>
+    <p>Qwen3-TTS дообучена слушаться знака ударения U+0301 после гласной. Здесь можно сравнить на слух исходную модель и адаптер v3, обученный только на данных со свободными лицензиями. Голос в обоих случаях один и тот же: <code>turgenev</code>.</p>
+    <p class="muted">Примеры отобраны случайно, а не лучшие. Рядом с каждой записью стоит вердикт автоматического детектора. По одному слову он ошибается примерно в каждом десятом случае, поэтому ухо здесь главнее.</p>
+  </header>
+
+  <div class="stats" aria-label="Итоги теста управляемости">
+    <div class="stat"><b>21%</b><span>исходная модель следует знаку на ненормативном слоге</span></div>
+    <div class="stat hl"><b>49%</b><span>адаптер v3, p = 0.002</span></div>
+    <div class="stat"><b>59%</b><span>ESpeech, источник данных v3, тот же детектор</span></div>
+    <div class="stat"><b>0.983</b><span>сходство голоса с образцом (исходная 0.985)</span></div>
+  </div>
+
+  <section id="paragraph">
+    <h2>Абзац целиком</h2>
+    <p class="muted">Трудные слова и омографы подряд. Один голос и один сид, весь абзац озвучен одним проходом, как это делает сервер. Ниже текст в том виде, в каком его получил адаптер со знаками: синим отмечено, куда RUAccent поставил ударение.</p>
+    <p class="para" id="para-text"></p>
+    <div class="takes" id="para-takes"></div>
+    <p class="note">Все три записи Whisper распознаёт без единой ошибки. Автоматический детектор ударений разницы между вариантами здесь не различает: его шум (10–12% ложных тревог) больше самой разницы. Судить стоит на слух.</p>
+  </section>
+
+  <section id="control">
+    <h2>Знак против привычки</h2>
+    <p class="muted">Знак стоит на слоге, где ударение не нормативно. Исходная модель знак не понимает и говорит по-своему. Адаптер должен сказать так, как указывает знак, даже если это звучит неправильно.</p>
+    <div class="list" id="control-list"></div>
+  </section>
+
+  <section id="hard">
+    <h2>Трудные слова</h2>
+    <p class="muted">Слова, которые исходная модель произнесла не так, как ждёт RUAccent, при двух разных сидах. Здесь они озвучены заново третьим сидом: у исходной модели без знаков, у адаптера со знаками по RUAccent. Детектор ошибается и на части самих этих слов: для Silero с верной разметкой он поднимает тревогу в 36% случаев.</p>
+    <div class="list" id="hard-list"></div>
+  </section>
+
+  <p class="note">Методика и все числа — <a href="https://github.com/olluorg/voicy/blob/master/experiments/23-stress-finetune/README.md">отчёт эксперимента 23</a>, решение — <a href="../docs/adr/0023-stress-marks-by-lora.md">ADR 0023</a>. Начало истории с ударениями — <a href="../#udareniya">раунд 13 статьи</a>.</p>
+</main>
+
+<script id="data" type="application/json">{"control": [{"sentence": "Задача оказалась значите́льно сложнее, чем казалось.", "word": "значительно", "target": "значите́льно", "normal": "значи́тельно", "base": {"audio": "../assets/audio/stress-v3/control__00_znachitel_no_3__base.opus", "det": 2}, "v3": {"audio": "../assets/audio/stress-v3/control__00_znachitel_no_3__v3.opus", "det": 2}, "k": 2}, {"sentence": "Эксперты обеспечили проекту хорошую репутацию́.", "word": "репутацию", "target": "репутацию́", "normal": "репута́цию", "base": {"audio": "../assets/audio/stress-v3/control__01_reputaciyu_5__base.opus", "det": 2}, "v3": {"audio": "../assets/audio/stress-v3/control__01_reputaciyu_5__v3.opus", "det": 2}, "k": 4}, {"sentence": "Врач посо́ветовал принимать лекарство дважды в день.", "word": "посоветовал", "target": "посо́ветовал", "normal": "посове́товал", "base": {"audio": "../assets/audio/stress-v3/control__02_posovetoval_2__base.opus", "det": 2}, "v3": {"audio": "../assets/audio/stress-v3/control__02_posovetoval_2__v3.opus", "det": 2}, "k": 1}, {"sentence": "Мы до́говорились созвониться в среду вечером.", "word": "договорились", "target": "до́говорились", "normal": "договори́лись", "base": {"audio": "../assets/audio/stress-v3/control__03_dogovorilis__1__base.opus", "det": 1}, "v3": {"audio": "../assets/audio/stress-v3/control__03_dogovorilis__1__v3.opus", "det": 3}, "k": 0}, {"sentence": "Жалюзи в офисе давно пора поме́нять.", "word": "поменять", "target": "поме́нять", "normal": "поменя́ть", "base": {"audio": "../assets/audio/stress-v3/control__04_pomenyat__2__base.opus", "det": null}, "v3": {"audio": "../assets/audio/stress-v3/control__04_pomenyat__2__v3.opus", "det": 1}, "k": 1}, {"sentence": "Старинный замок стоит на высоко́м холме.", "word": "высоком", "target": "высоко́м", "normal": "высо́ком", "base": {"audio": "../assets/audio/stress-v3/control__05_vysokom_3__base.opus", "det": null}, "v3": {"audio": "../assets/audio/stress-v3/control__05_vysokom_3__v3.opus", "det": 2}, "k": 2}, {"sentence": "Средства со счёта списали без пре́дупреждения.", "word": "предупреждения", "target": "пре́дупреждения", "normal": "предупрежде́ния", "base": {"audio": "../assets/audio/stress-v3/control__06_preduprezhdeniya_1__base.opus", "det": null}, "v3": {"audio": "../assets/audio/stress-v3/control__06_preduprezhdeniya_1__v3.opus", "det": 0}, "k": 0}, {"sentence": "Средства со счёта списали без предупреждени́я.", "word": "предупреждения", "target": "предупреждени́я", "normal": "предупрежде́ния", "base": {"audio": "../assets/audio/stress-v3/control__07_preduprezhdeniya_5__base.opus", "det": 0}, "v3": {"audio": "../assets/audio/stress-v3/control__07_preduprezhdeniya_5__v3.opus", "det": 1}, "k": 4}], "hard": [{"sentence": "Большая часть проверок выполняется при сборке.", "word": "Большая", "expected": "Бо́льшая", "k": 0, "base": {"audio": "../assets/audio/stress-v3/hard__00_bol_shaya__base.opus", "v": {"best": 1, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__00_bol_shaya__v3.opus", "v": {"best": 1, "bad": true}}}, {"sentence": "Мастер быстро починил замок на двери.", "word": "починил", "expected": "почини́л", "k": 2, "base": {"audio": "../assets/audio/stress-v3/hard__01_pochinil__base.opus", "v": {"best": 1, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__01_pochinil__v3.opus", "v": {"best": 1, "bad": false}}}, {"sentence": "А вот добавить туда Интеджер нельзя, и это главное.", "word": "это", "expected": "э́то", "k": 0, "base": {"audio": "../assets/audio/stress-v3/hard__02_eto__base.opus", "v": {"best": 1, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__02_eto__v3.opus", "v": {"best": 0, "bad": false}}}, {"sentence": "Компилятор не знает, чей это список на самом деле — Интеджеров или Даблов, поэтому запрещает запись.", "word": "запрещает", "expected": "запреща́ет", "k": 2, "base": {"audio": "../assets/audio/stress-v3/hard__03_zapreschaet__base.opus", "v": {"best": 3, "bad": false}}, "v3": {"audio": "../assets/audio/stress-v3/hard__03_zapreschaet__v3.opus", "v": {"best": 3, "bad": false}}}, {"sentence": "Первая: пытаться добавлять элементы в коллекцию с экстендс — не скомпилируется.", "word": "элементы", "expected": "элеме́нты", "k": 2, "base": {"audio": "../assets/audio/stress-v3/hard__04_elementy__base.opus", "v": {"best": 2, "bad": false}}, "v3": {"audio": "../assets/audio/stress-v3/hard__04_elementy__v3.opus", "v": {"best": 1, "bad": true}}}, {"sentence": "Топик становится долговременным журналом текущего состояния.", "word": "долговременным", "expected": "долговре́менным", "k": 2, "base": {"audio": "../assets/audio/stress-v3/hard__05_dolgovremennym__base.opus", "v": {"best": 3, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__05_dolgovremennym__v3.opus", "v": {"best": 1, "bad": false}}}, {"sentence": "Именно так устроены внутренние топики состояния Кафка Стримс и справочники, которые реплицируют между сервисами.", "word": "Именно", "expected": "И́менно", "k": 0, "base": {"audio": "../assets/audio/stress-v3/hard__06_imenno__base.opus", "v": {"best": 2, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__06_imenno__v3.opus", "v": {"best": 1, "bad": true}}}, {"sentence": "Первая: путать уплотнение по ключу со сжатием сообщений.", "word": "сообщений", "expected": "сообще́ний", "k": 2, "base": {"audio": "../assets/audio/stress-v3/hard__07_soobscheniy__base.opus", "v": {"best": 3, "bad": true}}, "v3": {"audio": "../assets/audio/stress-v3/hard__07_soobscheniy__v3.opus", "v": {"best": 1, "bad": true}}}], "paragraph": {"marked": "Бо́льшая часть прове́рок выполня́ется при сбо́рке, поэ́тому э́тот вопро́с сто́ит разобра́ть подро́бно. Ма́стер бы́стро почини́л замо́к на двери́, а стари́нный за́мок стои́т на высо́ком холме́. Мы договори́лись созвони́ться в сре́ду и на́чали звони́ть поставщика́м. И́менно долговре́менным хране́нием сообще́ний занима́ется э́тот се́рвис. Он запреща́ет удаля́ть элеме́нты, у кото́рых нет ключа́. Краси́вее всего́ го́род вы́глядит ра́нним у́тром, когда́ жалюзи́ в о́фисах ещё закры́ты. Врач посове́товал облегчи́ть нагру́зку, а мы углуби́ли ана́лиз и уточни́ли вы́воды.", "text": "Большая часть проверок выполняется при сборке, поэтому этот вопрос стоит разобрать подробно. Мастер быстро починил замок на двери, а старинный замок стоит на высоком холме. Мы договорились созвониться в среду и начали звонить поставщикам. Именно долговременным хранением сообщений занимается этот сервис. Он запрещает удалять элементы, у которых нет ключа. Красивее всего город выглядит ранним утром, когда жалюзи в офисах ещё закрыты. Врач посоветовал облегчить нагрузку, а мы углубили анализ и уточнили выводы.", "flagged": {"base": [11, 56], "v3-plain": [12, 56], "v3-marked": [12, 56]}, "audio": {"base": "../assets/audio/stress-v3/paragraph__base.opus", "v3-plain": "../assets/audio/stress-v3/paragraph__v3-plain.opus", "v3-marked": "../assets/audio/stress-v3/paragraph__v3-marked.opus"}}}</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("data").textContent);
+  var ACUTE = "́";
+
+  function esc(s) {
+    return s.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+  }
+  function wordHtml(w) {
+    var i = w.indexOf(ACUTE);
+    if (i < 1) return esc(w);
+    return esc(w.slice(0, i - 1)) + '<span class="acc">' + esc(w.slice(i - 1, i + 1)) + "</span>" + esc(w.slice(i + 1));
+  }
+  function syl(k) { return (k + 1) + "-й слог"; }
+
+  function take(label, audio, chipClass, chipText, id) {
+    return '<div class="take"><label for="' + id + '">' + label + '</label><div class="line">' +
+      '<audio id="' + id + '" controls preload="none" src="' + audio + '"></audio>' +
+      (chipText ? '<span class="chip ' + chipClass + '">' + chipText + "</span>" : "") + "</div></div>";
+  }
+  function controlChip(det, k) {
+    if (det === null || det === undefined) return ["na", "слово не распознано"];
+    return det === k ? ["ok", "по знаку, " + syl(det)] : ["miss", "не по знаку, " + syl(det)];
+  }
+  function hardChip(v) {
+    if (!v) return ["na", "слово не распознано"];
+    return v.bad ? ["miss", "не там, " + syl(v.best)] : ["ok", "как в RUAccent"];
+  }
+
+  var P = data.paragraph;
+  if (P) {
+    document.getElementById("para-text").innerHTML = P.marked.split(" ").map(wordHtml).join(" ");
+    var names = [["base", "Исходная"], ["v3-plain", "v3 без знаков"], ["v3-marked", "v3 со знаками"]];
+    document.getElementById("para-takes").innerHTML = names.map(function (n, i) {
+      return take(n[1], P.audio[n[0]], "", "", "p" + i);
+    }).join("");
+  }
+
+  var c = document.getElementById("control-list");
+  data.control.forEach(function (x, n) {
+    var b = controlChip(x.base.det, x.k), v = controlChip(x.v3.det, x.k);
+    c.insertAdjacentHTML("beforeend",
+      '<div class="row"><div><div class="word">' + wordHtml(x.target) + "</div>" +
+      '<div class="meta"><span>знак: ' + syl(x.k) + '</span><span>норма: ' + wordHtml(x.normal) + "</span></div>" +
+      '<div class="sent">' + esc(x.sentence.replace(new RegExp(ACUTE, "g"), "")) + "</div></div>" +
+      '<div class="takes">' + take("Исходная", x.base.audio, b[0], b[1], "c" + n + "b") +
+      take("Адаптер v3", x.v3.audio, v[0], v[1], "c" + n + "v") + "</div></div>");
+  });
+
+  var h = document.getElementById("hard-list");
+  data.hard.forEach(function (x, n) {
+    var b = hardChip(x.base.v), v = hardChip(x.v3.v);
+    h.insertAdjacentHTML("beforeend",
+      '<div class="row"><div><div class="word">' + wordHtml(x.expected) + "</div>" +
+      '<div class="meta"><span>RUAccent: ' + syl(x.k) + "</span></div>" +
+      '<div class="sent">' + esc(x.sentence) + "</div></div>" +
+      '<div class="takes">' + take("Исходная", x.base.audio, b[0], b[1], "h" + n + "b") +
+      take("Адаптер v3", x.v3.audio, v[0], v[1], "h" + n + "v") + "</div></div>");
+  });
+
+  // одна запись за раз: запуск новой останавливает остальные
+  document.addEventListener("play", function (e) {
+    document.querySelectorAll("audio").forEach(function (a) { if (a !== e.target) a.pause(); });
+  }, true);
+})();
+</script>
+
+</body>
+</html>

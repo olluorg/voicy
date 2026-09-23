@@ -1,0 +1,104 @@
+<main class="wrap">
+  <header class="lede">
+    <h1>Ударение по знаку</h1>
+    <p>Qwen3-TTS дообучена слушаться знака ударения U+0301 после гласной. Здесь можно сравнить на слух исходную модель и адаптер v3, обученный только на данных со свободными лицензиями. Голос в обоих случаях один и тот же: <code>turgenev</code>.</p>
+    <p class="muted">Примеры отобраны случайно, а не лучшие. Рядом с каждой записью стоит вердикт автоматического детектора. По одному слову он ошибается примерно в каждом десятом случае, поэтому ухо здесь главнее.</p>
+  </header>
+
+  <div class="stats" aria-label="Итоги теста управляемости">
+    <div class="stat"><b>21%</b><span>исходная модель следует знаку на ненормативном слоге</span></div>
+    <div class="stat hl"><b>49%</b><span>адаптер v3, p = 0.002</span></div>
+    <div class="stat"><b>59%</b><span>ESpeech, источник данных v3, тот же детектор</span></div>
+    <div class="stat"><b>0.983</b><span>сходство голоса с образцом (исходная 0.985)</span></div>
+  </div>
+
+  <section id="paragraph">
+    <h2>Абзац целиком</h2>
+    <p class="muted">Трудные слова и омографы подряд. Один голос и один сид, весь абзац озвучен одним проходом, как это делает сервер. Ниже текст в том виде, в каком его получил адаптер со знаками: синим отмечено, куда RUAccent поставил ударение.</p>
+    <p class="para" id="para-text"></p>
+    <div class="takes" id="para-takes"></div>
+    <p class="note">Все три записи Whisper распознаёт без единой ошибки. Автоматический детектор ударений разницы между вариантами здесь не различает: его шум (10–12% ложных тревог) больше самой разницы. Судить стоит на слух.</p>
+  </section>
+
+  <section id="control">
+    <h2>Знак против привычки</h2>
+    <p class="muted">Знак стоит на слоге, где ударение не нормативно. Исходная модель знак не понимает и говорит по-своему. Адаптер должен сказать так, как указывает знак, даже если это звучит неправильно.</p>
+    <div class="list" id="control-list"></div>
+  </section>
+
+  <section id="hard">
+    <h2>Трудные слова</h2>
+    <p class="muted">Слова, которые исходная модель произнесла не так, как ждёт RUAccent, при двух разных сидах. Здесь они озвучены заново третьим сидом: у исходной модели без знаков, у адаптера со знаками по RUAccent. Детектор ошибается и на части самих этих слов: для Silero с верной разметкой он поднимает тревогу в 36% случаев.</p>
+    <div class="list" id="hard-list"></div>
+  </section>
+
+  <p class="note">Подробности, методика и все числа: <code>experiments/23-stress-finetune/README.md</code> в репозитории voicy.</p>
+</main>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("data").textContent);
+  var ACUTE = "́";
+
+  function esc(s) {
+    return s.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+  }
+  function wordHtml(w) {
+    var i = w.indexOf(ACUTE);
+    if (i < 1) return esc(w);
+    return esc(w.slice(0, i - 1)) + '<span class="acc">' + esc(w.slice(i - 1, i + 1)) + "</span>" + esc(w.slice(i + 1));
+  }
+  function syl(k) { return (k + 1) + "-й слог"; }
+
+  function take(label, audio, chipClass, chipText, id) {
+    return '<div class="take"><label for="' + id + '">' + label + '</label><div class="line">' +
+      '<audio id="' + id + '" controls preload="none" src="' + audio + '"></audio>' +
+      (chipText ? '<span class="chip ' + chipClass + '">' + chipText + "</span>" : "") + "</div></div>";
+  }
+  function controlChip(det, k) {
+    if (det === null || det === undefined) return ["na", "слово не распознано"];
+    return det === k ? ["ok", "по знаку, " + syl(det)] : ["miss", "не по знаку, " + syl(det)];
+  }
+  function hardChip(v) {
+    if (!v) return ["na", "слово не распознано"];
+    return v.bad ? ["miss", "не там, " + syl(v.best)] : ["ok", "как в RUAccent"];
+  }
+
+  var P = data.paragraph;
+  if (P) {
+    document.getElementById("para-text").innerHTML = P.marked.split(" ").map(wordHtml).join(" ");
+    var names = [["base", "Исходная"], ["v3-plain", "v3 без знаков"], ["v3-marked", "v3 со знаками"]];
+    document.getElementById("para-takes").innerHTML = names.map(function (n, i) {
+      return take(n[1], P.audio[n[0]], "", "", "p" + i);
+    }).join("");
+  }
+
+  var c = document.getElementById("control-list");
+  data.control.forEach(function (x, n) {
+    var b = controlChip(x.base.det, x.k), v = controlChip(x.v3.det, x.k);
+    c.insertAdjacentHTML("beforeend",
+      '<div class="row"><div><div class="word">' + wordHtml(x.target) + "</div>" +
+      '<div class="meta"><span>знак: ' + syl(x.k) + '</span><span>норма: ' + wordHtml(x.normal) + "</span></div>" +
+      '<div class="sent">' + esc(x.sentence.replace(new RegExp(ACUTE, "g"), "")) + "</div></div>" +
+      '<div class="takes">' + take("Исходная", x.base.audio, b[0], b[1], "c" + n + "b") +
+      take("Адаптер v3", x.v3.audio, v[0], v[1], "c" + n + "v") + "</div></div>");
+  });
+
+  var h = document.getElementById("hard-list");
+  data.hard.forEach(function (x, n) {
+    var b = hardChip(x.base.v), v = hardChip(x.v3.v);
+    h.insertAdjacentHTML("beforeend",
+      '<div class="row"><div><div class="word">' + wordHtml(x.expected) + "</div>" +
+      '<div class="meta"><span>RUAccent: ' + syl(x.k) + "</span></div>" +
+      '<div class="sent">' + esc(x.sentence) + "</div></div>" +
+      '<div class="takes">' + take("Исходная", x.base.audio, b[0], b[1], "h" + n + "b") +
+      take("Адаптер v3", x.v3.audio, v[0], v[1], "h" + n + "v") + "</div></div>");
+  });
+
+  // одна запись за раз: запуск новой останавливает остальные
+  document.addEventListener("play", function (e) {
+    document.querySelectorAll("audio").forEach(function (a) { if (a !== e.target) a.pause(); });
+  }, true);
+})();
+</script>

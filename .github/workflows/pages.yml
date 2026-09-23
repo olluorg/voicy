@@ -35,17 +35,20 @@ jobs:
         run: |
           python3 - <<'PY'
           import pathlib, re, sys
-          html = pathlib.Path("_site/index.html").read_text(encoding="utf-8")
-          srcs = re.findall(r'src="(assets/audio/[^"]+)"', html)
-          missing = [s for s in srcs if not (pathlib.Path("_site") / s).exists()]
-          print(f"ссылок на аудио: {len(srcs)}, битых: {len(missing)}")
-          if missing:
-              print("\n".join(missing[:10])); sys.exit(1)
-          links = re.findall(r'href="(docs/[^"]+)"', html)
-          broken = [l for l in links if not (pathlib.Path("_site") / l).exists()]
-          print(f"ссылок на документы: {len(links)}, битых: {len(broken)}")
-          if broken:
-              print("\n".join(broken)); sys.exit(1)
+          # все страницы сайта: пути к звуку ищутся и в атрибутах, и в данных для скриптов
+          # (страница stress/ подставляет звук из JSON), и проверяются от каталога страницы
+          bad, n_audio, n_docs = [], 0, 0
+          for page in pathlib.Path("_site").rglob("*.html"):
+              if "docs" in page.relative_to("_site").parts:
+                  continue
+              html = page.read_text(encoding="utf-8")
+              audio = set(re.findall(r'((?:\.\./)*assets/audio/[^"\\\s]+\.opus)', html))
+              docs = set(re.findall(r'href="((?:\.\./)*docs/[^"#]+)"', html))
+              n_audio += len(audio); n_docs += len(docs)
+              bad += [f"{page}: {p}" for p in sorted(audio | docs) if not (page.parent / p).exists()]
+          print(f"ссылок на аудио: {n_audio}, на документы: {n_docs}, битых: {len(bad)}")
+          if bad:
+              print("\n".join(bad[:20])); sys.exit(1)
           PY
 
       - uses: actions/configure-pages@v5

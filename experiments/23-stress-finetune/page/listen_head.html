@@ -1,0 +1,62 @@
+<title>Ударение по знаку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=PT+Serif:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --ink:#17201D; --muted:#5B6763; --line:#D8DEDB;
+  --accent:#2D5BA8; --ok:#1F7A55; --miss:#A4453A; --na:#7A8480;
+  --ok-bg:#E3F1EA; --miss-bg:#F6E5E2; --na-bg:#ECEFEE;
+  --serif:"PT Serif", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111614; --surface:#19201D; --ink:#E3E9E6; --muted:#9AA6A1; --line:#2A3430;
+    --accent:#86A8E6; --ok:#5CC08E; --miss:#E07A6D; --na:#8C9692;
+    --ok-bg:#16301F; --miss-bg:#361D19; --na-bg:#212926;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111614; --surface:#19201D; --ink:#E3E9E6; --muted:#9AA6A1; --line:#2A3430;
+  --accent:#86A8E6; --ok:#5CC08E; --miss:#E07A6D; --na:#8C9692;
+  --ok-bg:#16301F; --miss-bg:#361D19; --na-bg:#212926;
+}
+body{background:var(--bg); color:var(--ink); font:15px/1.55 var(--sans); padding:0 16px;}
+.wrap{max-width:880px; margin:0 auto; padding-block:40px 64px; display:grid; gap:40px;}
+h1{font:700 clamp(28px,5vw,40px)/1.15 var(--serif); margin:0; text-wrap:balance;}
+h2{font:700 22px/1.25 var(--serif); margin:0; text-wrap:balance;}
+p{margin:0; max-width:65ch;}
+.lede{display:grid; gap:14px;}
+.muted{color:var(--muted);}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+.stat{background:var(--surface); padding:14px 16px; display:grid; gap:2px;}
+.stat b{font:500 26px/1.1 var(--mono); font-variant-numeric:tabular-nums;}
+.stat span{font-size:13px; color:var(--muted);}
+.stat.hl b{color:var(--accent);}
+section{display:grid; gap:16px;}
+.list{display:grid; gap:0; border-top:1px solid var(--line);}
+.row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:16px 24px; padding:18px 0; border-bottom:1px solid var(--line); align-items:start;}
+@media (max-width:640px){ .row{grid-template-columns:1fr;} }
+.word{font:400 26px/1.2 var(--serif);}
+.word .acc{color:var(--accent);}
+.meta{font:13px/1.5 var(--mono); color:var(--muted); display:grid; gap:2px; margin-top:6px;}
+.sent{font-size:14px; color:var(--muted); margin-top:6px;}
+.takes{display:grid; gap:10px;}
+.take{display:grid; grid-template-columns:118px minmax(0,1fr); gap:6px 12px; align-items:center;}
+@media (max-width:420px){ .take{grid-template-columns:1fr;} }
+.take label{font:500 12px/1.3 var(--sans); letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
+.take .line{display:flex; flex-wrap:wrap; gap:8px; align-items:center; min-width:0;}
+audio{width:100%; max-width:320px; height:36px;}
+.chip{font:12px/1 var(--mono); padding:5px 8px; border-radius:999px; white-space:nowrap;}
+.chip.ok{background:var(--ok-bg); color:var(--ok);}
+.chip.miss{background:var(--miss-bg); color:var(--miss);}
+.chip.na{background:var(--na-bg); color:var(--na);}
+.note{font-size:14px; color:var(--muted); border-left:2px solid var(--line); padding-left:12px;}
+code{font:13px var(--mono);}
+.para{font:400 20px/1.6 var(--serif); max-width:65ch;}
+.para .acc{color:var(--accent);}
+</style>
