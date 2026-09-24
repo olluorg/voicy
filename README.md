@@ -193,6 +193,7 @@ cargo build --release --manifest-path rust\Cargo.toml
 ```powershell
 voicy.exe setup            @rem библиотеки и модели, 7.8 ГБ
 voicy.exe up               @rem поднять и прогреть
+voicy.exe update           @rem обновиться до последнего выпуска
 voicy.exe say @текст.txt out.wav
 ```
 

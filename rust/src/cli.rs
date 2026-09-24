@@ -406,11 +406,6 @@ fn run_dir() -> PathBuf {
     native::cache_dir().join("run")
 }
 
-/// The server `up` started, if it is still running.
-pub fn server_pid() -> Option<u32> {
-    read_pid()
-}
-
 fn read_pid() -> Option<u32> {
     let pid: u32 = std::fs::read_to_string(run_dir().join("server.pid")).ok()?.trim().parse().ok()?;
     alive(pid).then_some(pid)

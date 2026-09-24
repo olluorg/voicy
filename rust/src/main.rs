@@ -18,6 +18,7 @@ mod encode;
 mod engines;
 mod errors;
 mod host;
+mod instance;
 mod jobs;
 mod live;
 mod native;
@@ -26,6 +27,7 @@ mod speak;
 mod tempo;
 mod textprep;
 mod transcripts;
+mod update;
 mod voices;
 mod webhooks;
 
@@ -222,6 +224,15 @@ enum Command {
         #[arg(long, short)]
         yes: bool,
     },
+    /// Обновить voicy до последнего выпуска с GitHub
+    Update {
+        /// не спрашивать
+        #[arg(long, short)]
+        yes: bool,
+        /// только сказать, есть ли новая версия
+        #[arg(long)]
+        check: bool,
+    },
     /// Родное распознавание faster-whisper: задания из JSON [{"file", "language", "prompt",
     /// "hotwords", "word_timestamps", "live", "draft"}], по строке JSON на задание — сверка с Python
     #[command(hide = true)]
@@ -347,7 +358,27 @@ fn router(app: Arc<App>) -> Router {
         .with_state(app)
 }
 
+/// The server, once it holds the one-per-machine lock (instance.rs).
 async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<PathBuf>) -> anyhow::Result<()> {
+    let _lock = match instance::Instance::acquire("сервер", Some(port))? {
+        Ok(lock) => lock,
+        Err(h) => anyhow::bail!("{h}; второй не запускаю. Остановить тот: voicy down или закрыть его окно"),
+    };
+    serve_locked(host, port, home, python).await
+}
+
+/// Setup changes files the server holds open: not while it runs.
+async fn setup_locked(what: &str, yes: bool) -> anyhow::Result<()> {
+    let _lock = match instance::Instance::acquire("установка", None)? {
+        Ok(lock) => lock,
+        Err(h) => anyhow::bail!(
+            "{h}. Установка меняет файлы, которые он держит открытыми, — остановите его \
+             (voicy down или закройте его окно) и запустите voicy setup снова"),
+    };
+    setup::run(what, yes).await
+}
+
+async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Option<PathBuf>) -> anyhow::Result<()> {
     let home = find_home(home)?;
     let server_dir = home.as_ref().map(|h| h.join("server"));
     let python = find_python(home.as_deref().unwrap_or(Path::new(".")), python);
@@ -516,20 +547,67 @@ fn launched_by_click() -> bool {
     false
 }
 
-/// Дружелюбный путь: без команд и без чтения справки.
-async fn welcome() -> anyhow::Result<()> {
+/// Дружелюбный путь: без команд и без чтения справки. Ok(true) — держать окно
+/// открытым, пока человек не прочтёт; Ok(false) — закрыть: сказать больше нечего.
+async fn welcome() -> anyhow::Result<bool> {
     eprintln!("voicy {}\n", env!("CARGO_PKG_VERSION"));
+    let url = format!("http://127.0.0.1:{}", DEFAULT_PORT);
+    // второе окно не запускает второй voicy, а показывает первый
+    if let Some(h) = instance::running() {
+        let url = h.port.map_or(url, |p| format!("http://127.0.0.1:{p}"));
+        if h.port.is_some() {
+            eprintln!("{h}. Открываю его консоль: {url}");
+            open_when_ready(url).await;
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            return Ok(false);
+        }
+        eprintln!("{h} — дождитесь, пока он закончит, или закройте его окно.");
+        return Ok(true);
+    }
+    if let Some(done) = offer_update().await {
+        return done;
+    }
+    let lock = match instance::Instance::acquire("запуск", None)? {
+        Ok(lock) => lock,
+        Err(h) => anyhow::bail!("{h}"), // успел кто-то между проверкой и захватом
+    };
     // не «есть ли каталог», а всё ли на месте: оборванная закачка оставляет каталоги
     if !setup::missing().is_empty() {
         eprintln!("Первый запуск: нужны библиотеки и модели, это гигабайты и не быстро.\n");
+        lock.describe("установка", None);
         setup::run("all", false).await?;
         eprintln!();
     }
-    let url = format!("http://127.0.0.1:{}", DEFAULT_PORT);
+    lock.describe("сервер", Some(DEFAULT_PORT));
     tokio::spawn(open_when_ready(url.clone()));
     eprintln!("Поднимаю сервер. Консоль откроется в браузере: {url}");
     eprintln!("Чтобы остановить — закройте это окно.\n");
-    serve("127.0.0.1".into(), DEFAULT_PORT, None, None).await
+    serve_locked("127.0.0.1".into(), DEFAULT_PORT, None, None).await.map(|_| true)
+}
+
+/// Предложить новую версию, если она вышла. Some — обновились и новая версия
+/// отработала в этом же окне; None — работаем дальше этой. Сеть недоступна —
+/// молча дальше: обновление не повод не запуститься.
+async fn offer_update() -> Option<anyhow::Result<bool>> {
+    let http = setup::client().ok()?;
+    let rel = tokio::time::timeout(std::time::Duration::from_secs(5), update::latest(&http)).await.ok()?.ok()?;
+    let exe = std::env::current_exe().ok()?;
+    if !rel.is_newer() {
+        return None;
+    }
+    update::describe(&rel, &exe);
+    if !setup::ask("Обновить сейчас?").unwrap_or(false) {
+        eprintln!();
+        return None;
+    }
+    if let Err(e) = update::install(&http, &rel, &exe).await {
+        eprintln!("Не обновилось: {e:#}\nПродолжаю с этой версией.\n");
+        return None;
+    }
+    // новая версия — в этом же окне; VOICY_WELCOME, потому что окно теперь делят двое
+    eprintln!();
+    let status = std::process::Command::new(&exe).env("VOICY_WELCOME", "1").status();
+    Some(status.map(|_| false).map_err(Into::into))
 }
 
 /// Открыть консоль в браузере, когда сервер начнёт отвечать.
@@ -559,19 +637,27 @@ fn wait_for_enter() {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     allow_two_openmp();
-    if std::env::args_os().len() == 1 && launched_by_click() {
+    update::cleanup();
+    let relaunched = std::env::var_os("VOICY_WELCOME").is_some();
+    if relaunched {
+        unsafe { std::env::remove_var("VOICY_WELCOME") };
+    }
+    if std::env::args_os().len() == 1 && (relaunched || launched_by_click()) {
         let done = welcome().await;
         if let Err(e) = &done {
             eprintln!("\nНе получилось: {e:#}");
         }
-        wait_for_enter();
-        return done;
+        if !matches!(done, Ok(false)) {
+            wait_for_enter();
+        }
+        return done.map(|_| ());
     }
     let cli = Cli::parse();
     let url = cli.url.clone().unwrap_or_else(cli::default_url);
     match cli.command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
-        Command::Setup { what, yes } => setup::run(&what, yes).await,
+        Command::Setup { what, yes } => setup_locked(&what, yes).await,
+        Command::Update { yes, check } => update::run(yes, check).await,
         Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
             cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
         Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>

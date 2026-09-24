@@ -6,6 +6,7 @@
 ```
 voicy setup          # библиотеки и модели в кэш, 7.8 ГБ, один раз
 voicy up             # поднять и прогреть
+voicy update         # обновиться до последнего выпуска
 voicy say "Проверка." out.opus
 voicy hear запись.opus
 ```

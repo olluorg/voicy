@@ -213,20 +213,44 @@ async fn size_of(http: &reqwest::Client, url: &str) -> Option<u64> {
 
 /// Asks before gigabytes go over the wire. Without a terminal there is no one
 /// to ask, and agreement has to come with the command itself.
-fn confirm(yes: bool) -> anyhow::Result<()> {
+pub fn confirm(yes: bool, command: &str) -> anyhow::Result<()> {
     if yes {
         return Ok(());
     }
     if !std::io::stdin().is_terminal() {
-        bail!("скачивание не подтверждено: здесь нет терминала, чтобы спросить; voicy setup --yes");
+        bail!("скачивание не подтверждено: здесь нет терминала, чтобы спросить; {command} --yes");
     }
-    eprint!("setup: скачать? [Y/n] ");
+    if !ask("скачать?")? {
+        bail!("скачивание отменено, ничего не скачано");
+    }
+    Ok(())
+}
+
+/// A yes-or-no question in the terminal; Enter means yes.
+pub fn ask(question: &str) -> anyhow::Result<bool> {
+    eprint!("{question} [Y/n] ");
     let mut answer = String::new();
     std::io::stdin().read_line(&mut answer)?;
-    match answer.trim().to_lowercase().as_str() {
-        "" | "y" | "yes" | "д" | "да" => Ok(()),
-        _ => bail!("скачивание отменено, ничего не скачано"),
-    }
+    Ok(matches!(answer.trim().to_lowercase().as_str(), "" | "y" | "yes" | "д" | "да"))
+}
+
+/// The client for everything fetched from outside. read_timeout: a hung
+/// connection has to become an error and a resumed download, not a wait
+/// without end; proxies come from the environment and the system settings,
+/// as the browser's do.
+pub fn client() -> anyhow::Result<reqwest::Client> {
+    Ok(reqwest::Client::builder()
+        .user_agent(concat!("voicy/", env!("CARGO_PKG_VERSION")))
+        .connect_timeout(Duration::from_secs(30))
+        .read_timeout(Duration::from_secs(60))
+        .build()?)
+}
+
+/// One file, with the same progress, retries and resuming as setup's own.
+pub async fn download(http: &reqwest::Client, url: &str, to: &Path, size: Option<u64>) -> anyhow::Result<()> {
+    let dir = to.parent().unwrap_or(Path::new("."));
+    let plan = Plan { items: vec![Download { url: url.into(), to: to.into(), dir: dir.into(), size }] };
+    plan.fetch_all(http).await
 }
 
 /// Progress of the whole download: in a terminal one line redrawn in place,
@@ -1011,22 +1035,11 @@ async fn models(m: Models) -> anyhow::Result<()> {
 pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
     let tmp = native::cache_dir().join("downloads");
     fs::create_dir_all(&tmp)?;
-    // read_timeout: зависшее соединение должно стать ошибкой и докачкой, а не вечным ожиданием;
-    // прокси — из переменных среды и системных настроек, как у браузера
-    let http = reqwest::Client::builder()
-        .user_agent("voicy-setup")
-        .connect_timeout(Duration::from_secs(30))
-        .read_timeout(Duration::from_secs(60))
-        .build()?;
+    let http = client()?;
     say("смотрю, чего не хватает");
     let mut plan = Plan::default();
     // setup libs — поставить заново в любом случае; иначе — только если их нет или они не те
     let libs_plan = if what == "libs" || (what == "all" && libs_needed()) {
-        // сервер, поднятый voicy up, держит библиотеки открытыми — лучше сказать до скачивания
-        if let Some(pid) = crate::cli::server_pid() {
-            bail!("библиотеки нужно поставить заново, а сервер voicy (процесс {pid}) держит их открытыми.\n\
-                   Остановите его — voicy down — и запустите voicy setup снова.");
-        }
         Some(plan_libs(&http, &mut plan, &tmp).await?)
     } else {
         if what == "all" {
@@ -1040,7 +1053,7 @@ pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
     } else {
         plan.measure(&http).await;
         plan.show(libs_plan.as_ref().map(|_| native::lib_dir_path()).as_deref());
-        confirm(yes)?;
+        confirm(yes, "voicy setup")?;
         plan.fetch_all(&http).await?;
     }
 

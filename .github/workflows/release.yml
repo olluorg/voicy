@@ -84,6 +84,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # checkout кладёт тег лёгким, и %(contents) отдал бы сообщение коммита, а не тега
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
           { git tag -l --format='%(contents)' "$GITHUB_REF_NAME"; echo; cat .github/release-notes.md; } > body.md
           gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
             --title "voicy $GITHUB_REF_NAME" --notes-file body.md --verify-tag \
