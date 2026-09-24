@@ -74,7 +74,7 @@ enum Command {
     Serve {
         #[arg(long, env = "VOICY_HOST", default_value = "127.0.0.1")]
         host: String,
-        #[arg(long, env = "VOICY_PORT", default_value_t = 8080)]
+        #[arg(long, env = "VOICY_PORT", default_value_t = DEFAULT_PORT)]
         port: u16,
         /// Каталог репозитория (там server/ и data/); по умолчанию ищется от текущего и от бинарника
         #[arg(long, env = "VOICY_HOME")]
@@ -462,9 +462,81 @@ fn allow_two_openmp() {
     }
 }
 
+/// Порт по умолчанию — тот же, что у флага --port и у Python-сервера.
+const DEFAULT_PORT: u16 = 8080;
+
+/// Запуск двойным щелчком из проводника: аргументов нет, консоль создана для
+/// нас одних, и подсказка clap мелькнула бы и исчезла вместе с окном. Поэтому
+/// делаем то, чего человек и хотел, — ставим, чего не хватает, поднимаем сервер
+/// и открываем консоль в браузере, а окно держим открытым.
+#[cfg(windows)]
+fn launched_by_click() -> bool {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetConsoleProcessList(list: *mut u32, count: u32) -> u32;
+    }
+    let mut list = [0u32; 4];
+    // в списке процессов нашей консоли только мы — значит, окно создано под нас
+    unsafe { GetConsoleProcessList(list.as_mut_ptr(), list.len() as u32) == 1 }
+}
+
+#[cfg(not(windows))]
+fn launched_by_click() -> bool {
+    false
+}
+
+/// Дружелюбный путь: без команд и без чтения справки.
+async fn welcome() -> anyhow::Result<()> {
+    eprintln!("voicy {}\n", env!("CARGO_PKG_VERSION"));
+    let needs_setup = native::lib_dir().is_err()
+        || !native::cache_dir().join("models").join("whisper").exists();
+    if needs_setup {
+        eprintln!("Первый запуск: скачиваю библиотеки и модели, это гигабайты и не быстро.\n");
+        setup::run("all").await?;
+        eprintln!();
+    }
+    let url = format!("http://127.0.0.1:{}", DEFAULT_PORT);
+    tokio::spawn(open_when_ready(url.clone()));
+    eprintln!("Поднимаю сервер. Консоль откроется в браузере: {url}");
+    eprintln!("Чтобы остановить — закройте это окно.\n");
+    serve("127.0.0.1".into(), DEFAULT_PORT, None, None).await
+}
+
+/// Открыть консоль в браузере, когда сервер начнёт отвечать.
+async fn open_when_ready(url: String) {
+    let http = reqwest::Client::builder().no_proxy().build().unwrap_or_default();
+    for _ in 0..600 {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        if http.get(format!("{url}/health")).send().await.is_ok_and(|r| r.status().is_success()) {
+            #[cfg(windows)]
+            let _ = std::process::Command::new("cmd").args(["/c", "start", "", &url]).spawn();
+            #[cfg(target_os = "macos")]
+            let _ = std::process::Command::new("open").arg(&url).spawn();
+            #[cfg(all(unix, not(target_os = "macos")))]
+            let _ = std::process::Command::new("xdg-open").arg(&url).spawn();
+            return;
+        }
+    }
+}
+
+/// Окно, созданное проводником, закроется вместе с процессом: чтобы человек
+/// увидел, что случилось, дожидаемся Enter.
+fn wait_for_enter() {
+    eprintln!("\nНажмите Enter, чтобы закрыть окно.");
+    let _ = std::io::stdin().read_line(&mut String::new());
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     allow_two_openmp();
+    if std::env::args_os().len() == 1 && launched_by_click() {
+        let done = welcome().await;
+        if let Err(e) = &done {
+            eprintln!("\nНе получилось: {e:#}");
+        }
+        wait_for_enter();
+        return done;
+    }
     let cli = Cli::parse();
     let url = cli.url.clone().unwrap_or_else(cli::default_url);
     match cli.command {

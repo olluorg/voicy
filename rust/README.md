@@ -6,6 +6,10 @@
 виде, идёт через Python-движки в дочернем процессе. Как и почему —
 [ADR 0022](../docs/adr/0022-rust-migration-and-hardware.md).
 
+Двойной щелчок по файлу в проводнике тоже работает: без аргументов бинарник
+доставит, чего не хватает, поднимет сервер и откроет консоль в браузере, —
+окно при этом не закроется, пока его не закроют.
+
 ```bash
 cargo build --release                         # rust/target/release/voicy
 target/release/voicy setup                    # библиотеки и модели в ~/.cache/voicy (один раз)
@@ -40,6 +44,7 @@ say hear job jobs cancel contexts voices add-voice prepare up down status warm
 | | по умолчанию | как выбрать другое |
 |---|---|---|
 | форматы звука | `wav`, `pcm`, `opus`, `mp3`, `flac` и темп — в процессе (libopus, LAME, flacenc, свой WSOLA); `aac` — системный ffmpeg | — |
+| чтение записей | контейнеры разбирает symphonia, opus декодирует libopus: wav, mp3, flac, ogg, webm, mp4 — без ffmpeg | — |
 | синтез | Qwen3-TTS на llama.cpp + ONNX Runtime, talker q5_k | `TTS_GGUF_TALKER=q8_0\|f16`; `TTS_ENGINE=qwen3-tts` — PyTorch в Python |
 | распознавание | faster-whisper: CTranslate2 и его логика на Rust (experiments/22) | `STT_ENGINE=whisper.cpp` — хуже на терминах (experiments/21) |
 | конец реплики | Smart Turn на ONNX Runtime | `TURN_ENGINE=…` — движок Python |
