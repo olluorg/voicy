@@ -43,7 +43,9 @@ struct Platform {
     whisper_asset: &'static str,
     /// Колёса PyPI: чем помечены под эту платформу и что из них берётся.
     wheels: &'static [&'static str],
-    wheel_tag: &'static str,
+    /// Все эти куски должны быть в имени колеса: одного «manylinux» мало —
+    /// под ним лежат и x86-64, и aarch64, и первым в списке PyPI бывает не тот.
+    wheel_tag: &'static [&'static str],
     wanted: &'static [&'static str],
 }
 
@@ -55,7 +57,7 @@ const LINUX_X64_CUDA13: Platform = Platform {
     llama_assets: &["llama-{v}-bin-ubuntu-cuda-13.4-x64.tar.gz", "cudart-llama-{v}-bin-ubuntu-cuda-13.4-x64.tar.gz"],
     whisper_asset: "whisper-bin-ubuntu-x64.tar.gz",
     wheels: WHEELS,
-    wheel_tag: "manylinux",
+    wheel_tag: &["manylinux", "x86_64"],
     wanted: &["libonnxruntime.so", "libonnxruntime_providers_cuda.so", "libonnxruntime_providers_shared.so", "libcudnn",
               "libcurand.so", "libcufft.so", "libnvJitLink.so", "libnvrtc", "libctranslate2", "libgomp",
               "libcublas.so.12", "libcublasLt.so.12"],
@@ -65,7 +67,7 @@ const WINDOWS_X64_CUDA13: Platform = Platform {
     llama_assets: &["llama-{v}-bin-win-cuda-13.4-x64.zip", "cudart-llama-bin-win-cuda-13.4-x64.zip"],
     whisper_asset: "whisper-bin-x64.zip",
     wheels: WHEELS,
-    wheel_tag: "win_amd64",
+    wheel_tag: &["win_amd64"],
     // cudnn64_9.dll есть и у CTranslate2 (под CUDA 12), и в колесе cuDNN под CUDA 13;
     // имя одно, и в процессе останется тот, кто загрузился первым — cuDNN берём у CUDA 13.
     wanted: &["onnxruntime.dll", "onnxruntime_providers_cuda.dll", "onnxruntime_providers_shared.dll", "cudnn",
@@ -146,7 +148,7 @@ async fn cached(url: &str, dir: &Path) -> anyhow::Result<PathBuf> {
 }
 
 /// The manylinux x86-64 wheel of `name[==version]`, as PyPI's JSON index gives it.
-async fn wheel_url(spec: &str, tag: &str) -> anyhow::Result<String> {
+async fn wheel_url(spec: &str, tag: &[&str]) -> anyhow::Result<String> {
     let (name, version) = spec.split_once("==").map_or((spec, ""), |(n, v)| (n, v));
     let url = if version.is_empty() {
         format!("https://pypi.org/pypi/{name}/json")
@@ -159,11 +161,11 @@ async fn wheel_url(spec: &str, tag: &str) -> anyhow::Result<String> {
         .iter()
         .filter_map(|f| {
             let n = f["filename"].as_str()?;
-            let ok = n.ends_with(".whl") && n.contains(tag) && (n.contains("cp312") || n.contains("py3-none"));
+            let ok = n.ends_with(".whl") && tag.iter().all(|t| n.contains(t)) && (n.contains("cp312") || n.contains("py3-none"));
             ok.then(|| f["url"].as_str().unwrap_or_default().to_string())
         })
         .next()
-        .with_context(|| format!("no {tag} wheel for {spec}"))
+        .with_context(|| format!("no {} wheel for {spec}", tag.join("+")))
 }
 
 // ------------------------------------------------------------------ распаковка
@@ -460,7 +462,7 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
     let vad = models.join("vad");
     if !vad.join("silero_vad_v6.onnx").exists() {
         fs::create_dir_all(&vad)?;
-        let url = wheel_url(&format!("faster-whisper=={FASTER_WHISPER}"), "py3-none").await.or_else(|_| {
+        let url = wheel_url(&format!("faster-whisper=={FASTER_WHISPER}"), &["py3-none"]).await.or_else(|_| {
             Ok::<String, anyhow::Error>(format!(
                 "https://files.pythonhosted.org/packages/py3/f/faster-whisper/faster_whisper-{FASTER_WHISPER}-py3-none-any.whl"
             ))
