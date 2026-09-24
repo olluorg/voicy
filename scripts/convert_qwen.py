@@ -66,7 +66,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Qwen3-TTS → GGUF и ONNX")
     ap.add_argument("--weights", type=Path, help="свои веса той же формы вместо официальных")
     ap.add_argument("--name", default="qwen3-tts-12hz-1.7b-base-gguf", help="каталог результата в моделях voicy")
+    ap.add_argument("--talkers", default="q5_k", help="варианты говорящей части через запятую: q5_k,q8_0,f16")
     a = ap.parse_args()
+    talkers = [t.strip().lower() for t in a.talkers.split(",") if t.strip()]
 
     out = MODELS / a.name
     if (out / "qwen3_tts_talker.q5_k.gguf").exists():
@@ -91,7 +93,7 @@ def main() -> None:
 
         src = repo / "model-base"
         env = {**os.environ, "LD_LIBRARY_PATH": str(LIB)}
-        for name, kind in (("talker", "Q5_K"), ("predictor", "Q8_0")):
+        for name, kind in [("talker", t.upper()) for t in talkers if t != "f16"] + [("predictor", "Q8_0")]:
             say(f"квантование: {name} → {kind}")
             subprocess.run([str(quantize), str(src / f"qwen3_tts_{name}.f16.gguf"),
                             str(src / f"qwen3_tts_{name}.{kind.lower()}.gguf"), kind], env=env, check=True,
@@ -104,7 +106,9 @@ def main() -> None:
         onnx.save(m16, str(src / "qwen3_tts_decoder.fp16.onnx"))
 
         out.mkdir(parents=True, exist_ok=True)
-        for name in KEEP:
+        keep = [n for n in KEEP if not n.startswith("qwen3_tts_talker.")]
+        keep += [f"qwen3_tts_talker.{t}.gguf" for t in talkers]
+        for name in keep:
             shutil.copy(src / name, out / name)
         shutil.copytree(src / "embeddings", out / "embeddings", dirs_exist_ok=True)
     say(f"готово — {out}")

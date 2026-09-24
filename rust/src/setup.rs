@@ -30,6 +30,8 @@ const WHISPER_MODEL: &str = "mobiuslabsgmbh/faster-whisper-large-v3-turbo";
 /// Qwen3-TTS в GGUF и ONNX: те же официальные веса, переведённые
 /// scripts/convert_qwen.py. Свой репозиторий — VOICY_TTS_GGUF_REPO.
 const QWEN_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-base-gguf";
+/// По умолчанию — та же модель, дообученная слушаться знака ударения (docs/adr/0023).
+const QWEN_STRESS_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-ru-stress-gguf";
 const TURN_MODEL: &str = "pipecat-ai/smart-turn-v3";
 /// Silero — из колеса faster-whisper: тот же файл, что слышит движок Python.
 const FASTER_WHISPER: &str = "1.2.1";
@@ -471,12 +473,15 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
         unzip(&wheel, &vad, |n| n == "silero_vad_v6.onnx")?;
     }
 
-    // Qwen3-TTS: говорящая часть в том варианте, который попросили (q5_k по умолчанию)
-    let repo = std::env::var("VOICY_TTS_GGUF_REPO").unwrap_or_else(|_| QWEN_MODEL.into());
+    // Qwen3-TTS: по умолчанию — модель, понимающая знаки ударения; исходные веса —
+    // VOICY_TTS_GGUF_REPO=sknyazev/qwen3-tts-12hz-1.7b-base-gguf. Говорящая часть —
+    // в том варианте, который попросили (q5_k по умолчанию)
+    let repo = std::env::var("VOICY_TTS_GGUF_REPO").unwrap_or_else(|_| QWEN_STRESS_MODEL.into());
+    let stress = repo == QWEN_STRESS_MODEL;
     let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
-    let gguf = std::env::var_os("VOICY_TTS_GGUF_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| models.join("qwen3-tts-12hz-1.7b-base-gguf"));
+    let gguf = std::env::var_os("VOICY_TTS_GGUF_DIR").map(PathBuf::from).unwrap_or_else(|| {
+        models.join(if stress { crate::engines::TTS_STRESS_DIR } else { crate::engines::TTS_BASE_DIR })
+    });
     let mut files = vec![
         "tokenizer.json".to_string(),
         format!("qwen3_tts_talker.{variant}.gguf"),
@@ -491,6 +496,9 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
         "embeddings/text_embedding_projected.npy".into(),
     ];
     files.extend((0..16).map(|i| format!("embeddings/codec_embedding_{i}.npy")));
+    if stress {
+        files.push(crate::engines::STRESS_MARKER.into());
+    }
     fs::create_dir_all(gguf.join("embeddings"))?;
     for f in files {
         hf(&repo, &f, &gguf).await?;
@@ -511,6 +519,11 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
         say("собираю словарь ударений (3.2 млн словоформ, один раз)");
         let dir = accent.clone();
         tokio::task::spawn_blocking(move || native::accent::build_dictionary(&dir)).await??;
+    }
+    let old = models.join(crate::engines::TTS_BASE_DIR);
+    if stress && old.is_dir() && std::env::var_os("VOICY_TTS_GGUF_DIR").is_none() {
+        say(format!("прежняя модель без ударений больше не используется, её можно удалить: {}", old.display()));
+        say(format!("  вернуться к ней: VOICY_TTS_GGUF_REPO={QWEN_MODEL} voicy setup models"));
     }
     say(format!("модели — {}", models.display()));
     Ok(())

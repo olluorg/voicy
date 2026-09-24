@@ -25,6 +25,10 @@ docker compose up -d
 - Форматы `opus`, `mp3`, `wav`, `flac`, `aac`, `pcm`. Темп 0.8–1.2 меняется
   растяжением готового звука: так разборчивость не падает.
 - Длинный текст ставится заданием, для живого разговора есть синтез потоком.
+- Ударения по знаку: сервер размечает текст (RUAccent) и ставит `U+0301` после
+  ударной гласной, а модель, дообученная на этом знаке, читает «сто́ит» и «стои́т»
+  так, как размечено. [Послушать](https://olluorg.github.io/voicy/stress/),
+  [ADR 0023](docs/adr/0023-stress-marks-by-lora.md).
 - Инженерный текст: словарь произношений на 79 терминов и режим, который убирает
   запятые внутри коротких фраз, — модель читает запятую как повод остановиться.
 
@@ -275,12 +279,16 @@ rust/target/release/voicy serve --port 8080
 
 | | По умолчанию | Ещё | Выбор |
 |---|---|---|---|
-| синтез | Qwen3-TTS 1.7B | ESpeech RL-V2 (F5-TTS) | `TTS_ENGINE` |
+| синтез | Qwen3-TTS 1.7B, в Rust-сервере — с ударениями по знаку | ESpeech RL-V2 (F5-TTS) | `TTS_ENGINE` |
+| ударения | RUAccent (в Rust-сервере, без Python) | — | `--no-stress` |
 | распознавание | Whisper large-v3-turbo (faster-whisper) | whisper.cpp — в Rust-сервере | `STT_ENGINE` |
 | конец реплики | Smart Turn v3 | — | `TURN_ENGINE` |
 | детектор голоса | Silero VAD | — | `VAD_ENGINE` |
 
-Qwen3-TTS заявляет десять языков, проверялся русский. ESpeech говорит только
+Qwen3-TTS заявляет десять языков, проверялся русский. Rust-сервер по умолчанию
+берёт её вариант, дообученный слушаться знака ударения
+([sknyazev/qwen3-tts-12hz-1.7b-ru-stress-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-ru-stress-gguf)) —
+он только для русского; исходные веса — `VOICY_TTS_GGUF_REPO=sknyazev/qwen3-tts-12hz-1.7b-base-gguf voicy setup models`. ESpeech говорит только
 по-русски: при той же разборчивости он быстрее и легче, но с паузами хуже.
 Его зависимости ставятся отдельно (`server/requirements-espeech.txt`), сравнение —
 [experiments/19](experiments/19-second-engine/README.md).
@@ -343,7 +351,8 @@ article/      статья по исследованию со всем ауди�
 | Qwen3-TTS | Apache-2.0 |
 | ESpeech-TTS-1 RL-V2 | Apache-2.0 |
 | F5-TTS, Vocos | MIT |
-| RUAccent | Apache-2.0 |
+| RUAccent: код / модели | Apache-2.0 / MIT |
+| Russian LibriSpeech — данные дообучения ударений | общественное достояние |
 | Whisper, faster-whisper, CTranslate2 | MIT |
 | llama.cpp, whisper.cpp, ONNX Runtime | MIT |
 | libopus | BSD-3-Clause |
