@@ -1,6 +1,9 @@
 """Qwen3-TTS → GGUF и ONNX: перевод официальных весов в то, что исполняет сервер.
 
     python scripts/convert_qwen.py        →  ~/.cache/voicy/models/qwen3-tts-12hz-1.7b-base-gguf
+    python scripts/convert_qwen.py --weights <каталог> --name <имя>
+        — те же шаги над своими весами той же формы, например со слитым адаптером
+          ударений (scripts/stress_ft_merge.py, docs/adr/0023)
 
 Обычно он не нужен: `voicy setup` качает уже переведённые файлы
 (sknyazev/qwen3-tts-12hz-1.7b-base-gguf) вместе с остальными моделями.
@@ -57,14 +60,20 @@ def quantize_tool() -> Path:
 
 
 def main() -> None:
+    import argparse
     from huggingface_hub import snapshot_download
 
-    out = MODELS / "qwen3-tts-12hz-1.7b-base-gguf"
+    ap = argparse.ArgumentParser(description="Qwen3-TTS → GGUF и ONNX")
+    ap.add_argument("--weights", type=Path, help="свои веса той же формы вместо официальных")
+    ap.add_argument("--name", default="qwen3-tts-12hz-1.7b-base-gguf", help="каталог результата в моделях voicy")
+    a = ap.parse_args()
+
+    out = MODELS / a.name
     if (out / "qwen3_tts_talker.q5_k.gguf").exists():
         say(f"уже переведён — {out}")
         return
     quantize = quantize_tool()
-    weights = Path(snapshot_download(QWEN))
+    weights = a.weights.resolve() if a.weights else Path(snapshot_download(QWEN))
     with tempfile.TemporaryDirectory() as d:
         repo = Path(d) / "conv"
         run(["git", "clone", "-q", CONVERTER, str(repo)], Path(d))

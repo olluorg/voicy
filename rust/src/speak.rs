@@ -167,6 +167,8 @@ pub struct Options {
     pub speed: f64,
     pub prepare: bool,
     pub legato: bool,
+    /// знаки ударения; решено заранее: запрошены, язык русский, модель их понимает
+    pub stress: bool,
     pub seed: Option<i64>,
 }
 
@@ -189,7 +191,7 @@ pub fn speak_args(text: &str, o: &Options) -> Value {
 /// One chunk. `alive()` is asked at every progress event; false stops the work.
 pub async fn synthesize(app: &App, text: &str, o: &Options, alive: impl Fn() -> bool)
                         -> Result<(Vec<f32>, u32, f64), ApiError> {
-    let text = if o.prepare || o.legato { textprep::prepared_text(text, o.prepare, o.legato) } else { text.into() };
+    let text = textprep::for_speech(text, o.prepare, o.legato, o.stress).await;
     let started = Instant::now();
     let out = app.engines.speak(speak_args(&text, o), |_| alive()).await.map_err(|s| match s {
         Stop::Cancelled => ApiError::new(409, "cancelled"),
@@ -211,9 +213,11 @@ pub async fn http_stream(app: Arc<App>, req: crate::api::SpeechRequest) -> ApiRe
     if req.input.trim().is_empty() {
         return Err(ApiError::bad("input is empty"));
     }
+    let language = app.engines.language(req.language.as_deref()).await?;
     let o = Options {
         voice: pick_voice(&app, req.voice.as_deref())?,
-        language: app.engines.language(req.language.as_deref()).await?,
+        stress: req.stress && language == "ru" && app.engines.stress_marks(),
+        language,
         speed: req.speed,
         prepare: req.prepare,
         legato: req.legato,
@@ -296,11 +300,17 @@ pub struct StreamQuery {
     prepare: bool,
     #[serde(default)]
     legato: bool,
+    #[serde(default = "yes")]
+    stress: bool,
     seed: Option<i64>,
 }
 
 fn one() -> f64 {
     1.0
+}
+
+fn yes() -> bool {
+    true
 }
 
 enum Out {
@@ -348,9 +358,11 @@ pub async fn socket(app: Arc<App>, q: StreamQuery, ws: WebSocket) {
         if !(8000..=48000).contains(&rate) {
             return Err(ApiError::bad("sample_rate must be 8000–48000"));
         }
+        let language = app.engines.language(q.language.as_deref()).await?;
         Ok(Options {
             voice: pick_voice(&app, q.voice.as_deref())?,
-            language: app.engines.language(q.language.as_deref()).await?,
+            stress: q.stress && language == "ru" && app.engines.stress_marks(),
+            language,
             speed: if q.speed != 1.0 { q.speed.clamp(0.8, 1.2) } else { 1.0 },
             prepare: q.prepare,
             legato: q.legato,

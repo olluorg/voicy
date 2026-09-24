@@ -212,7 +212,8 @@ def cmd_say(a) -> int:
             "(а самый первый запуск сервера ещё и качает веса)")
 
     payload = {"input": text, "response_format": fmt, "speed": a.speed,
-               "language": a.language, "prepare": a.prepare, "legato": a.legato}
+               "language": a.language, "prepare": a.prepare, "legato": a.legato,
+               "stress": not a.no_stress}
     if a.voice:
         payload["voice"] = a.voice
     if a.seed is not None:
@@ -419,7 +420,7 @@ def cmd_add_voice(a) -> int:
 def cmd_prepare(a) -> int:
     require_server(a.url)
     payload = {"text": read_text(a.text), "dictionary": not a.no_dictionary,
-               "legato": a.legato}
+               "legato": a.legato, "stress": not a.no_stress}
     body, _ = post_json(a.url, "/v1/text/prepare", payload, 30)
     print(json.loads(body)["text"])
     return 0
@@ -698,6 +699,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--seed", type=int)
     s.add_argument("--prepare", action="store_true", help="применить словарь произношений")
     s.add_argument("--legato", action="store_true", help="убрать запятые внутри коротких фраз")
+    s.add_argument("--no-stress", action="store_true",
+                   help="без знаков ударения (по умолчанию их ставит сервер, если модель их понимает)")
     s.add_argument("--detach", action="store_true",
                    help="не ждать: напечатать id задания и выйти")
     s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
@@ -753,6 +756,7 @@ def main(argv: list[str]) -> int:
     s.add_argument("text", help="текст, либо @файл, либо -")
     s.add_argument("--no-dictionary", action="store_true")
     s.add_argument("--legato", action="store_true")
+    s.add_argument("--no-stress", action="store_true")
     s.set_defaults(fn=cmd_prepare)
 
     s = sub.add_parser("up", help="поднять сервер и дождаться готовности")

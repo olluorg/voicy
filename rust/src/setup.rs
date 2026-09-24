@@ -495,6 +495,23 @@ async fn models(tmp: &Path) -> anyhow::Result<()> {
     for f in files {
         hf(&repo, &f, &gguf).await?;
     }
+    // RUAccent: словари и четыре модели на закреплённой ревизии, из словаря ударений — FST
+    let accent = native::accent::dir();
+    for f in native::accent::FILES {
+        let to = accent.join(f);
+        if !to.exists() {
+            fs::create_dir_all(to.parent().unwrap_or(&accent))?;
+            say(format!("скачиваю {}/{f}", native::accent::REPO));
+            let url = format!("https://huggingface.co/{}/resolve/{}/{f}?download=true",
+                              native::accent::REPO, native::accent::REVISION);
+            fetch(&url, &to).await?;
+        }
+    }
+    if !accent.join(native::accent::DICTIONARY_FST).exists() {
+        say("собираю словарь ударений (3.2 млн словоформ, один раз)");
+        let dir = accent.clone();
+        tokio::task::spawn_blocking(move || native::accent::build_dictionary(&dir)).await??;
+    }
     say(format!("модели — {}", models.display()));
     Ok(())
 }

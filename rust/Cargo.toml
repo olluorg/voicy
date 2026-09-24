@@ -16,6 +16,7 @@ clap = { version = "4", features = ["derive", "env"] }
 fancy-regex = "0.19"
 flacenc = "0.5.1"
 flate2 = "1.1.10"
+fst = "0.4"
 futures = "0.3"
 half = "2"
 hex = "0.4"

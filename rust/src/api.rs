@@ -35,6 +35,9 @@ type S = State<Arc<App>>;
 fn tts1() -> String {
     "tts-1".into()
 }
+fn yes() -> bool {
+    true
+}
 fn wav() -> String {
     "wav".into()
 }
@@ -58,6 +61,9 @@ pub struct SpeechRequest {
     pub prepare: bool,
     #[serde(default)]
     pub legato: bool,
+    /// знаки ударения U+0301 по RUAccent — там, где модель их понимает (docs/adr/0023)
+    #[serde(default = "yes")]
+    pub stress: bool,
     pub seed: Option<i64>,
     pub stream_format: Option<String>,
     pub webhook_url: Option<String>,
@@ -215,13 +221,10 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
     }
     let voice = speak::pick_voice(app, req.voice.as_deref())?;
     let language = app.engines.language(req.language.as_deref()).await?;
-    let text = if req.prepare || req.legato {
-        textprep::prepared_text(&req.input, req.prepare, req.legato)
-    } else {
-        req.input.clone()
-    };
+    let stress = req.stress && language == "ru" && app.engines.stress_marks();
+    let text = textprep::for_speech(&req.input, req.prepare, req.legato, stress).await;
     let expected = estimate_seconds(&text);
-    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, seed: req.seed };
+    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, stress: false, seed: req.seed };
     let format = req.response_format.clone();
     let app2 = app.clone();
     let work: crate::jobs::Work = Box::new(move |job: Arc<Job>| {
@@ -596,10 +599,19 @@ pub async fn delete_context(State(app): S, Path(name): Path<String>) -> ApiResul
     Ok(axum::Json(json!({"deleted": name})).into_response())
 }
 
-pub async fn prepare_text(Json(p): Json<Value>) -> impl IntoResponse {
+pub async fn prepare_text(State(app): S, Json(p): Json<Value>) -> impl IntoResponse {
     let text = p["text"].as_str().unwrap_or_default();
     let flag = |k: &str, d: bool| p.get(k).map_or(d, |v| v.as_bool().unwrap_or(!v.is_null() && v != &json!(0)));
-    axum::Json(textprep::prepare(text, flag("dictionary", true), flag("legato", false)))
+    let mut out = textprep::prepare(text, flag("dictionary", true), flag("legato", false));
+    // знаки — как их поставит синтез: только если модель их понимает
+    let stress = flag("stress", true) && app.engines.stress_marks();
+    if stress {
+        let marked = textprep::stress(out["text"].as_str().unwrap_or(text)).await;
+        out["changed"] = json!(marked != text);
+        out["text"] = json!(marked);
+    }
+    out["stress"] = json!(stress);
+    axum::Json(out)
 }
 
 pub async fn health(State(app): S) -> impl IntoResponse {

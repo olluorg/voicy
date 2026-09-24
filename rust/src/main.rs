@@ -86,6 +86,12 @@ enum Command {
     /// Вероятности детектора голоса и конца реплики для wav 16 кГц — сверка с Python
     #[command(hide = true)]
     ProbeListen { wav: PathBuf },
+    /// Строки stdin → то, что вернул бы RUAccent.process_all, либо (--mark) текст со знаками — сверка с Python
+    #[command(hide = true)]
+    ProbeAccent {
+        #[arg(long)]
+        mark: bool,
+    },
     /// Текст → аудиофайл
     Say {
         /// текст, либо @файл, либо - для stdin
@@ -109,6 +115,9 @@ enum Command {
         /// убрать запятые внутри коротких фраз
         #[arg(long)]
         legato: bool,
+        /// без знаков ударения (по умолчанию их ставит RUAccent, если модель их понимает)
+        #[arg(long)]
+        no_stress: bool,
         /// не ждать: напечатать id задания и выйти
         #[arg(long)]
         detach: bool,
@@ -183,6 +192,8 @@ enum Command {
         no_dictionary: bool,
         #[arg(long)]
         legato: bool,
+        #[arg(long)]
+        no_stress: bool,
     },
     /// Поднять сервер этим же бинарником и дождаться готовности
     Up {
@@ -389,6 +400,17 @@ fn probe_listen(wav: PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn probe_accent(mark: bool) -> anyhow::Result<()> {
+    use std::io::BufRead;
+    native::init_onnx(&native::lib_dir()?)?;
+    let a = native::accent::Accentuator::load(&native::accent::dir())?;
+    for line in std::io::stdin().lock().lines() {
+        let line = line?;
+        println!("{}", if mark { a.mark(&line)? } else { a.process_all(&line)? });
+    }
+    Ok(())
+}
+
 fn probe_stt(jobs: PathBuf, model: PathBuf) -> anyhow::Result<()> {
     use std::time::Instant;
     let vad = native::cache_dir().join("models").join("vad").join("silero_vad_v6.onnx");
@@ -542,8 +564,8 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
         Command::Setup { what } => setup::run(&what).await,
-        Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, detach, webhook } =>
-            cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, detach, webhook).await,
+        Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
+            cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
         Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>
             cli::hear(&url, file, language, format, prompt, temperature, words, context, hotwords, detach, webhook).await,
         Command::Job { id, out, wait, format } => cli::job(&url, id, out, wait, format).await,
@@ -552,12 +574,14 @@ async fn main() -> anyhow::Result<()> {
         Command::Contexts => cli::contexts(&url).await,
         Command::Voices => cli::voices(&url).await,
         Command::AddVoice { file, name, text, note, replace } => cli::add_voice(&url, file, name, text, note, replace).await,
-        Command::Prepare { text, no_dictionary, legato } => cli::prepare(&url, &text, no_dictionary, legato).await,
+        Command::Prepare { text, no_dictionary, legato, no_stress } =>
+            cli::prepare(&url, &text, no_dictionary, legato, !no_stress).await,
         Command::Up { wait, no_warm, cpu } => cli::up(&url, wait, !no_warm, cpu).await,
         Command::Down => cli::down(&url).await,
         Command::Status => cli::status(&url).await,
         Command::Warm => cli::warm(&url).await,
         Command::ProbeListen { wav } => probe_listen(wav),
+        Command::ProbeAccent { mark } => probe_accent(mark),
         Command::ProbeStt { jobs, model } => probe_stt(jobs, model),
         Command::BenchTts { jobs, voice, voice_text, talker, language } => bench_tts(jobs, voice, voice_text, talker, language),
     }

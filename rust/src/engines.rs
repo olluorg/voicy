@@ -81,18 +81,28 @@ struct NativeTts {
     files: native::qwen::Files,
     engine: OnceCell<Arc<native::qwen::Qwen>>,
     variant: String,
+    /// stress.json рядом с весами: модель дообучена слушаться знака ударения (docs/adr/0023)
+    stress: Option<Value>,
 }
+
+/// The default synthesis model: the one that obeys stress marks when it is
+/// installed, the official weights otherwise.
+pub const TTS_STRESS_DIR: &str = "qwen3-tts-12hz-1.7b-ru-stress-gguf";
+pub const TTS_BASE_DIR: &str = "qwen3-tts-12hz-1.7b-base-gguf";
+pub const STRESS_MARKER: &str = "stress.json";
 
 impl NativeTts {
     fn find() -> Option<NativeTts> {
         let explicit = wanted("TTS_ENGINE", &["qwen3-tts-gguf"])?;
-        let dir = std::env::var_os("VOICY_TTS_GGUF_DIR")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| models().join("qwen3-tts-12hz-1.7b-base-gguf"));
         // q5_k: та же разборчивость и то же сходство голоса, что у f16 и torch, при 2.4 ГБ (experiments/20)
         let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
+        let talker = format!("qwen3_tts_talker.{variant}.gguf");
+        let dir = std::env::var_os("VOICY_TTS_GGUF_DIR").map(PathBuf::from).unwrap_or_else(|| {
+            let stress = models().join(TTS_STRESS_DIR);
+            if stress.join(&talker).is_file() { stress } else { models().join(TTS_BASE_DIR) }
+        });
         let files = native::qwen::Files {
-            talker: format!("qwen3_tts_talker.{variant}.gguf"),
+            talker,
             predictor: "qwen3_tts_predictor.q8_0.gguf".into(),
             dir,
         };
@@ -100,7 +110,8 @@ impl NativeTts {
         if !ready && explicit {
             eprintln!("voicy: TTS_ENGINE=qwen3-tts-gguf, but no model in {} or no engine libraries", files.dir.display());
         }
-        ready.then(|| NativeTts { files, engine: OnceCell::new(), variant })
+        let stress = std::fs::read(files.dir.join(STRESS_MARKER)).ok().and_then(|b| serde_json::from_slice(&b).ok());
+        ready.then(|| NativeTts { files, engine: OnceCell::new(), variant, stress })
     }
 
     async fn get(&self) -> Result<Arc<native::qwen::Qwen>, HostError> {
@@ -122,7 +133,8 @@ impl NativeTts {
     }
 
     fn status(&self) -> Value {
-        json!({"engine": "qwen3-tts", "model": format!("Qwen/Qwen3-TTS-12Hz-1.7B-Base ({})", self.variant),
+        let model = self.stress.as_ref().and_then(|s| s["model"].as_str()).unwrap_or("Qwen/Qwen3-TTS-12Hz-1.7B-Base");
+        json!({"engine": "qwen3-tts", "model": format!("{model} ({})", self.variant), "stress_marks": self.stress.is_some(),
                "runtime": "llama.cpp + onnxruntime", "loaded": self.engine.initialized(),
                "device": self.engine.get().map_or("cuda".into(), |e| e.device.clone())})
     }
@@ -398,6 +410,13 @@ impl Engines {
     // ---------------------------------------------------------------- синтез
 
     /// The engine checks the language before anything is queued.
+    /// Whether the synthesis model reads U+0301 as a stress mark. The official
+    /// weights mangle a word with it (docs/adr/0015), so marks go only to the
+    /// model that was trained on them.
+    pub fn stress_marks(&self) -> bool {
+        self.tts.as_ref().is_some_and(|t| t.stress.is_some())
+    }
+
     pub async fn language(&self, code: Option<&str>) -> Result<String, ApiError> {
         if self.tts.is_some() {
             let code = code.map(str::trim).filter(|c| !c.is_empty()).unwrap_or("ru");

@@ -1,8 +1,14 @@
-//! Optional text preparation before synthesis — server/textprep.py, one to one.
+//! Text preparation before synthesis — server/textprep.py, one to one, plus
+//! stress marks.
 //!
 //! Terms are replaced with the spelling the engine reads correctly, from
 //! data/pronunciation.json; "legato" drops commas inside short sentences, since
 //! a comma is what makes the model stop mid-phrase. Both off by default.
+//!
+//! Stress marks are on by default where the model understands them: RUAccent
+//! (native/accent.rs) puts U+0301 after the stressed vowel and restores ё.
+//! A spelling from the dictionary that already carries a mark is kept — that is
+//! how a term overrides RUAccent («дже́нерики»). docs/adr/0023.
 
 use std::path::Path;
 use std::sync::OnceLock;
@@ -110,4 +116,70 @@ pub fn prepare(text: &str, use_dictionary: bool, use_legato: bool) -> Value {
 
 pub fn prepared_text(text: &str, use_dictionary: bool, use_legato: bool) -> String {
     prepare(text, use_dictionary, use_legato)["text"].as_str().unwrap_or(text).to_string()
+}
+
+// ------------------------------------------------------------ ударения
+
+static ACCENT: tokio::sync::OnceCell<Option<std::sync::Arc<crate::native::accent::Accentuator>>> =
+    tokio::sync::OnceCell::const_new();
+
+/// RUAccent, loaded once on first use; None when `voicy setup` has not put it
+/// in place — then speech goes without marks, and that is said once.
+async fn accentuator() -> Option<std::sync::Arc<crate::native::accent::Accentuator>> {
+    ACCENT
+        .get_or_init(|| async {
+            let dir = crate::native::accent::dir();
+            if !crate::native::accent::Accentuator::ready(&dir) {
+                eprintln!("voicy: нет моделей RUAccent в {} — синтез без знаков ударения; voicy setup models", dir.display());
+                return None;
+            }
+            let loaded = tokio::task::spawn_blocking(move || {
+                crate::native::init_onnx(&crate::native::lib_dir()?)?;
+                crate::native::accent::Accentuator::load(&dir)
+            })
+            .await;
+            match loaded {
+                Ok(Ok(a)) => Some(std::sync::Arc::new(a)),
+                Ok(Err(e)) => {
+                    eprintln!("voicy: RUAccent не загрузился ({e:#}) — синтез без знаков ударения");
+                    None
+                }
+                Err(e) => {
+                    eprintln!("voicy: RUAccent не загрузился ({e}) — синтез без знаков ударения");
+                    None
+                }
+            }
+        })
+        .await
+        .clone()
+}
+
+fn has_cyrillic(text: &str) -> bool {
+    text.chars().any(|c| ('а'..='я').contains(&c) || ('А'..='Я').contains(&c) || c == 'ё' || c == 'Ё')
+}
+
+/// Stress marks on `text`, or `text` as it is when there is nothing to mark
+/// or no RUAccent to mark it with.
+pub async fn stress(text: &str) -> String {
+    if !has_cyrillic(text) {
+        return text.to_string();
+    }
+    let Some(a) = accentuator().await else {
+        return text.to_string();
+    };
+    let owned = text.to_string();
+    match tokio::task::spawn_blocking(move || a.mark(&owned)).await {
+        Ok(Ok(marked)) => marked,
+        Ok(Err(e)) => {
+            eprintln!("voicy: разметка ударений не удалась ({e:#}) — фраза без знаков");
+            text.to_string()
+        }
+        Err(_) => text.to_string(),
+    }
+}
+
+/// Everything before synthesis, in order: dictionary, legato, stress marks.
+pub async fn for_speech(text: &str, use_dictionary: bool, use_legato: bool, use_stress: bool) -> String {
+    let t = if use_dictionary || use_legato { prepared_text(text, use_dictionary, use_legato) } else { text.to_string() };
+    if use_stress { stress(&t).await } else { t }
 }

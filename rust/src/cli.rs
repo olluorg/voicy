@@ -162,7 +162,7 @@ fn detached(job: &Value, rest: &str) -> anyhow::Result<()> {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn say(url: &str, text: &str, out: Option<PathBuf>, voice: Option<String>, format: String, speed: f64,
-                 language: Option<String>, seed: Option<i64>, prepare: bool, legato: bool, detach: bool,
+                 language: Option<String>, seed: Option<i64>, prepare: bool, legato: bool, stress: bool, detach: bool,
                  webhook: Option<String>) -> anyhow::Result<()> {
     let text = read_text(text)?.trim().to_string();
     anyhow::ensure!(!text.is_empty(), "пустой текст");
@@ -183,7 +183,7 @@ pub async fn say(url: &str, text: &str, out: Option<PathBuf>, voice: Option<Stri
         log("модель синтеза ещё не в памяти — первый вызов дольше обычного");
     }
     let mut payload = json!({"input": text, "response_format": fmt, "speed": speed, "prepare": prepare,
-                             "legato": legato});
+                             "legato": legato, "stress": stress});
     if let Some(v) = voice {
         payload["voice"] = json!(v);
     }
@@ -391,10 +391,10 @@ pub async fn add_voice(url: &str, file: PathBuf, name: String, text: Option<Stri
     Ok(())
 }
 
-pub async fn prepare(url: &str, text: &str, no_dictionary: bool, legato: bool) -> anyhow::Result<()> {
+pub async fn prepare(url: &str, text: &str, no_dictionary: bool, legato: bool, stress: bool) -> anyhow::Result<()> {
     let api = Api::new(url)?;
     api.require().await?;
-    let body = json!({"text": read_text(text)?, "dictionary": !no_dictionary, "legato": legato});
+    let body = json!({"text": read_text(text)?, "dictionary": !no_dictionary, "legato": legato, "stress": stress});
     let v: Value = api.post_json("/v1/text/prepare", body).await?.json().await?;
     println!("{}", v["text"].as_str().unwrap_or_default());
     Ok(())

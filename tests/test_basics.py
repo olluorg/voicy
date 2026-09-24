@@ -55,3 +55,13 @@ class TextPrepare(Case):
         r = self.c.post("/v1/text/prepare", json_body={"text": "Просто текст."}).json()
         self.assertFalse(r["changed"])
         self.assertEqual(r["text"], "Просто текст.")
+
+    def test_no_stress_marks_for_a_model_that_does_not_read_them(self):
+        # знак U+0301 коверкает слово у модели, не обученной на нём (ADR 0015):
+        # сервер ставит его, только если модель объявила, что его понимает (ADR 0023)
+        health = self.c.get("/health").json()
+        if health.get("tts", {}).get("stress_marks"):
+            self.skipTest("модель понимает знаки ударения")
+        r = self.c.post("/v1/text/prepare", json_body={"text": "Этот вопрос стоит разобрать."}).json()
+        self.assertNotIn("́", r["text"])
+        self.assertFalse(r.get("stress", False))
