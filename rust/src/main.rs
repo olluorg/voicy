@@ -454,7 +454,7 @@ fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, 
 
 /// Два OpenMP в одном процессе: llama.cpp приносит LLVM-овский, CTranslate2 —
 /// Intel-овский, и второй по счёту завершает программу. Ключ, который оба
-/// понимают, разрешает им сосуществовать; замеры — experiments/23.
+/// понимают, разрешает им сосуществовать; замеры — experiments/24.
 fn allow_two_openmp() {
     #[cfg(windows)]
     if std::env::var_os("KMP_DUPLICATE_LIB_OK").is_none() {

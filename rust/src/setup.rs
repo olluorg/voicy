@@ -320,7 +320,7 @@ fn openmp_bridge(lib: &Path, tmp: &Path) -> anyhow::Result<()> {
     }
     let Some(vcvars) = vcvars() else {
         // без компилятора остаётся ключ, который понимают оба рантайма (main::allow_two_openmp):
-        // по замерам скорость та же, но Intel называет это неподдерживаемым (experiments/23)
+        // по замерам скорость та же, но Intel называет это неподдерживаемым (experiments/24)
         say("нет компилятора C++ — OpenMP останется в двух экземплярах, их разводит ключ KMP_DUPLICATE_LIB_OK");
         return Ok(());
     };
