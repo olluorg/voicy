@@ -1,0 +1,77 @@
+name: сборки
+
+# Готовые бинарники: один файл на систему, который сам качает библиотеки
+# и модели (voicy setup) и сам работает сервером и клиентом. Собирается тем же
+# компилятором, что и обёртка над CTranslate2 внутри него, — поэтому у того,
+# кто просто скачал файл, компилятора быть не должно.
+#
+# По тегу v* — выпуск с файлами и контрольными суммами; вручную — только сборка,
+# чтобы проверить, что она жива.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.asset }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 22.04, а не 24.04: бинарник тогда идёт и на системах с более старой glibc
+          - { asset: voicy-linux-x64,       os: ubuntu-22.04, bin: voicy }
+          - { asset: voicy-windows-x64.exe, os: windows-2025, bin: voicy.exe }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: сборка
+        run: cargo build --release --manifest-path rust/Cargo.toml
+
+      - name: свои проверки
+        run: cargo test --release --manifest-path rust/Cargo.toml
+
+      - name: файл и контрольная сумма
+        shell: bash
+        run: |
+          cp rust/target/release/${{ matrix.bin }} ${{ matrix.asset }}
+          sha256sum ${{ matrix.asset }} | tee ${{ matrix.asset }}.sha256
+          ls -l ${{ matrix.asset }}
+
+      # Бинарник должен запускаться там, где ни библиотек, ни моделей ещё нет
+      - name: запускается без кэша
+        shell: bash
+        run: ./${{ matrix.asset }} --version && ./${{ matrix.asset }} status || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}*
+
+  release:
+    name: выпуск
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    steps:
+      # Сначала репозиторий, потом файлы: checkout вычищает рабочий каталог
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/release-notes.md
+          sparse-checkout-cone-mode: false
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: выложить файлы к тегу
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
+            --title "voicy $GITHUB_REF_NAME" --notes-file .github/release-notes.md --verify-tag \
+            || gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber

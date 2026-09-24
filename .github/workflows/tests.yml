@@ -2,6 +2,8 @@ name: проверки
 
 # Набор проверок API с учебными движками (tests/): без моделей и видеокарты,
 # на всех целевых системах. Отчёт каждой платформы — в артефактах прогона.
+# Вторым заходом — тот же набор против сервера на Rust, чтобы поломка сборки
+# или расхождение реализаций были видны сразу, а не при выпуске.
 
 on:
   push:
@@ -46,4 +48,36 @@ jobs:
         with:
           name: report-${{ matrix.name }}
           path: report-${{ matrix.name }}.json
+          if-no-files-found: ignore
+
+  binary:
+    name: бинарник ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x64,   os: ubuntu-24.04 }
+          - { name: windows-x64, os: windows-2025 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Учебные движки — на Python: сервер на Rust поднимает их дочерним процессом
+      - name: зависимости
+        run: python -m pip install -r tests/requirements.txt
+      - name: сборка
+        run: cargo build --release --manifest-path rust/Cargo.toml
+      - name: свои проверки
+        run: cargo test --release --manifest-path rust/Cargo.toml
+      - name: проверки API
+        env:
+          VOICY_IMPL: rust
+        run: python -m tests --report report-rust-${{ matrix.name }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-rust-${{ matrix.name }}
+          path: report-rust-${{ matrix.name }}.json
           if-no-files-found: ignore

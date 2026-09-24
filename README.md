@@ -170,9 +170,9 @@ git clone https://github.com/olluorg/voicy && cd voicy
 
 **Бинарник на Rust** — то, что проверено на Windows с настоящими моделями:
 один файл, который сам ставит всё остальное. Синтез и распознавание считаются
-в его процессе, Python не нужен, компилятор — тоже: обёртка над CTranslate2
-собрана внутрь бинарника. Готовых сборок пока нет, так что сначала собрать
-самому (Rust и Build Tools нужны только для этого шага):
+в его процессе; ни Python, ни компилятор, ни ffmpeg на машине не нужны. Готовые
+сборки прикладываются к выпускам (`voicy-windows-x64.exe`), а собрать самому —
+Rust и Build Tools нужны только для этого шага:
 
 ```powershell
 winget install Rustlang.Rustup Git.Git Microsoft.VisualStudio.2022.BuildTools
