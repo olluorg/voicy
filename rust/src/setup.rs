@@ -132,7 +132,7 @@ impl Plan {
 
     /// A file of a Hugging Face repository at a revision.
     fn hf(&mut self, repo: &str, revision: &str, file: &str, dir: &Path) -> PathBuf {
-        self.add(format!("https://huggingface.co/{repo}/resolve/{revision}/{file}?download=true"), dir.join(file), dir)
+        self.add(format!("{}/{repo}/resolve/{revision}/{file}?download=true", hf_endpoint()), dir.join(file), dir)
     }
 
     /// Sizes, asked for with a one-byte range: HEAD is not answered by the
@@ -154,9 +154,10 @@ impl Plan {
     /// `lib` — куда распакуются библиотеки, если они в плане.
     fn show(&self, lib: Option<&Path>) {
         let unknown = self.items.iter().filter(|d| d.size.is_none()).count();
-        let total = match unknown {
-            0 => human(self.total()),
-            _ => format!("не меньше {}", human(self.total())),
+        let total = match (unknown, self.total()) {
+            (0, t) => human(t),
+            (_, 0) => "размер узнать не удалось".into(),
+            (_, t) => format!("не меньше {}", human(t)),
         };
         say(format!("будет скачано {} {}, {total}:", self.items.len(), files(self.items.len())));
         let resumed: u64 = self.items.iter().filter_map(|d| fs::metadata(part_of(d)).ok()).map(|m| m.len()).sum();
@@ -168,7 +169,8 @@ impl Plan {
             }
         }
         for (dir, size, n) in dirs {
-            say(format!("  {:>8}  {n:>2} {:<6}  {}", human(size), files(n), dir.display()));
+            let size = if size == 0 { "?".into() } else { human(size) };
+            say(format!("  {size:>8}  {n:>2} {:<6}  {}", files(n), dir.display()));
         }
         if resumed > 0 {
             say(format!("{} из них уже лежит с прошлого раза — докачаю с того же места", human(resumed)));
@@ -187,6 +189,15 @@ impl Plan {
         say(format!("скачано {} за {}", human(bar.received), duration(bar.started.elapsed().as_secs())));
         Ok(())
     }
+}
+
+/// Hugging Face or a mirror of it: HF_ENDPOINT, as huggingface_hub reads it.
+fn hf_endpoint() -> String {
+    std::env::var("HF_ENDPOINT")
+        .ok()
+        .map(|e| e.trim().trim_end_matches('/').to_string())
+        .filter(|e| !e.is_empty())
+        .unwrap_or_else(|| "https://huggingface.co".into())
 }
 
 async fn size_of(http: &reqwest::Client, url: &str) -> Option<u64> {
@@ -352,19 +363,56 @@ async fn fetch(http: &reqwest::Client, d: &Download, i: usize, bar: &mut Bar) ->
                 bar.clear();
                 let have = fs::metadata(&part).map_or(0, |m| m.len());
                 let wait = 2u64 << attempt; // 4, 8 … 64 с
-                say(format!("  оборвалось на {}: {e:#}; попытка {} из {ATTEMPTS} через {wait} с",
-                            human(have), attempt + 1));
+                say(format!("  оборвалось на {}: {}; попытка {} из {ATTEMPTS} через {wait} с",
+                            human(have), e.root_cause(), attempt + 1));
                 tokio::time::sleep(Duration::from_secs(wait)).await;
                 attempt += 1;
             }
             Err(e) => {
                 bar.clear();
-                return Err(e).with_context(|| format!(
-                    "{} не скачан за {ATTEMPTS} попыток; скачанное осталось в {}, и voicy setup продолжит с этого места",
-                    d.url, part.display()));
+                let kept = match fs::metadata(&part).map_or(0, |m| m.len()) {
+                    0 => String::new(),
+                    n => format!("\nСкачанные {} лежат в {}; повторный voicy setup продолжит с этого места.",
+                                 human(n), part.display()),
+                };
+                if unreachable(&e) {
+                    bail!("{}{kept}\nПричина: {}", no_route(&d.url), e.root_cause());
+                }
+                return Err(e).with_context(|| format!("{} не скачан за {ATTEMPTS} попыток{kept}", d.url));
             }
         }
     }
+}
+
+/// Whether the failure is the connection itself: refused, reset during the
+/// handshake, timed out. Retrying that does not help; the network has to change.
+fn unreachable(e: &anyhow::Error) -> bool {
+    e.chain().any(|c| c.downcast_ref::<reqwest::Error>().is_some_and(|r| r.is_connect() || r.is_timeout()))
+}
+
+/// What to say when a host cannot be reached at all: it is the network, and
+/// here is what can be changed about it.
+fn no_route(url: &str) -> String {
+    let host = url.split("://").nth(1).and_then(|r| r.split('/').next()).unwrap_or(url);
+    let set = if cfg!(windows) { "setx" } else { "export" };
+    let eq = if cfg!(windows) { " " } else { "=" };
+    let system = match std::env::consts::OS {
+        "windows" => "системный прокси Windows voicy берёт сам, иначе — ",
+        "macos" => "системный прокси macOS voicy берёт сам, иначе — ",
+        _ => "",
+    };
+    let mut s = format!(
+        "{host} недоступен с этой машины: соединение обрывается ещё при подключении, {ATTEMPTS} попыток подряд.\n\
+         Это сеть, а не voicy — откройте https://{host} в браузере.\n\
+         Если браузер ходит через прокси или VPN, voicy нужно пустить тем же путём:\n  \
+         {system}{set} HTTPS_PROXY{eq}http://адрес:порт");
+    if host.contains("huggingface.co") {
+        s += &format!("\nЗеркало Hugging Face вместо него: {set} HF_ENDPOINT{eq}https://адрес-зеркала");
+    }
+    if cfg!(windows) {
+        s += "\n(после setx — новое окно: переменная видна только новым процессам)";
+    }
+    s
 }
 
 /// One attempt: from the start, or from the end of what `.part` already holds.
@@ -429,14 +477,14 @@ async fn fetch_once(http: &reqwest::Client, d: &Download, part: &Path, bar: &mut
 }
 
 /// The manylinux x86-64 wheel of `name[==version]`, as PyPI's JSON index gives it.
-async fn wheel_url(spec: &str, tag: &[&str]) -> anyhow::Result<String> {
+async fn wheel_url(http: &reqwest::Client, spec: &str, tag: &[&str]) -> anyhow::Result<String> {
     let (name, version) = spec.split_once("==").map_or((spec, ""), |(n, v)| (n, v));
     let url = if version.is_empty() {
         format!("https://pypi.org/pypi/{name}/json")
     } else {
         format!("https://pypi.org/pypi/{name}/{version}/json")
     };
-    let v: serde_json::Value = reqwest::get(&url).await?.error_for_status()?.json().await?;
+    let v: serde_json::Value = http.get(&url).send().await?.error_for_status()?.json().await?;
     let files = v["urls"].as_array().context("pypi: no files")?;
     files
         .iter()
@@ -682,7 +730,7 @@ struct Libs {
     ct2_src: Option<PathBuf>,
 }
 
-async fn plan_libs(plan: &mut Plan, tmp: &Path) -> anyhow::Result<Libs> {
+async fn plan_libs(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyhow::Result<Libs> {
     let p = platform()?;
     let llama = p
         .llama_assets
@@ -694,7 +742,7 @@ async fn plan_libs(plan: &mut Plan, tmp: &Path) -> anyhow::Result<Libs> {
         plan.archive(format!("https://github.com/ggml-org/whisper.cpp/releases/download/{WHISPER_CPP}/{}", p.whisper_asset), tmp);
     let mut wheels = vec![];
     for spec in p.wheels {
-        wheels.push(plan.archive(wheel_url(&expand(spec), p.wheel_tag).await?, tmp));
+        wheels.push(plan.archive(wheel_url(http, &expand(spec), p.wheel_tag).await?, tmp));
     }
     // заголовки CTranslate2 для обёртки; на Windows она вкомпилирована в бинарник (build.rs)
     let ct2_src = (!cfg!(all(windows, target_env = "msvc")))
@@ -845,7 +893,7 @@ pub fn describe(missing: &[PathBuf]) -> String {
     s + "\nДокачать: voicy setup (скачанное раньше не пропадёт)"
 }
 
-async fn plan_models(plan: &mut Plan, tmp: &Path) -> anyhow::Result<Models> {
+async fn plan_models(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyhow::Result<Models> {
     let root = native::cache_dir().join("models");
     let whisper = whisper_dir(&root);
     for f in WHISPER_FILES {
@@ -857,7 +905,7 @@ async fn plan_models(plan: &mut Plan, tmp: &Path) -> anyhow::Result<Models> {
     let vad = if vad_dir.join(SILERO).exists() {
         None
     } else {
-        let url = wheel_url(&format!("faster-whisper=={FASTER_WHISPER}"), &["py3-none"]).await.unwrap_or_else(|_| {
+        let url = wheel_url(http, &format!("faster-whisper=={FASTER_WHISPER}"), &["py3-none"]).await.unwrap_or_else(|_| {
             format!("https://files.pythonhosted.org/packages/py3/f/faster-whisper/faster_whisper-{FASTER_WHISPER}-py3-none-any.whl")
         });
         Some((plan.archive(url, tmp), vad_dir))
@@ -907,17 +955,17 @@ async fn models(m: Models) -> anyhow::Result<()> {
 pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
     let tmp = native::cache_dir().join("downloads");
     fs::create_dir_all(&tmp)?;
-    say("смотрю, чего не хватает");
-    let mut plan = Plan::default();
-    let libs_plan = if what != "models" { Some(plan_libs(&mut plan, &tmp).await?) } else { None };
-    let models_plan = if what != "libs" { Some(plan_models(&mut plan, &tmp).await?) } else { None };
-
-    // read_timeout: зависшее соединение должно стать ошибкой и докачкой, а не вечным ожиданием
+    // read_timeout: зависшее соединение должно стать ошибкой и докачкой, а не вечным ожиданием;
+    // прокси — из переменных среды и системных настроек, как у браузера
     let http = reqwest::Client::builder()
         .user_agent("voicy-setup")
         .connect_timeout(Duration::from_secs(30))
         .read_timeout(Duration::from_secs(60))
         .build()?;
+    say("смотрю, чего не хватает");
+    let mut plan = Plan::default();
+    let libs_plan = if what != "models" { Some(plan_libs(&http, &mut plan, &tmp).await?) } else { None };
+    let models_plan = if what != "libs" { Some(plan_models(&http, &mut plan, &tmp).await?) } else { None };
     if plan.items.is_empty() {
         say("всё нужное уже скачано");
     } else {
