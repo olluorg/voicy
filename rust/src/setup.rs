@@ -524,7 +524,7 @@ fn untar(archive: &Path, dest: &Path, keep: impl Fn(&str) -> bool) -> anyhow::Re
             n += 1;
             continue;
         }
-        entry.unpack(&out)?;
+        entry.unpack(&out).with_context(|| format!("cannot write {}", out.display()))?;
         n += 1;
     }
     Ok(n)
@@ -545,10 +545,32 @@ fn unzip(archive: &Path, dest: &Path, keep: impl Fn(&str) -> bool) -> anyhow::Re
         }
         let mut bytes = vec![];
         f.read_to_end(&mut bytes)?;
-        fs::write(dest.join(&name), bytes)?;
+        put(&dest.join(&name), &bytes)?;
         n += 1;
     }
     Ok(n)
+}
+
+/// Writes a library file. On Windows a DLL that a process has loaded cannot be
+/// overwritten, and an antivirus holds a fresh one for a moment while it scans
+/// it: the second passes in a few seconds, the first is named.
+fn put(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
+    let busy = |e: &std::io::Error| cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 33));
+    let mut tries = 0;
+    loop {
+        match fs::write(path, bytes) {
+            Ok(()) => return Ok(()),
+            Err(e) if busy(&e) && tries < 10 => {
+                tries += 1;
+                std::thread::sleep(Duration::from_millis(500));
+            }
+            Err(e) if busy(&e) => bail!(
+                "{} занят другим процессом. Обычно это запущенный раньше сервер voicy: он держит библиотеки открытыми.\n\
+                 Остановите его (voicy down или закройте его окно) и запустите voicy setup снова — скачанное не пропадёт.",
+                path.display()),
+            Err(e) => return Err(e).with_context(|| format!("cannot write {}", path.display())),
+        }
+    }
 }
 
 /// Unpacks the whole tree of a source tarball; only the headers are used.
@@ -578,8 +600,7 @@ fn build_shim(lib: &Path, src_archive: &Path, tmp: &Path) -> anyhow::Result<()> 
 }
 
 fn unix_shim(cpp: &Path, include: &Path, ct2: &Path, out: &Path) -> anyhow::Result<()> {
-    let Some(cxx) = std::env::var("CXX").ok().or_else(|| ["g++", "clang++", "c++"].into_iter().find(|c| which(c)).map(String::from))
-    else {
+    let Some(cxx) = cxx() else {
         return no_compiler("sudo apt install build-essential (или xcode-select --install)");
     };
     say(format!("собираю обёртку над CTranslate2 ({cxx})"));
@@ -700,6 +721,10 @@ fn finish(r: std::process::Output) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn cxx() -> Option<String> {
+    std::env::var("CXX").ok().or_else(|| ["g++", "clang++", "c++"].into_iter().find(|c| which(c)).map(String::from))
+}
+
 fn which(cmd: &str) -> bool {
     std::env::var_os("PATH")
         .map(|paths| std::env::split_paths(&paths).any(|d| d.join(cmd).is_file()))
@@ -783,6 +808,7 @@ async fn libs(archives: Libs, tmp: &Path) -> anyhow::Result<()> {
     if let Some(src) = &archives.ct2_src {
         build_shim(&lib, src, tmp)?;
     }
+    fs::write(lib.join(LIB_MARKER), lib_set())?;
     say(format!("библиотеки — {} ({} файлов)", lib.display(), fs::read_dir(&lib)?.count()));
     Ok(())
 }
@@ -859,20 +885,50 @@ pub fn missing() -> Vec<PathBuf> {
     want.extend(native::accent::FILES.iter().map(|f| accent.join(f)));
     want.push(accent.join(native::accent::DICTIONARY_FST));
     let mut out: Vec<PathBuf> = want.into_iter().filter(|p| !p.is_file()).collect();
-    // библиотеки: по файлу на каждое имя, которое ищут движки
-    if let Ok(p) = platform() {
-        let lib = native::lib_dir_path();
-        let names: Vec<String> = fs::read_dir(&lib)
-            .map(|d| d.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
-            .unwrap_or_default();
-        let own = ["llama", "ggml", "whisper", "onnxruntime"].map(native::lib_file);
-        for prefix in p.wanted.iter().copied().chain(own.iter().map(String::as_str)) {
-            if !names.iter().any(|n| n.starts_with(prefix)) {
-                out.push(lib.join(prefix));
-            }
-        }
-    }
+    out.extend(missing_libs());
     out
+}
+
+/// Libraries: a file for every name the engines look for.
+fn missing_libs() -> Vec<PathBuf> {
+    let Ok(p) = platform() else { return vec![] };
+    let lib = native::lib_dir_path();
+    let names: Vec<String> = fs::read_dir(&lib)
+        .map(|d| d.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
+        .unwrap_or_default();
+    let own = ["llama", "ggml", "whisper", "onnxruntime"].map(native::lib_file);
+    p.wanted
+        .iter()
+        .copied()
+        .chain(own.iter().map(String::as_str))
+        .filter(|prefix| !names.iter().any(|n| n.starts_with(prefix)))
+        .map(|prefix| lib.join(prefix))
+        .collect()
+}
+
+/// Which versions the library directory holds, written once they are all in.
+const LIB_MARKER: &str = "voicy-libs.txt";
+
+fn lib_set() -> String {
+    format!("llama.cpp {LLAMA}, whisper.cpp {WHISPER_CPP}, CTranslate2 {CT2}, ONNX Runtime {ORT}, cuBLAS 12 {CUBLAS12}\n")
+}
+
+/// Whether the libraries have to be put in again. Unpacking over installed ones
+/// is not harmless: on Windows a DLL loaded by a running server cannot be
+/// overwritten, and setup would fail on files it did not need to touch.
+fn libs_needed() -> bool {
+    let lib = native::lib_dir_path();
+    if !missing_libs().is_empty() {
+        return true;
+    }
+    let current = match fs::read_to_string(lib.join(LIB_MARKER)) {
+        Ok(set) => set == lib_set(),
+        // поставлены до появления метки; версии с тех пор не менялись — те же самые
+        Err(_) => fs::write(lib.join(LIB_MARKER), lib_set()).is_ok(),
+    };
+    // обёртку над CTranslate2 без компилятора собрать не удалось — с ним можно попробовать снова
+    let shim = !cfg!(all(windows, target_env = "msvc")) && !lib.join(native::lib_file("ct2shim")).exists() && cxx().is_some();
+    !current || shim
 }
 
 /// Whether setup has been run here at all: then what is missing is a download
@@ -964,7 +1020,20 @@ pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
         .build()?;
     say("смотрю, чего не хватает");
     let mut plan = Plan::default();
-    let libs_plan = if what != "models" { Some(plan_libs(&http, &mut plan, &tmp).await?) } else { None };
+    // setup libs — поставить заново в любом случае; иначе — только если их нет или они не те
+    let libs_plan = if what == "libs" || (what == "all" && libs_needed()) {
+        // сервер, поднятый voicy up, держит библиотеки открытыми — лучше сказать до скачивания
+        if let Some(pid) = crate::cli::server_pid() {
+            bail!("библиотеки нужно поставить заново, а сервер voicy (процесс {pid}) держит их открытыми.\n\
+                   Остановите его — voicy down — и запустите voicy setup снова.");
+        }
+        Some(plan_libs(&http, &mut plan, &tmp).await?)
+    } else {
+        if what == "all" {
+            say(format!("библиотеки уже на месте: {} — {}", native::lib_dir_path().display(), lib_set().trim()));
+        }
+        None
+    };
     let models_plan = if what != "libs" { Some(plan_models(&http, &mut plan, &tmp).await?) } else { None };
     if plan.items.is_empty() {
         say("всё нужное уже скачано");
