@@ -35,7 +35,7 @@ from engines.device import describe, has_cuda
 
 HERE = Path(__file__).parent
 
-app = FastAPI(title="voicy", version="1.4.1",
+app = FastAPI(title="voicy", version="1.5.0",
               description="Локальный речевой сервер с OpenAI-совместимым API")
 # Модели — за интерфейсами engines/base.py; какую взять, решает окружение
 # (TTS_ENGINE, STT_ENGINE, …), а сервер про их устройство не знает.

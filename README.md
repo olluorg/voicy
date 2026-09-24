@@ -191,7 +191,7 @@ cargo build --release --manifest-path rust\Cargo.toml
 Дальше нужен только сам `voicy.exe` — его можно унести на другую машину:
 
 ```powershell
-voicy.exe setup            @rem библиотеки и модели, 7.3 ГБ
+voicy.exe setup            @rem библиотеки и модели, 7.8 ГБ
 voicy.exe up               @rem поднять и прогреть
 voicy.exe say @текст.txt out.wav
 ```
@@ -259,7 +259,7 @@ silicon идёт под эмуляцией x86-64 и для работы неп�
 sudo apt install build-essential cmake            # g++ — для обёртки над CTranslate2
 curl https://sh.rustup.rs -sSf | sh               # Rust
 cargo build --release --manifest-path rust/Cargo.toml
-rust/target/release/voicy setup                   # библиотеки и модели, 7.3 ГБ
+rust/target/release/voicy setup                   # библиотеки и модели, 7.8 ГБ
 rust/target/release/voicy serve --port 8080
 ```
 
