@@ -1,7 +1,9 @@
 //! Encoding to the formats the OpenAI audio API advertises, the same bytes as
-//! server/audio_io.py: wav and pcm are written directly, everything else goes
-//! through ffmpeg. Opus at 24 kbps is half the size of 32 kbps mp3 and sounds
-//! better on speech. Resampling is libsoxr, as in the Python server.
+//! server/audio_io.py: wav and pcm are written directly, opus, mp3 and flac by
+//! the encoders built into the binary (encode.rs), and only aac and the tempo
+//! change still go through ffmpeg. Opus at 24 kbps is half the size of 32 kbps
+//! mp3 and sounds better on speech. Resampling is libsoxr, as in the Python
+//! server.
 
 use std::path::Path;
 
@@ -20,9 +22,6 @@ pub fn content_type(fmt: &str) -> &'static str {
 
 fn ffmpeg_args(fmt: &str) -> Option<&'static [&'static str]> {
     Some(match fmt {
-        "mp3" => &["-c:a", "libmp3lame", "-b:a", "64k"],
-        "opus" => &["-c:a", "libopus", "-b:a", "24k"],
-        "flac" => &["-c:a", "flac"],
         "aac" => &["-c:a", "aac", "-b:a", "96k"],
         _ => return None,
     })
@@ -145,6 +144,14 @@ pub async fn encode(x: &[f32], sr: u32, fmt: &str) -> ApiResult<(Vec<u8>, &'stat
     let wav = to_wav(x, sr);
     if fmt == "wav" {
         return Ok((wav, content_type("wav")));
+    }
+    if crate::encode::own(&fmt) {
+        let (x, sr, f) = (x.to_vec(), sr, fmt.clone());
+        let data = tokio::task::spawn_blocking(move || crate::encode::encode(&x, sr, &f))
+            .await
+            .map_err(|e| ApiError::internal(e.to_string()))?
+            .map_err(|e| ApiError::internal(format!("{e:#}")))?;
+        return Ok((data, content_type(&fmt)));
     }
     let Some(args) = ffmpeg_args(&fmt) else {
         return Err(ApiError::internal(format!("unsupported response_format: {fmt}")));

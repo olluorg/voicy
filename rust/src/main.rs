@@ -14,6 +14,7 @@ mod cli;
 mod audio;
 mod auth;
 mod contexts;
+mod encode;
 mod engines;
 mod errors;
 mod host;

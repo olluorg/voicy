@@ -117,9 +117,10 @@ docker — образ, нет — исходники. Явно — `--docker` и
 
 Первый запуск скачивает около пяти гигабайт весов, дальше они лежат в кэше.
 Без видеокарты всё работает, но синтез медленнее реального времени
-(`./voicy up --cpu`, в docker — `-e FORCE_CPU=1`); насколько — не мерилось. Для `opus`, `mp3`, `flac`,
-`aac` и изменения темпа нужен `ffmpeg`: в образе он есть, из исходников —
-системный.
+(`./voicy up --cpu`, в docker — `-e FORCE_CPU=1`); насколько — не мерилось.
+Python-серверу для `opus`, `mp3`, `flac`, `aac` и изменения темпа нужен
+системный `ffmpeg` (в образе он есть); бинарнику на Rust — только для `aac`
+и темпа, остальное он кодирует сам.
 
 Что где проверено:
 
@@ -187,9 +188,10 @@ voicy.exe up               @rem поднять и прогреть
 voicy.exe say @текст.txt out.wav
 ```
 
-Замеры на RTX 3080: синтез 5.04 с звука за 1.17 с, распознавание — как
-faster-whisper, 45 из 45 проверок. `ffmpeg` на Windows не обязателен для `wav`,
-но без него откажут `opus`, `mp3`, `flac`, `aac` и изменение темпа:
+Замеры на RTX 3080: синтез 4.56 с звука за 1.07 с (≈×4 к реальному времени),
+распознавание — как у faster-whisper, 46 из 46 проверок на машине без ffmpeg
+(пропущена одна — изменение темпа). `wav`, `opus`, `mp3` и `flac` бинарник
+кодирует сам; `ffmpeg` нужен только для `aac` и темпа:
 `winget install Gyan.FFmpeg`.
 
 **Python-сервер** тоже запускается — через **WSL2** это проверенный путь:
@@ -234,7 +236,7 @@ silicon идёт под эмуляцией x86-64 и для работы неп�
 впереди.
 
 ```bash
-sudo apt install build-essential ffmpeg           # g++ — для обёртки над CTranslate2
+sudo apt install build-essential cmake            # g++ — для обёртки над CTranslate2
 curl https://sh.rustup.rs -sSf | sh               # Rust
 cargo build --release --manifest-path rust/Cargo.toml
 rust/target/release/voicy setup                   # библиотеки и модели, 7.3 ГБ
@@ -326,6 +328,8 @@ article/      статья по исследованию со всем ауди�
 | RUAccent | Apache-2.0 |
 | Whisper, faster-whisper, CTranslate2 | MIT |
 | llama.cpp, whisper.cpp, ONNX Runtime | MIT |
+| libopus | BSD-3-Clause |
+| LAME (mp3) | LGPL-2.1 |
 | Smart Turn v3 | BSD-2-Clause |
 | Silero VAD | MIT |
 | образцы голосов (LibriVox) | общественное достояние |

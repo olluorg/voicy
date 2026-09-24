@@ -8,11 +8,13 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+audiopus_sys = { version = "0.2", features = ["static"] }
 axum = { version = "0.8", features = ["ws", "multipart"] }
 base64 = "0.22"
 bytes = "1"
 clap = { version = "4", features = ["derive", "env"] }
 fancy-regex = "0.19"
+flacenc = "0.5.1"
 flate2 = "1.1.10"
 futures = "0.3"
 half = "2"
@@ -21,6 +23,8 @@ hmac = "0.12"
 libloading = "0.9"
 matrixmultiply = "0.3"
 memmap2 = "0.9"
+mp3lame-encoder = "0.2.5"
+ogg = "0.9.2"
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-24", "half", "cuda"] }
 realfft = "3"
 regex = "1"
