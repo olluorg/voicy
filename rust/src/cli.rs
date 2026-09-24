@@ -473,6 +473,7 @@ pub async fn up(url: &str, wait: f64, do_warm: bool, cpu: bool) -> anyhow::Resul
     let dir = run_dir();
     std::fs::create_dir_all(&dir)?;
     let log_file = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("server.log"))?;
+    let log_from = log_file.metadata().map_or(0, |m| m.len());
     let mut cmd = std::process::Command::new(std::env::current_exe()?);
     cmd.arg("serve").arg("--port").arg(port.to_string())
         .stdin(std::process::Stdio::null())
@@ -491,7 +492,7 @@ pub async fn up(url: &str, wait: f64, do_warm: bool, cpu: bool) -> anyhow::Resul
         use std::os::windows::process::CommandExt;
         cmd.creation_flags(0x00000008 | 0x00000200); // DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
     }
-    let child = cmd.spawn().context("не запускается сервер")?;
+    let mut child = cmd.spawn().context("не запускается сервер")?;
     std::fs::write(dir.join("server.pid"), child.id().to_string())?;
     log(format!("процесс {}, журнал — {}", child.id(), dir.join("server.log").display()));
     log("ждём готовности (первый запуск грузит модели, это долго) …");
@@ -500,6 +501,13 @@ pub async fn up(url: &str, wait: f64, do_warm: bool, cpu: bool) -> anyhow::Resul
         if api.health().await.is_some() {
             log(format!("voicy на {url}, консоль там же"));
             return if do_warm { warm(url).await } else { Ok(()) };
+        }
+        // сервер не поднялся и уже не поднимется — не ждать до конца срока
+        if let Ok(Some(status)) = child.try_wait() {
+            let _ = std::fs::remove_file(dir.join("server.pid"));
+            let text = std::fs::read(dir.join("server.log")).unwrap_or_default();
+            let tail = String::from_utf8_lossy(text.get(log_from as usize..).unwrap_or_default());
+            bail!("сервер остановился ({status}):\n{}", tail.trim_end());
         }
         tokio::time::sleep(Duration::from_secs(1)).await;
     }

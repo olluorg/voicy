@@ -263,7 +263,8 @@ rust/target/release/voicy setup                   # библиотеки и мо
 rust/target/release/voicy serve --port 8080
 ```
 
-`voicy setup` качает всё сам: готовые llama.cpp, CTranslate2 и ONNX Runtime,
+`voicy setup` качает всё сам — показав прежде, что и в какой каталог ляжет,
+и дождавшись согласия (`--yes` — не спрашивать): готовые llama.cpp, CTranslate2 и ONNX Runtime,
 модели Whisper, Silero, Smart Turn и Qwen3-TTS, переведённый в GGUF и ONNX
 ([sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf)),
 — и собирает обёртку над CTranslate2: у неё C++-интерфейс, и на это нужен

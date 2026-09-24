@@ -218,6 +218,9 @@ enum Command {
         /// libs, models или всё сразу
         #[arg(default_value = "all", value_parser = ["all", "libs", "models"])]
         what: String,
+        /// скачать не спрашивая: без этого setup показывает, что и куда ляжет, и ждёт согласия
+        #[arg(long, short)]
+        yes: bool,
     },
     /// Родное распознавание faster-whisper: задания из JSON [{"file", "language", "prompt",
     /// "hotwords", "word_timestamps", "live", "draft"}], по строке JSON на задание — сверка с Python
@@ -362,6 +365,12 @@ async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<Pa
         None => cache.join("contexts"),
     });
 
+    // Недокачанная установка: сервер поднялся бы и падал на первом запросе
+    // или молча ушёл бы на движки Python. Лучше сказать сразу.
+    let missing = setup::missing();
+    if !missing.is_empty() && setup::started() {
+        anyhow::bail!("{}", setup::describe(&missing));
+    }
     let engines = engines::Engines::start(&python, server_dir.as_deref()).await?;
     let var = |n: &str| std::env::var(n).unwrap_or_default();
     let app = Arc::new(App {
@@ -510,11 +519,10 @@ fn launched_by_click() -> bool {
 /// Дружелюбный путь: без команд и без чтения справки.
 async fn welcome() -> anyhow::Result<()> {
     eprintln!("voicy {}\n", env!("CARGO_PKG_VERSION"));
-    let needs_setup = native::lib_dir().is_err()
-        || !native::cache_dir().join("models").join("whisper").exists();
-    if needs_setup {
-        eprintln!("Первый запуск: скачиваю библиотеки и модели, это гигабайты и не быстро.\n");
-        setup::run("all").await?;
+    // не «есть ли каталог», а всё ли на месте: оборванная закачка оставляет каталоги
+    if !setup::missing().is_empty() {
+        eprintln!("Первый запуск: нужны библиотеки и модели, это гигабайты и не быстро.\n");
+        setup::run("all", false).await?;
         eprintln!();
     }
     let url = format!("http://127.0.0.1:{}", DEFAULT_PORT);
@@ -563,7 +571,7 @@ async fn main() -> anyhow::Result<()> {
     let url = cli.url.clone().unwrap_or_else(cli::default_url);
     match cli.command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
-        Command::Setup { what } => setup::run(&what).await,
+        Command::Setup { what, yes } => setup::run(&what, yes).await,
         Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
             cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
         Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>

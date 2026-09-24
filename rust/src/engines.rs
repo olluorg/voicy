@@ -97,10 +97,7 @@ impl NativeTts {
         // q5_k: та же разборчивость и то же сходство голоса, что у f16 и torch, при 2.4 ГБ (experiments/20)
         let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
         let talker = format!("qwen3_tts_talker.{variant}.gguf");
-        let dir = std::env::var_os("VOICY_TTS_GGUF_DIR").map(PathBuf::from).unwrap_or_else(|| {
-            let stress = models().join(TTS_STRESS_DIR);
-            if stress.join(&talker).is_file() { stress } else { models().join(TTS_BASE_DIR) }
-        });
+        let dir = crate::setup::tts_dir();
         let files = native::qwen::Files {
             talker,
             predictor: "qwen3_tts_predictor.q8_0.gguf".into(),
