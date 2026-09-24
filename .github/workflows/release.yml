@@ -7,6 +7,11 @@ name: сборки
 #
 # По тегу v* — выпуск с файлами и контрольными суммами; вручную — только сборка,
 # чтобы проверить, что она жива.
+#
+# Подписи удостоверяющего центра у проекта пока нет (docs/code-signing-policy.md),
+# поэтому к каждому файлу прикладывается подтверждение сборки: GitHub заверяет,
+# что этот файл собран этим workflow из этого коммита. Проверяется так:
+#     gh attestation verify voicy-windows-x64.exe --repo olluorg/voicy
 
 on:
   push:
@@ -15,6 +20,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write        # подтверждение сборки подписывается через OIDC
+  attestations: write
 
 jobs:
   build:
@@ -47,6 +54,11 @@ jobs:
       - name: запускается без кэша
         shell: bash
         run: ./${{ matrix.asset }} --version && ./${{ matrix.asset }} status || true
+
+      - name: подтверждение сборки
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: ${{ matrix.asset }}
 
       - uses: actions/upload-artifact@v4
         with:
