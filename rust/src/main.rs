@@ -23,6 +23,7 @@ mod live;
 mod native;
 mod setup;
 mod speak;
+mod tempo;
 mod textprep;
 mod transcripts;
 mod voices;

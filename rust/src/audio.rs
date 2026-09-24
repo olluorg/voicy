@@ -1,7 +1,7 @@
 //! Encoding to the formats the OpenAI audio API advertises, the same bytes as
 //! server/audio_io.py: wav and pcm are written directly, opus, mp3 and flac by
-//! the encoders built into the binary (encode.rs), and only aac and the tempo
-//! change still go through ffmpeg. Opus at 24 kbps is half the size of 32 kbps
+//! the encoders built into the binary (encode.rs); the tempo change is
+//! tempo.rs, and only aac still goes through ffmpeg. Opus at 24 kbps is half the size of 32 kbps
 //! mp3 and sounds better on speech. Resampling is libsoxr, as in the Python
 //! server.
 
@@ -166,20 +166,15 @@ pub async fn encode(x: &[f32], sr: u32, fmt: &str) -> ApiResult<(Vec<u8>, &'stat
     Ok((tokio::fs::read(&dst).await?, content_type(&fmt)))
 }
 
-/// Change tempo without pitch, via ffmpeg's WSOLA. Applied to finished audio:
-/// the model's own speed control raised the error rate fivefold (ADR 0005).
+/// Change tempo without pitch (tempo.rs). Applied to finished audio: the
+/// model's own speed control raised the error rate fivefold (ADR 0005).
 pub async fn stretch(x: Vec<f32>, sr: u32, factor: f64) -> ApiResult<Vec<f32>> {
     if (factor - 1.0).abs() < 1e-3 {
         return Ok(x);
     }
-    let factor = factor.clamp(0.5, 2.0);
-    let dir = tempfile::tempdir()?;
-    let (a, b) = (dir.path().join("a.wav"), dir.path().join("b.wav"));
-    tokio::fs::write(&a, to_wav(&x, sr)).await?;
-    let filter = format!("atempo={factor}");
-    ffmpeg(&["-i", path_str(&a), "-filter:a", &filter, path_str(&b)], "changing the tempo").await?;
-    let data = tokio::fs::read(&b).await?;
-    read_wav(&data).map(|(y, _)| y).ok_or_else(|| ApiError::internal("ffmpeg wrote an unreadable wav"))
+    tokio::task::spawn_blocking(move || crate::tempo::stretch(&x, sr, factor))
+        .await
+        .map_err(|e| ApiError::internal(e.to_string()))
 }
 
 fn path_str(p: &Path) -> &str {

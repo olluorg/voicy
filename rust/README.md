@@ -39,7 +39,7 @@ say hear job jobs cancel contexts voices add-voice prepare up down status warm
 
 | | по умолчанию | как выбрать другое |
 |---|---|---|
-| форматы звука | `wav`, `pcm`, `opus`, `mp3`, `flac` — в процессе (libopus, LAME, flacenc); `aac` и темп — системный ffmpeg | — |
+| форматы звука | `wav`, `pcm`, `opus`, `mp3`, `flac` и темп — в процессе (libopus, LAME, flacenc, свой WSOLA); `aac` — системный ffmpeg | — |
 | синтез | Qwen3-TTS на llama.cpp + ONNX Runtime, talker q5_k | `TTS_GGUF_TALKER=q8_0\|f16`; `TTS_ENGINE=qwen3-tts` — PyTorch в Python |
 | распознавание | faster-whisper: CTranslate2 и его логика на Rust (experiments/22) | `STT_ENGINE=whisper.cpp` — хуже на терминах (experiments/21) |
 | конец реплики | Smart Turn на ONNX Runtime | `TURN_ENGINE=…` — движок Python |
@@ -79,9 +79,8 @@ Python не запускается. `/health` показывает, кто гд�
 ## Где проверено
 
 Linux x86-64 и Windows x86-64, оба с NVIDIA. На Windows, где ffmpeg нет вовсе:
-синтез 4.56 с звука за 1.07 с, распознавание верное, `wav`, `opus`, `mp3`
-и `flac` кодируются в процессе, 46 из 46 проверок — пропущена одна, изменение
-темпа, которому ffmpeg ещё нужен. Четыре особенности Windows, из-за которых это не
+синтез 4.56 с звука за 1.07 с, распознавание верное, форматы и темп — в самом
+процессе, 47 из 47 проверок — столько же, сколько на Linux. Четыре особенности Windows, из-за которых это не
 работало сразу, описаны в коде рядом с их решениями: экспорт функций из DLL,
 имя в `LIBRARY` импортной библиотеки, `localhost` как IPv6 и два OpenMP
 в одном процессе.
