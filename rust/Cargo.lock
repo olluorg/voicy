@@ -2647,6 +2647,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "bytes",
+ "cc",
  "clap",
  "fancy-regex",
  "flate2",

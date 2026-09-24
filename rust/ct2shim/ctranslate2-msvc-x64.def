@@ -1,0 +1,26 @@
+; Импортная библиотека для ctranslate2.dll: колесо CTranslate2 её не содержит,
+; а MSVC без неё не слинкует. Здесь ровно те символы, которые вызывает
+; ct2shim.cpp (dumpbin /imports по собранной обёртке), в разметке MSVC x64.
+; LIBRARY обязателен: без него имя DLL берётся из имени этого файла.
+LIBRARY ctranslate2.dll
+EXPORTS
+  ??$?0M@StorageView@ctranslate2@@QEAA@V?$vector@_JV?$allocator@_J@std@@@std@@AEBV?$vector@MV?$allocator@M@std@@@3@W4Device@1@@Z
+  ??0ModelLoader@models@ctranslate2@@QEAA@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+  ??0StorageView@ctranslate2@@QEAA@$$QEAV01@@Z
+  ??0ThreadPool@ctranslate2@@QEAA@V?$vector@V?$unique_ptr@VWorker@ctranslate2@@U?$default_delete@VWorker@ctranslate2@@@std@@@std@@V?$allocator@V?$unique_ptr@VWorker@ctranslate2@@U?$default_delete@VWorker@ctranslate2@@@std@@@std@@@2@@std@@_KH@Z
+  ??1StorageView@ctranslate2@@QEAA@XZ
+  ??1ThreadPool@ctranslate2@@QEAA@XZ
+  ?align@Whisper@models@ctranslate2@@QEAA?AV?$vector@V?$future@UWhisperAlignmentResult@models@ctranslate2@@@std@@V?$allocator@V?$future@UWhisperAlignmentResult@models@ctranslate2@@@std@@@2@@std@@AEBVStorageView@3@V?$vector@_KV?$allocator@_K@std@@@5@V?$vector@V?$vector@_KV?$allocator@_K@std@@@std@@V?$allocator@V?$vector@_KV?$allocator@_K@std@@@std@@@2@@5@1_J@Z
+  ?create_from_model@WhisperReplica@models@ctranslate2@@SA?AV?$unique_ptr@VWhisperReplica@models@ctranslate2@@U?$default_delete@VWhisperReplica@models@ctranslate2@@@std@@@std@@AEBVModel@23@@Z
+  ?destroy_context@ctranslate2@@YAXW4Device@1@@Z
+  ?detect_language@Whisper@models@ctranslate2@@QEAA?AV?$vector@V?$future@V?$vector@U?$pair@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@M@std@@V?$allocator@U?$pair@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@M@std@@@2@@std@@@std@@V?$allocator@V?$future@V?$vector@U?$pair@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@M@std@@V?$allocator@U?$pair@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@M@std@@@2@@std@@@std@@@2@@std@@AEBVStorageView@3@@Z
+  ?encode@Whisper@models@ctranslate2@@QEAA?AV?$future@VStorageView@ctranslate2@@@std@@AEBVStorageView@3@_N@Z
+  ?generate@Whisper@models@ctranslate2@@QEAA?AV?$vector@V?$future@UWhisperGenerationResult@models@ctranslate2@@@std@@V?$allocator@V?$future@UWhisperGenerationResult@models@ctranslate2@@@std@@@2@@std@@AEBVStorageView@3@V?$vector@V?$vector@_KV?$allocator@_K@std@@@std@@V?$allocator@V?$vector@_KV?$allocator@_K@std@@@std@@@2@@5@UWhisperOptions@23@@Z
+  ?get_allocator@ctranslate2@@YAAEAVAllocator@1@W4Device@1@@Z
+  ?is_multilingual@Whisper@models@ctranslate2@@QEBA_NXZ
+  ?load@ModelLoader@models@ctranslate2@@QEBA?AV?$vector@V?$shared_ptr@$$CBVModel@models@ctranslate2@@@std@@V?$allocator@V?$shared_ptr@$$CBVModel@models@ctranslate2@@@std@@@2@@std@@XZ
+  ?n_mels@Whisper@models@ctranslate2@@QEBA_KXZ
+  ?set_device_index@ctranslate2@@YAXW4Device@1@H@Z
+  ?set_num_threads@ctranslate2@@YAX_K@Z
+  ?str_to_compute_type@ctranslate2@@YA?AW4ComputeType@1@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+  ?synchronize_stream@ctranslate2@@YAXW4Device@1@@Z

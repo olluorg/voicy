@@ -13,8 +13,11 @@ target/release/voicy up                       # поднять и прогрет
 target/release/voicy say "Проверка." out.wav  # тот же бинарник — и клиент
 ```
 
-`setup` качает готовые библиотеки и модели (7.3 ГБ) и собирает обёртку над
-CTranslate2. Python не нужен: Qwen3-TTS берётся уже переведённым —
+`setup` качает готовые библиотеки и модели (7.3 ГБ). Обёртку над C++-интерфейсом
+CTranslate2 на Windows собирает `build.rs` — внутрь бинарника, с отложенной
+загрузкой `ctranslate2.dll`, так что на машине, где сервер работает, компилятор
+не нужен; на Unix её по-прежнему собирает `setup` (нужен g++). Python не нужен:
+Qwen3-TTS берётся уже переведённым —
 [sknyazev/qwen3-tts-12hz-1.7b-base-gguf](https://huggingface.co/sknyazev/qwen3-tts-12hz-1.7b-base-gguf),
 свой репозиторий задаётся через `VOICY_TTS_GGUF_REPO`. Перевести официальные
 веса самому — `scripts/convert_qwen.py`, вот там нужен PyTorch.
@@ -52,6 +55,10 @@ Python не запускается. `/health` показывает, кто гд�
 
 ## Откуда что берётся
 
+- **Заголовки CTranslate2** — `ct2shim/include/`: те 77 файлов, что нужны
+  обёртке, тега v4.8.2, чтобы сборка не зависела от сети. Рядом —
+  `ctranslate2-msvc-x64.def`: двадцать символов, которые обёртка вызывает,
+  из них делается импортная библиотека (в колесе CTranslate2 её нет).
 - **Библиотеки** — `~/.cache/voicy/lib/<платформа>/` (или `VOICY_LIB_DIR`):
   llama.cpp b11090, whisper.cpp b5130, CTranslate2 4.8.2 (из колеса
   faster-whisper) с cuBLAS 12, ONNX Runtime 1.30 с провайдером CUDA, CUDA 13

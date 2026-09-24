@@ -169,16 +169,22 @@ git clone https://github.com/olluorg/voicy && cd voicy
 
 **Бинарник на Rust** — то, что проверено на Windows с настоящими моделями:
 один файл, который сам ставит всё остальное. Синтез и распознавание считаются
-в его процессе, Python не нужен. Собирается он пока сам — готовых сборок ещё
-нет, и для сборки нужны Rust и «Build Tools for Visual Studio» с компонентом C++:
+в его процессе, Python не нужен, компилятор — тоже: обёртка над CTranslate2
+собрана внутрь бинарника. Готовых сборок пока нет, так что сначала собрать
+самому (Rust и Build Tools нужны только для этого шага):
 
 ```powershell
 winget install Rustlang.Rustup Git.Git Microsoft.VisualStudio.2022.BuildTools
 git clone https://github.com/olluorg/voicy; cd voicy
 cargo build --release --manifest-path rust\Cargo.toml
-rust\target\release\voicy.exe setup            @rem библиотеки и модели, 7.3 ГБ
-rust\target\release\voicy.exe up               @rem поднять и прогреть
-rust\target\release\voicy.exe say @текст.txt out.wav
+```
+
+Дальше нужен только сам `voicy.exe` — его можно унести на другую машину:
+
+```powershell
+voicy.exe setup            @rem библиотеки и модели, 7.3 ГБ
+voicy.exe up               @rem поднять и прогреть
+voicy.exe say @текст.txt out.wav
 ```
 
 Замеры на RTX 3080: синтез 5.04 с звука за 1.17 с, распознавание — как

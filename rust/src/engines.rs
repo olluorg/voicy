@@ -189,7 +189,9 @@ impl NativeStt {
             }
             "" | "faster-whisper" => {
                 let ct2 = dir.join(format!("faster-whisper-{name}"));
-                if !(ct2.join("model.bin").is_file() && has("ct2shim")) {
+                // на Windows обёртка вкомпилирована в бинарник, искать файл нечего
+                let shim = cfg!(all(windows, target_env = "msvc")) || has("ct2shim");
+                if !(ct2.join("model.bin").is_file() && shim) {
                     return None;
                 }
                 SttKind::Ct2 { dir: ct2, vad: models().join("vad").join("silero_vad_v6.onnx") }

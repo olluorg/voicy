@@ -75,7 +75,29 @@ struct Api {
     detect_language: unsafe extern "C" fn(P, P, *mut *mut c_char, *mut *mut f32, *mut usize, *mut c_char, usize) -> i32,
     align: unsafe extern "C" fn(P, P, *const usize, usize, *const usize, usize, usize, c_long, *mut *mut i64,
                                 *mut usize, *mut *mut f32, *mut usize, *mut c_char, usize) -> i32,
-    _lib: Library,
+    /// Внутри бинарника библиотеки нет: обёртка вкомпилирована (build.rs).
+    _lib: Option<Library>,
+}
+
+// На Windows обёртка вкомпилирована в бинарник, а ctranslate2.dll подгружается
+// отложенно — при первом из этих вызовов (build.rs).
+#[cfg(all(windows, target_env = "msvc"))]
+unsafe extern "C" {
+    fn ct2w_load(path: *const c_char, cuda: i32, index: i32, compute: *const c_char, intra: usize, inter: usize,
+                 err: *mut c_char, errlen: usize) -> P;
+    fn ct2w_free(m: P);
+    fn ct2w_is_multilingual(m: P) -> i32;
+    fn ct2w_n_mels(m: P) -> usize;
+    fn ct2w_encode(m: P, features: *const f32, n_mels: usize, n_frames: usize, err: *mut c_char, errlen: usize) -> P;
+    fn ct2w_free_sv(sv: P);
+    fn ct2w_generate(m: P, enc: P, prompt: *const usize, n_prompt: usize, opts: *const GenOpts, ids: *mut *mut usize,
+                     n_ids: *mut usize, score: *mut f32, nsp: *mut f32, err: *mut c_char, errlen: usize) -> i32;
+    fn ct2w_free_buf(p: *mut c_void);
+    fn ct2w_detect_language(m: P, enc: P, tokens: *mut *mut c_char, probs: *mut *mut f32, n: *mut usize,
+                            err: *mut c_char, errlen: usize) -> i32;
+    fn ct2w_align(m: P, enc: P, start: *const usize, n_start: usize, text: *const usize, n_text: usize,
+                  num_frames: usize, median: c_long, pairs: *mut *mut i64, n_pairs: *mut usize, probs: *mut *mut f32,
+                  n_probs: *mut usize, err: *mut c_char, errlen: usize) -> i32;
 }
 
 fn err_text(e: &ErrBuf) -> String {
@@ -84,6 +106,8 @@ fn err_text(e: &ErrBuf) -> String {
 
 impl Api {
     fn load(dir: &Path) -> anyhow::Result<Api> {
+        #[cfg(all(windows, target_env = "msvc"))]
+        let _ = dir; // каталог нужен только там, где обёртка лежит файлом
         // CTranslate2 открывает cuBLAS 12 по имени, когда он понадобится: загруженный
         // заранее глобально находится по этому имени, где бы ни лежал.
         #[cfg(unix)]
@@ -96,6 +120,22 @@ impl Api {
                 }
             }
         }
+        #[cfg(all(windows, target_env = "msvc"))]
+        return Ok(Api {
+            load: ct2w_load,
+            free: ct2w_free,
+            is_multilingual: ct2w_is_multilingual,
+            n_mels: ct2w_n_mels,
+            encode: ct2w_encode,
+            free_sv: ct2w_free_sv,
+            generate: ct2w_generate,
+            free_buf: ct2w_free_buf,
+            detect_language: ct2w_detect_language,
+            align: ct2w_align,
+            _lib: None,
+        });
+        #[cfg(not(all(windows, target_env = "msvc")))]
+        {
         let lib = super::llama::open_lib(dir, "ct2shim")?;
         macro_rules! f {
             ($n:literal) => {
@@ -113,8 +153,9 @@ impl Api {
             free_buf: f!("ct2w_free_buf"),
             detect_language: f!("ct2w_detect_language"),
             align: f!("ct2w_align"),
-            _lib: lib,
+            _lib: Some(lib),
         })
+        }
     }
 }
 

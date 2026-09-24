@@ -19,8 +19,9 @@
 
 using namespace ctranslate2;
 
-// Windows не выносит ничего наружу без явной пометки, unix выносит всё
-#ifdef _WIN32
+// Windows не выносит ничего наружу без явной пометки, unix выносит всё.
+// Внутри бинарника (CT2SHIM_STATIC) выносить нечего: вызовы прямые.
+#if defined(_WIN32) && !defined(CT2SHIM_STATIC)
 #define CT2W __declspec(dllexport)
 #else
 #define CT2W

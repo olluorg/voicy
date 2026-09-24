@@ -230,9 +230,14 @@ fn untar_all(archive: &Path, dest: &Path) -> anyhow::Result<PathBuf> {
 
 // ------------------------------------------------------------------- обёртка
 
-/// ct2shim: a C face for CTranslate2's C++ API, and the one thing built here.
+/// ct2shim: a C face for CTranslate2's C++ API, and the one thing built here —
+/// on Unix. On Windows it is compiled into the binary instead (build.rs), since
+/// a compiler is not something to ask of whoever just runs the server.
 /// Without it recognition falls back to whisper.cpp or to the Python engine.
 async fn build_shim(lib: &Path, tmp: &Path) -> anyhow::Result<()> {
+    if cfg!(all(windows, target_env = "msvc")) {
+        return Ok(()); // там она вкомпилирована в бинарник (build.rs)
+    }
     let src_archive = cached(&format!("https://github.com/OpenNMT/CTranslate2/archive/refs/tags/v{CT2}.tar.gz"), tmp).await?;
     let root = untar_all(&src_archive, &tmp.join("ct2-src"))?;
     let cpp = tmp.join("ct2shim.cpp");
@@ -416,15 +421,16 @@ async fn libs(tmp: &Path) -> anyhow::Result<()> {
     if cfg!(windows) {
         openmp_bridge(&lib, tmp)?;
     }
-    let so = lib.join(native::lib_file("onnxruntime"));
-    if !so.exists() && !cfg!(windows) {
+    // В колесе лежит libonnxruntime.so.1.30.0, а ищется короткое имя
+    #[cfg(unix)]
+    if !lib.join(native::lib_file("onnxruntime")).exists() {
+        let so = lib.join(native::lib_file("onnxruntime"));
         let mut versioned: Vec<PathBuf> = fs::read_dir(&lib)?
             .filter_map(|e| e.ok().map(|e| e.path()))
             .filter(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with("libonnxruntime.so.")))
             .collect();
         versioned.sort();
         if let Some(v) = versioned.last() {
-            #[cfg(unix)]
             std::os::unix::fs::symlink(v.file_name().unwrap_or_default(), &so)?;
         }
     }
