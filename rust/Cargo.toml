@@ -1,6 +1,6 @@
 [package]
 name = "voicy"
-version = "0.1.0"
+version = "1.4.0"
 edition = "2024"
 description = "Local speech server with an OpenAI-compatible audio API"
 license = "MIT"

@@ -71,11 +71,11 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     steps:
-      # Сначала репозиторий, потом файлы: checkout вычищает рабочий каталог
+      # Сначала репозиторий, потом файлы: checkout вычищает рабочий каталог.
+      # Полная история — чтобы прочитать описание тега: в нём сказано, что в выпуске.
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: .github/release-notes.md
-          sparse-checkout-cone-mode: false
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -84,6 +84,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          { git tag -l --format='%(contents)' "$GITHUB_REF_NAME"; echo; cat .github/release-notes.md; } > body.md
           gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
-            --title "voicy $GITHUB_REF_NAME" --notes-file .github/release-notes.md --verify-tag \
+            --title "voicy $GITHUB_REF_NAME" --notes-file body.md --verify-tag \
             || gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber

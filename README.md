@@ -13,6 +13,10 @@ docker compose up -d
 
 Консоль — `http://localhost:8080`, API — `http://localhost:8080/v1`.
 
+Либо один файл без docker и Python — из [выпусков](https://github.com/olluorg/voicy/releases):
+`voicy setup && voicy up`. Пока для Linux x86-64 и Windows x86-64 с NVIDIA
+([подробнее](#сервер-на-rust--одним-бинарником)).
+
 ## Что умеет
 
 **Синтез речи**
