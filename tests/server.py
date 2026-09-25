@@ -53,6 +53,9 @@ class Server:
         if IMPL == "rust":
             # сервер на Rust; движки — в дочернем Python того же окружения, что у проверок
             env.update(VOICY_HOME=str(ROOT), VOICY_PYTHON=sys.executable)
+            # свой кэш: сервер на кэш — один (rust/src/instance.rs), а проверки
+            # поднимают несколько сразу и не должны задевать настоящий voicy
+            env["VOICY_CACHE"] = str(self.dir / "cache")
             cmd = [str(RUST_BIN), "serve", "--host", "127.0.0.1", "--port", str(port)]
         else:
             cmd = [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1",
