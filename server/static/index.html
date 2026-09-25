@@ -93,6 +93,12 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
 .drop.over{border-color:var(--accent);color:var(--ink)}
 .rec{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--bad);display:inline-block}
+.mic{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.mic[hidden]{display:none}
+.meter{width:140px;height:8px;background:var(--raised);border:1px solid var(--line);
+  border-radius:99px;overflow:hidden;flex:none}
+.meter i{display:block;height:100%;width:0;background:var(--good);transition:width .06s linear}
+.meter.loud i{background:var(--bad)}
 </style>
 </head>
 <body data-mode="easy">
@@ -169,9 +175,17 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
     <button class="ghost" id="live">Диктовка</button>
     <span id="rec-state" class="note"></span>
   </div>
+  <div class="mic" id="mic-box" hidden>
+    <span class="meter" id="mic-meter" title="Уровень звука с микрофона: движется, когда он вас слышит"><i id="mic-level"></i></span>
+    <span class="note" id="mic-name" style="margin:0"></span>
+  </div>
+  <div class="err" id="mic-warn" hidden></div>
 
   <div class="adv">
     <h3>Параметры</h3>
+    <div style="margin-bottom:12px"><label for="mic">Микрофон — можно сменить и во время записи</label>
+      <select id="mic"><option value="">системный по умолчанию</option></select>
+      <div class="note" id="mic-hint"></div></div>
     <div class="row r3">
       <div><label for="stt-lang">Язык</label>
         <input type="text" id="stt-lang" placeholder="ru — пусто = определить"></div>
@@ -487,34 +501,152 @@ function wavFromChunks(chunks, rate){
   return new Blob([buf], {type: 'audio/wav'});
 }
 
+/* ------------------------------------------------------------------ микрофон
+
+   Запись и диктовка берут звук здесь. Пока микрофон открыт, под кнопками
+   видно, что он слышит: полоса уровня и имя устройства. Выключенный в системе
+   или не тот микрофон отдаёт ровную тишину — о ней сказано словами, иначе
+   это выясняется только по пустому тексту в конце.
+
+   Устройство выбирается в подробном режиме и меняется на ходу: заменяется
+   только источник звука, а AudioContext, запись и соединение диктовки
+   остаются те же. Выбор запоминается в браузере; если устройство отключили,
+   берётся системное по умолчанию. */
+const MIC_KEY = 'voicy-mic';
+const micId = () => { try { return localStorage.getItem(MIC_KEY) || ''; } catch { return ''; } };
+const micAudio = id => ({audio: {channelCount: 1, echoCancellation: true, ...(id ? {deviceId: {exact: id}} : {})}});
+let activeMic = null;
+
+async function micStream(id){
+  try { return await navigator.mediaDevices.getUserMedia(micAudio(id)); }
+  catch(e){
+    if (!id || !['OverconstrainedError', 'NotFoundError'].includes(e.name)) throw e;
+    try { localStorage.removeItem(MIC_KEY); } catch {}
+    $('#mic').value = '';
+    $('#mic-hint').textContent = 'Выбранного микрофона больше нет — взял системный по умолчанию.';
+    return navigator.mediaDevices.getUserMedia(micAudio(''));
+  }
+}
+
+async function listMics(){
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+  const all = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+  // «default» и «communications» у Chrome — не устройства, а указатели на них
+  const def = all.find(d => d.deviceId === 'default');
+  const real = all.filter(d => d.deviceId && !['default', 'communications'].includes(d.deviceId));
+  const sel = $('#mic'), want = micId();
+  const option = (value, text) => { const o = document.createElement('option'); o.value = value; o.textContent = text; return o; };
+  sel.replaceChildren(
+    option('', 'системный по умолчанию' + (def?.label ? ' — ' + def.label.replace(/^[^-]*-\s*/, '') : '')),
+    ...real.map((d, i) => option(d.deviceId, d.label || 'микрофон ' + (i + 1))));
+  sel.value = real.some(d => d.deviceId === want) ? want : '';
+  if (!$('#mic-hint').textContent.startsWith('Выбранного'))
+    $('#mic-hint').textContent = real.length && !real[0].label
+      ? 'Названия устройств браузер покажет, когда разрешит доступ к микрофону — после первой записи.' : '';
+}
+navigator.mediaDevices?.addEventListener?.('devicechange', () => listMics().catch(() => {}));
+listMics().catch(() => {});
+
+$('#mic').onchange = async () => {
+  const id = $('#mic').value;
+  try { localStorage.setItem(MIC_KEY, id); } catch {}
+  $('#mic-hint').textContent = '';
+  if (activeMic){
+    try { activeMic.attach(await micStream(id)); }
+    catch(e){ $('#stt-err').textContent = 'Этот микрофон не открылся: ' + e.message; }
+  }
+};
+
+/* Открывает микрофон и отдаёт сырые отсчёты в onChunk. */
+async function openMic(onChunk){
+  const stream = await micStream(micId());
+  const ctx = new AudioContext();
+  await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([LIVE_WORKLET], {type:'text/javascript'})));
+  const tap = new AudioWorkletNode(ctx, 'tap');
+  tap.port.onmessage = e => onChunk(e.data);
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 2048;
+  const mic = {
+    ctx, stream: null, src: null,
+    attach(next){
+      if (mic.src) mic.src.disconnect();
+      if (mic.stream) mic.stream.getTracks().forEach(t => t.stop());
+      mic.stream = next;
+      mic.src = ctx.createMediaStreamSource(next);
+      mic.src.connect(tap);
+      mic.src.connect(analyser);
+      const track = next.getAudioTracks()[0];
+      $('#mic-name').textContent = track?.label ? 'слышу: ' + track.label : '';
+      if (track) track.onended = () => warn('Микрофон отключился — выберите другой или начните заново.');
+      mic.silentSince = null;
+    },
+    close(){
+      mic.closed = true;
+      if (mic.stream) mic.stream.getTracks().forEach(t => t.stop());
+      ctx.close();
+      $('#mic-box').hidden = true; $('#mic-warn').hidden = true;
+      if (activeMic === mic) activeMic = null;
+    },
+  };
+  const warn = text => { $('#mic-warn').textContent = text; $('#mic-warn').hidden = !text; };
+  mic.attach(stream);
+  activeMic = mic;
+  $('#mic-box').hidden = false; warn('');
+  listMics().catch(() => {});   // доступ разрешён — теперь у устройств есть имена
+
+  // полоса уровня: RMS в дБ от −60 до 0, быстрый подъём и плавный спад
+  const buf = new Float32Array(analyser.fftSize);
+  let shown = 0;
+  const draw = () => {
+    if (mic.closed) return;
+    analyser.getFloatTimeDomainData(buf);
+    let sum = 0, peak = 0;
+    for (const x of buf){ sum += x * x; peak = Math.max(peak, Math.abs(x)); }
+    const db = 20 * Math.log10(Math.sqrt(sum / buf.length) + 1e-10);
+    shown = Math.max(Math.min(1, Math.max(0, (db + 60) / 60)), shown * 0.92);
+    $('#mic-level').style.width = (100 * shown).toFixed(1) + '%';
+    $('#mic-meter').classList.toggle('loud', peak > 0.98);
+    // тишина ниже −80 дБ дольше трёх секунд — так звучит выключенный микрофон, а не тихая комната
+    const now = performance.now();
+    if (db < -80){
+      mic.silentSince ??= now;
+      if (now - mic.silentSince > 3000)
+        warn('Звука нет — микрофон выключен в системе или выбран не тот.' +
+             (document.body.dataset.mode === 'advanced' ? ' Другой можно выбрать в параметрах ниже.'
+                                                         : ' Другой можно выбрать в режиме «Подробно».'));
+    } else if (mic.silentSince !== null){
+      mic.silentSince = null; warn('');
+    }
+    requestAnimationFrame(draw);
+  };
+  draw();
+  return mic;
+}
+
 let rec = null;
 $('#rec').onclick = async () => {
   if (rec){
-    const {ctx, stream, chunks} = rec;
+    const {mic, chunks} = rec;
     rec = null;
-    stream.getTracks().forEach(t => t.stop());
-    const rate = ctx.sampleRate;
-    await ctx.close();
+    const rate = mic.ctx.sampleRate;
+    mic.close();
     const blob = wavFromChunks(chunks, rate);
     setPending(new File([blob], 'recording.wav', {type: 'audio/wav'}));
     $('#rec').textContent = 'Записать с микрофона';
     $('#rec-state').textContent = '';
     return;
   }
+  if (live){ $('#stt-err').textContent = 'Сначала закончите диктовку.'; return; }
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true}});
-    const ctx = new AudioContext();
-    await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([LIVE_WORKLET], {type:'text/javascript'})));
-    const src = ctx.createMediaStreamSource(stream), tap = new AudioWorkletNode(ctx, 'tap');
-    src.connect(tap);
-    rec = {ctx, stream, chunks: []};
-    tap.port.onmessage = e => { if (rec) rec.chunks.push(e.data); };
+    const chunks = [];
+    const mic = await openMic(c => chunks.push(c));
+    rec = {mic, chunks};
     $('#rec').textContent = 'Остановить';
     const t0 = Date.now();
     const tick = () => {
       if (!rec) return;
       $('#rec-state').innerHTML = `<span class="dot"></span> идёт запись, ${((Date.now()-t0)/1000).toFixed(0)} с`;
-      requestAnimationFrame(() => setTimeout(tick, 200));
+      setTimeout(tick, 250);
     };
     tick();
   }catch(e){ $('#stt-err').textContent = 'Микрофон недоступен: ' + e.message; }
@@ -533,11 +665,10 @@ registerProcessor('tap', Tap);`;
 let live = null;
 async function liveStart(){
   $('#stt-err').textContent = '';
-  const stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true}});
-  const ctx = new AudioContext();
-  await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([LIVE_WORKLET], {type:'text/javascript'})));
-  const src = ctx.createMediaStreamSource(stream), tap = new AudioWorkletNode(ctx, 'tap');
-  src.connect(tap);
+  if (rec){ $('#stt-err').textContent = 'Сначала остановите запись.'; return; }
+  let onChunk = () => {};
+  const mic = await openMic(c => onChunk(c));
+  const ctx = mic.ctx;
   const q = new URLSearchParams({sample_rate: ctx.sampleRate});
   const lang = $('#stt-lang').value.trim(), hint = $('#hint').value.trim();
   if (lang) q.set('language', lang);
@@ -545,7 +676,9 @@ async function liveStart(){
   if ($('#stt-ctx').value) q.set('context', $('#stt-ctx').value);
   if ($('#hotwords').value.trim()) q.set('hotwords', $('#hotwords').value.trim());
   if (apiKey) q.set('api_key', apiKey);
-  const ws = new WebSocket(wsUrl(`v1/audio/transcriptions/stream?${q}`));
+  let ws;
+  try { ws = new WebSocket(wsUrl(`v1/audio/transcriptions/stream?${q}`)); }
+  catch(e){ mic.close(); throw e; }
   ws.binaryType = 'arraybuffer';
   let pending = [], size = 0, turns = [[]], draft = '', note = '';
   const show = () => {
@@ -556,8 +689,8 @@ async function liveStart(){
     }).join('');
     $('#stt-out').innerHTML = html + (note ? `<div class="note">${note}</div>` : '');
   };
-  tap.port.onmessage = e => {
-    pending.push(e.data); size += e.data.length;
+  onChunk = data => {
+    pending.push(data); size += data.length;
     if (size < ctx.sampleRate / 10 || ws.readyState !== WebSocket.OPEN) return;
     const pcm = new Int16Array(size); let o = 0;
     for (const c of pending) for (let i = 0; i < c.length; i++)
@@ -590,16 +723,15 @@ async function liveStart(){
     $('#rec-state').innerHTML = `<span class="dot"></span> диктовка, ${((Date.now()-t0)/1000).toFixed(0)} с`;
     setTimeout(tick, 250);
   };
-  live = {stream, ctx, ws};
+  live = {mic, ws};
   $('#stt-out').textContent = '';
   $('#live').textContent = 'Закончить';
   tick();
 }
 function liveStop(closed){
   if (!live) return;
-  const {stream, ctx, ws} = live; live = null;
-  stream.getTracks().forEach(t => t.stop());
-  ctx.close();
+  const {mic, ws} = live; live = null;
+  mic.close();
   // Сервер дочитает хвост, пришлёт последнюю фразу и закроет соединение сам.
   if (!closed && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({type:'end'}));
   $('#live').textContent = 'Диктовка';
