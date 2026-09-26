@@ -397,10 +397,15 @@ async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Op
     });
 
     // Недокачанная установка: сервер поднялся бы и падал на первом запросе
-    // или молча ушёл бы на движки Python. Лучше сказать сразу.
+    // или молча ушёл бы на движки Python. Её достраивает setup, прежде чем
+    // что-то загружено: распаковать из скачанного — молча, скачать — только
+    // с согласия (в терминале спросит, в фоне скажет, что сделать). DLL сейчас
+    // не держит никто: этот сервер их ещё не грузил, другой не запущен (instance.rs).
     let missing = setup::missing();
     if !missing.is_empty() && setup::started() {
-        anyhow::bail!("{}", setup::describe(&missing));
+        let more = if missing.len() > 1 { format!(" и ещё {}", missing.len() - 1) } else { String::new() };
+        eprintln!("voicy: установка неполная — нет {}{more}; достраиваю, потом запущусь", missing[0].display());
+        setup::run("all", false).await.with_context(|| setup::describe(&setup::missing()))?;
     }
     let engines = engines::Engines::start(&python, server_dir.as_deref()).await?;
     let var = |n: &str| std::env::var(n).unwrap_or_default();

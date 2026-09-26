@@ -78,12 +78,59 @@ fn search_here(dir: &Path) {
         #[link(name = "kernel32")]
         unsafe extern "system" {
             fn SetDllDirectoryW(path: *const u16) -> i32;
+            fn AddDllDirectory(path: *const u16) -> *mut std::ffi::c_void;
         }
         let wide: Vec<u16> = dir.as_os_str().encode_wide().chain(std::iter::once(0)).collect();
-        unsafe { SetDllDirectoryW(wide.as_ptr()) };
+        // SetDllDirectory видят обычные LoadLibrary, AddDllDirectory — вызовы с флагами
+        // LOAD_LIBRARY_SEARCH_*: так грузят свои зависимости ONNX Runtime и CTranslate2
+        unsafe {
+            SetDllDirectoryW(wide.as_ptr());
+            AddDllDirectory(wide.as_ptr());
+        }
+        preload_cuda(dir);
     }
     #[cfg(not(windows))]
     let _ = dir;
+}
+
+/// CUDA libraries that ONNX Runtime and CTranslate2 load by name, lazily, when
+/// the first request needs them — loaded here first, by full path. Windows
+/// hands a loaded module to anyone who asks for it by name, whatever the
+/// search order they ask with; and a library that does not load says so at
+/// start, by name and reason, not as "cudnn64_9.dll with error 2" in the middle
+/// of a request. Their own dependencies are looked up beside them
+/// (LOAD_WITH_ALTERED_SEARCH_PATH).
+#[cfg(windows)]
+fn preload_cuda(dir: &Path) {
+    use std::os::windows::ffi::OsStrExt;
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn LoadLibraryExW(path: *const u16, file: *mut std::ffi::c_void, flags: u32) -> *mut std::ffi::c_void;
+    }
+    const LOAD_WITH_ALTERED_SEARCH_PATH: u32 = 0x8;
+    const CUDA: [&str; 8] = ["cudart64_", "cublasLt64_", "cublas64_", "cudnn", "cufft64_", "curand64_", "nvJitLink_", "nvrtc"];
+    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let mut names: Vec<String> = entries
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".dll") && CUDA.iter().any(|c| n.starts_with(c)))
+        .collect();
+    // порядок зависимостей: рантайм, потом cuBLAS Lt, потом всё остальное
+    names.sort_by_key(|n| CUDA.iter().position(|c| n.starts_with(c)).unwrap_or(CUDA.len()));
+    for name in names {
+        let wide: Vec<u16> = dir.join(&name).as_os_str().encode_wide().chain(std::iter::once(0)).collect();
+        let handle = unsafe { LoadLibraryExW(wide.as_ptr(), std::ptr::null_mut(), LOAD_WITH_ALTERED_SEARCH_PATH) };
+        if handle.is_null() {
+            let e = std::io::Error::last_os_error();
+            let why = match e.raw_os_error() {
+                Some(126) => " — не хватает библиотеки, от которой он зависит",
+                Some(193) => " — файл повреждён или не для этой системы",
+                _ => "",
+            };
+            eprintln!("voicy: {name} не загружается ({e}){why}; движкам на GPU он понадобится — voicy setup libs поставит библиотеки заново");
+        }
+        // модуль не выгружается: он нужен до конца работы процесса
+    }
 }
 
 /// libfoo.so, foo.dll or libfoo.dylib, whichever this platform names it.

@@ -127,6 +127,7 @@ pub fn describe(rel: &Release, exe: &Path) {
 
 /// Downloads, checks and puts the new binary in place of `exe`.
 pub async fn install(http: &reqwest::Client, rel: &Release, exe: &Path) -> anyhow::Result<()> {
+    setup::speak_as("update");
     let dir = exe.parent().context("у бинарника нет каталога")?;
     let name = exe.file_name().context("у бинарника нет имени")?.to_string_lossy().into_owned();
     let new = dir.join(format!("{name}.new"));

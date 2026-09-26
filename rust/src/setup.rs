@@ -50,6 +50,10 @@ struct Platform {
     /// под ним лежат и x86-64, и aarch64, и первым в списке PyPI бывает не тот.
     wheel_tag: &'static [&'static str],
     wanted: &'static [&'static str],
+    /// Файлы, которые движки грузят по точному имени. `wanted` — начала имён,
+    /// и одного `cudnn` им хватает на любой из десяти файлов cuDNN; оборванная
+    /// распаковка оставляла cudnn_ops, но не cudnn64_9.dll, и проверка молчала.
+    required: &'static [&'static str],
 }
 
 const WHEELS: &[&str] = &["onnxruntime-gpu=={ort}", "nvidia-cudnn-cu13", "nvidia-curand", "nvidia-cufft",
@@ -64,6 +68,9 @@ const LINUX_X64_CUDA13: Platform = Platform {
     wanted: &["libonnxruntime.so", "libonnxruntime_providers_cuda.so", "libonnxruntime_providers_shared.so", "libcudnn",
               "libcurand.so", "libcufft.so", "libnvJitLink.so", "libnvrtc", "libctranslate2", "libgomp",
               "libcublas.so.12", "libcublasLt.so.12"],
+    required: &["libcudart.so.13", "libcublas.so.13", "libcublasLt.so.13", "libcublas.so.12", "libcublasLt.so.12",
+                "libcudnn.so.9", "libcudnn_graph.so.9", "libcudnn_ops.so.9", "libcudnn_cnn.so.9", "libcudnn_heuristic.so.9",
+                "libcudnn_engines_precompiled.so.9", "libcudnn_engines_runtime_compiled.so.9"],
 };
 
 const WINDOWS_X64_CUDA13: Platform = Platform {
@@ -76,6 +83,9 @@ const WINDOWS_X64_CUDA13: Platform = Platform {
     wanted: &["onnxruntime.dll", "onnxruntime_providers_cuda.dll", "onnxruntime_providers_shared.dll", "cudnn",
               "curand64_", "cufft64_", "nvJitLink_", "nvrtc", "ctranslate2.dll", "libiomp5md.dll", "cublas64_12.dll",
               "cublasLt64_12.dll"],
+    required: &["cudart64_13.dll", "cublas64_13.dll", "cublasLt64_13.dll", "cublas64_12.dll", "cublasLt64_12.dll",
+                "cudnn64_9.dll", "cudnn_graph64_9.dll", "cudnn_ops64_9.dll", "cudnn_cnn64_9.dll", "cudnn_heuristic64_9.dll",
+                "cudnn_engines_precompiled64_9.dll", "cudnn_engines_runtime_compiled64_9.dll"],
 };
 
 fn platform() -> anyhow::Result<&'static Platform> {
@@ -89,8 +99,15 @@ fn platform() -> anyhow::Result<&'static Platform> {
     }
 }
 
+/// Кто говорит в строках журнала: setup, или update, когда он качает через те же функции.
+static WHO: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
+
+pub fn speak_as(who: &'static str) {
+    let _ = WHO.set(who);
+}
+
 fn say(msg: impl AsRef<str>) {
-    eprintln!("setup: {}", msg.as_ref());
+    eprintln!("{}: {}", WHO.get().copied().unwrap_or("setup"), msg.as_ref());
 }
 
 fn expand(t: &str) -> String {
@@ -921,13 +938,14 @@ fn missing_libs() -> Vec<PathBuf> {
         .map(|d| d.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
         .unwrap_or_default();
     let own = ["llama", "ggml", "whisper", "onnxruntime"].map(native::lib_file);
-    p.wanted
+    let by_prefix = p
+        .wanted
         .iter()
         .copied()
         .chain(own.iter().map(String::as_str))
-        .filter(|prefix| !names.iter().any(|n| n.starts_with(prefix)))
-        .map(|prefix| lib.join(prefix))
-        .collect()
+        .filter(|prefix| !names.iter().any(|n| n.starts_with(prefix)));
+    let exact = p.required.iter().copied().filter(|name| !names.iter().any(|n| n == name));
+    by_prefix.chain(exact).map(|name| lib.join(name)).collect()
 }
 
 /// Which versions the library directory holds, written once they are all in.
