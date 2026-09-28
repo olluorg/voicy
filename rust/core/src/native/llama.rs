@@ -159,7 +159,7 @@ pub fn lib_name(stem: &str) -> String {
 }
 
 #[cfg(unix)]
-fn open(path: &Path) -> anyhow::Result<Library> {
+pub(super) fn open(path: &Path) -> anyhow::Result<Library> {
     use libloading::os::unix::{Library as U, RTLD_GLOBAL, RTLD_NOW};
     // глобально: ggml-cuda и остальные бэкенды ищут символы ggml среди уже загруженных
     let lib = unsafe { U::open(Some(path), RTLD_NOW | RTLD_GLOBAL) }
@@ -168,7 +168,7 @@ fn open(path: &Path) -> anyhow::Result<Library> {
 }
 
 #[cfg(windows)]
-fn open(path: &Path) -> anyhow::Result<Library> {
+pub(super) fn open(path: &Path) -> anyhow::Result<Library> {
     use libloading::os::windows::{LOAD_WITH_ALTERED_SEARCH_PATH, Library as W};
     // Windows ищет зависимости библиотеки не рядом с ней, а по своему списку:
     // без этого флага ggml-base.dll не находит libomp.dll, лежащую в том же каталоге

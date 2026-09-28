@@ -42,7 +42,7 @@ class Server:
 
     def start(self, timeout: float = 60) -> "Server":
         voices = self.dir / "voices"
-        shutil.copytree(ROOT / "server" / "voices", voices)
+        shutil.copytree(ROOT / "rust" / "core" / "assets" / "voices", voices)
         port = _free_port()
         env = {**os.environ, **FAKE, "VOICY_VOICES_DIR": str(voices),
                "VOICY_CONTEXTS_DIR": str(self.dir / "contexts"),

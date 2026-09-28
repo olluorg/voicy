@@ -85,17 +85,13 @@ struct NativeTts {
     stress: Option<Value>,
 }
 
-/// The default synthesis model: the one that obeys stress marks when it is
-/// installed, the official weights otherwise.
-pub const TTS_STRESS_DIR: &str = "qwen3-tts-12hz-1.7b-ru-stress-gguf";
-pub const TTS_BASE_DIR: &str = "qwen3-tts-12hz-1.7b-base-gguf";
-pub const STRESS_MARKER: &str = "stress.json";
+use voicy_core::STRESS_MARKER;
 
 impl NativeTts {
     fn find() -> Option<NativeTts> {
         let explicit = wanted("TTS_ENGINE", &["qwen3-tts-gguf"])?;
         // q5_k: та же разборчивость и то же сходство голоса, что у f16 и torch, при 2.4 ГБ (experiments/20)
-        let variant = std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into());
+        let variant = voicy_core::TtsConfig::from_env().talker;
         let talker = format!("qwen3_tts_talker.{variant}.gguf");
         let dir = crate::setup::tts_dir();
         let files = native::qwen::Files {
@@ -173,7 +169,7 @@ enum SttModel {
 }
 
 fn stt_gpu() -> bool {
-    std::env::var("FORCE_CPU").as_deref() != Ok("1") && std::env::var("STT_DEVICE").map_or(true, |d| d.starts_with("cuda"))
+    voicy_core::SttConfig::from_env().gpu
 }
 
 impl NativeStt {
@@ -198,7 +194,7 @@ impl NativeStt {
             }
             "" | "faster-whisper" => {
                 let ct2 = dir.join(format!("faster-whisper-{name}"));
-                // на Windows обёртка вкомпилирована в бинарник, искать файл нечего
+                // на Windows обёртка едет внутри бинарника и кладётся на место при загрузке
                 let shim = cfg!(all(windows, target_env = "msvc")) || has("ct2shim");
                 if !(ct2.join("model.bin").is_file() && shim) {
                     return None;
@@ -216,7 +212,7 @@ impl NativeStt {
                 let kind = self.kind.clone();
                 tokio::task::spawn_blocking(move || match kind {
                     SttKind::Ct2 { dir, vad } => {
-                        native::fwhisper::FasterWhisper::load(&dir, Some(&vad), stt_gpu()).map(SttModel::Ct2)
+                        native::fwhisper::FasterWhisper::load(&dir, Some(&vad), stt_gpu(), voicy_core::SttConfig::from_env().compute_type.as_deref()).map(SttModel::Ct2)
                     }
                     SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), true).map(SttModel::Cpp),
                 })

@@ -35,12 +35,6 @@ pub fn to_dict(tr: &Value, ctx: &Resolved) -> Value {
            "duration": tr["duration"], "segments": segments})
 }
 
-fn srt_time(t: f64) -> String {
-    let (h, rem) = ((t / 3600.0).floor(), t % 3600.0);
-    let (m, s) = ((rem / 60.0).floor(), rem % 60.0);
-    format!("{:02}:{:02}:{:02},{:03}", h as i64, m as i64, s as i64, ((s % 1.0) * 1000.0) as i64)
-}
-
 fn text(body: String, ctype: &'static str) -> Response {
     ([(header::CONTENT_TYPE, ctype)], body).into_response()
 }
@@ -52,25 +46,10 @@ pub fn render(tr: &Value, response_format: Option<&str>) -> Response {
     let f = |s: &Value, k: &str| s[k].as_f64().unwrap_or(0.0);
     match fmt.as_str() {
         "text" => text(tr["text"].as_str().unwrap_or_default().into(), "text/plain; charset=utf-8"),
-        "srt" => {
-            let mut lines = vec![];
-            for (i, s) in segments.iter().enumerate() {
-                lines.push((i + 1).to_string());
-                lines.push(format!("{} --> {}", srt_time(f(s, "start")), srt_time(f(s, "end"))));
-                lines.push(s["text"].as_str().unwrap_or_default().into());
-                lines.push(String::new());
-            }
-            text(lines.join("\n"), "text/plain; charset=utf-8")
-        }
-        "vtt" => {
-            let mut lines = vec!["WEBVTT".to_string(), String::new()];
-            for s in segments {
-                lines.push(format!("{} --> {}", srt_time(f(s, "start")).replace(',', "."),
-                                   srt_time(f(s, "end")).replace(',', ".")));
-                lines.push(s["text"].as_str().unwrap_or_default().into());
-                lines.push(String::new());
-            }
-            text(lines.join("\n"), "text/vtt; charset=utf-8")
+        "srt" | "vtt" => {
+            let cues = segments.iter().map(|s| (f(s, "start"), f(s, "end"), s["text"].as_str().unwrap_or_default()));
+            let ctype = if fmt == "vtt" { "text/vtt; charset=utf-8" } else { "text/plain; charset=utf-8" };
+            text(voicy_core::subtitles(cues, fmt == "vtt"), ctype)
         }
         "verbose_json" => {
             let segs: Vec<Value> = segments

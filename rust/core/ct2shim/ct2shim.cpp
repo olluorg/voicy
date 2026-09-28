@@ -4,7 +4,7 @@
 // makes — encode, generate, detect_language, align — and nothing else, against
 // the prebuilt libctranslate2 that faster-whisper itself ships (4.8.2). Same
 // library, same weights: the recogniser is faster-whisper's, only the Python
-// around it is gone (rust/src/native/fwhisper.rs).
+// around it is gone (rust/core/src/native/fwhisper.rs).
 //
 // Built by `voicy setup`, which fetches CTranslate2's headers at the same tag
 // (src/setup.rs). Errors come back as text in `err`; every function that
@@ -20,8 +20,7 @@
 using namespace ctranslate2;
 
 // Windows не выносит ничего наружу без явной пометки, unix выносит всё.
-// Внутри бинарника (CT2SHIM_STATIC) выносить нечего: вызовы прямые.
-#if defined(_WIN32) && !defined(CT2SHIM_STATIC)
+#if defined(_WIN32)
 #define CT2W __declspec(dllexport)
 #else
 #define CT2W

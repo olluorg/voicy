@@ -14,22 +14,19 @@ mod cli;
 mod audio;
 mod auth;
 mod contexts;
-mod encode;
 mod engines;
 mod errors;
 mod host;
 mod instance;
 mod jobs;
 mod live;
-mod native;
-mod setup;
 mod speak;
-mod tempo;
 mod textprep;
 mod transcripts;
 mod update;
-mod voices;
 mod webhooks;
+
+use voicy_core::{encode, native, setup, tempo, voices};
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -43,11 +40,6 @@ use clap::{Parser, Subcommand};
 use tower_http::catch_panic::CatchPanicLayer;
 
 const INDEX_HTML: &str = include_str!("../../server/static/index.html");
-const DEFAULT_VOICES: [(&str, &[u8]); 3] = [
-    ("turgenev.wav", include_bytes!("../../server/voices/turgenev.wav")),
-    ("dostoevsky.wav", include_bytes!("../../server/voices/dostoevsky.wav")),
-    ("voices.json", include_bytes!("../../server/voices/voices.json")),
-];
 
 pub struct App {
     pub engines: engines::Engines,
@@ -273,18 +265,6 @@ fn find_home(given: Option<PathBuf>) -> anyhow::Result<Option<PathBuf>> {
     Ok(None)
 }
 
-/// Without the repository: voices live in the cache, seeded with the two that ship.
-fn seed_voices(dir: &Path) -> std::io::Result<()> {
-    if dir.join("voices.json").exists() {
-        return Ok(());
-    }
-    std::fs::create_dir_all(dir)?;
-    for (name, data) in DEFAULT_VOICES {
-        std::fs::write(dir.join(name), data)?;
-    }
-    Ok(())
-}
-
 fn find_python(home: &Path, given: Option<PathBuf>) -> PathBuf {
     if let Some(p) = given {
         return p;
@@ -382,14 +362,15 @@ async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Op
     let home = find_home(home)?;
     let server_dir = home.as_ref().map(|h| h.join("server"));
     let python = find_python(home.as_deref().unwrap_or(Path::new(".")), python);
-    textprep::load(home.as_ref().map(|h| h.join("data").join("pronunciation.json")).as_deref());
+    textprep::load(home.as_ref().map(|h| h.join("rust").join("core").join("assets").join("pronunciation.json")).as_deref());
     let cache = native::cache_dir();
     let voices_dir = env_or("VOICY_VOICES_DIR", || match &server_dir {
         Some(s) => s.join("voices"),
         None => cache.join("voices"),
     });
-    if server_dir.is_none() && std::env::var_os("VOICY_VOICES_DIR").is_none() {
-        seed_voices(&voices_dir)?;
+    // поставляемые голоса — в крейте ядра; рабочий каталог получает их, пока пуст
+    if std::env::var_os("VOICY_VOICES_DIR").is_none() {
+        voices::seed(&voices_dir)?;
     }
     let contexts_dir = env_or("VOICY_CONTEXTS_DIR", || match &server_dir {
         Some(s) => s.join("contexts"),
@@ -460,7 +441,7 @@ fn probe_stt(jobs: PathBuf, model: PathBuf) -> anyhow::Result<()> {
     use std::time::Instant;
     let vad = native::cache_dir().join("models").join("vad").join("silero_vad_v6.onnx");
     let t = Instant::now();
-    let w = native::fwhisper::FasterWhisper::load(&model, Some(&vad), true)?;
+    let w = native::fwhisper::FasterWhisper::load(&model, Some(&vad), true, voicy_core::SttConfig::from_env().compute_type.as_deref())?;
     eprintln!("loaded in {:.1} s", t.elapsed().as_secs_f64());
     let rows: Vec<serde_json::Value> = serde_json::from_slice(&std::fs::read(&jobs)?)?;
     for row in rows {
@@ -517,6 +498,31 @@ fn bench_tts(jobs: PathBuf, voice: PathBuf, voice_text: String, talker: String, 
     }
     println!("{}", serde_json::json!({"rows": rows, "speed": jobs::round(ta / tt, 2)}));
     Ok(())
+}
+
+/// Ядро (voicy-core) говорит через log; сервер печатает это в stderr, как
+/// печатал всегда: «voicy: …», а установка и обновление — от своего имени.
+struct Stderr;
+
+impl Stderr {
+    fn ours(target: &str) -> bool {
+        target.starts_with("voicy") || target == "setup" || target == "update"
+    }
+}
+
+impl log::Log for Stderr {
+    fn enabled(&self, m: &log::Metadata) -> bool {
+        m.level() <= log::Level::Info && Self::ours(m.target())
+    }
+
+    fn log(&self, r: &log::Record) {
+        if self.enabled(r.metadata()) {
+            let who = if r.target().starts_with("voicy") { "voicy" } else { r.target() };
+            eprintln!("{who}: {}", r.args());
+        }
+    }
+
+    fn flush(&self) {}
 }
 
 /// Два OpenMP в одном процессе: llama.cpp приносит LLVM-овский, CTranslate2 —
@@ -641,6 +647,10 @@ fn wait_for_enter() {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    static LOG: Stderr = Stderr;
+    if log::set_logger(&LOG).is_ok() {
+        log::set_max_level(log::LevelFilter::Info);
+    }
     allow_two_openmp();
     update::cleanup();
     let relaunched = std::env::var_os("VOICY_WELCOME").is_some();

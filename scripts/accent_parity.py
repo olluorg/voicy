@@ -1,4 +1,4 @@
-"""Does the Rust RUAccent (rust/src/native/accent.rs) say what Python RUAccent says?
+"""Does the Rust RUAccent (rust/core/src/native/accent.rs) say what Python RUAccent says?
 
 Sentences come from RuLS transcripts (experiments/23 work data), the project's
 own texts and a handful of edge cases; each is cut into sentences the way

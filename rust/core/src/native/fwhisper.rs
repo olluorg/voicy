@@ -1,7 +1,7 @@
 //! Whisper as faster-whisper runs it, without Python.
 //!
 //! The model runs in CTranslate2 — the same prebuilt library faster-whisper
-//! ships, reached through the C wrapper in rust/ct2shim. Everything around the
+//! ships, reached through the C wrapper in rust/core/ct2shim. Everything around the
 //! model is faster-whisper 1.2.1's Python, function for function, under the
 //! same names: the log-mel, the 30-second windows, the prompt, the no-speech
 //! check, word timings, the voice-detector pass for live speech. Called with
@@ -75,29 +75,34 @@ struct Api {
     detect_language: unsafe extern "C" fn(P, P, *mut *mut c_char, *mut *mut f32, *mut usize, *mut c_char, usize) -> i32,
     align: unsafe extern "C" fn(P, P, *const usize, usize, *const usize, usize, usize, c_long, *mut *mut i64,
                                 *mut usize, *mut *mut f32, *mut usize, *mut c_char, usize) -> i32,
-    /// Внутри бинарника библиотеки нет: обёртка вкомпилирована (build.rs).
-    _lib: Option<Library>,
+    _lib: Library,
 }
 
-// На Windows обёртка вкомпилирована в бинарник, а ctranslate2.dll подгружается
-// отложенно — при первом из этих вызовов (build.rs).
+/// На Windows обёртку собирает build.rs, и её байты едут внутри крейта: в каталог
+/// библиотек она кладётся под именем с хешем содержимого, когда понадобится.
 #[cfg(all(windows, target_env = "msvc"))]
-unsafe extern "C" {
-    fn ct2w_load(path: *const c_char, cuda: i32, index: i32, compute: *const c_char, intra: usize, inter: usize,
-                 err: *mut c_char, errlen: usize) -> P;
-    fn ct2w_free(m: P);
-    fn ct2w_is_multilingual(m: P) -> i32;
-    fn ct2w_n_mels(m: P) -> usize;
-    fn ct2w_encode(m: P, features: *const f32, n_mels: usize, n_frames: usize, err: *mut c_char, errlen: usize) -> P;
-    fn ct2w_free_sv(sv: P);
-    fn ct2w_generate(m: P, enc: P, prompt: *const usize, n_prompt: usize, opts: *const GenOpts, ids: *mut *mut usize,
-                     n_ids: *mut usize, score: *mut f32, nsp: *mut f32, err: *mut c_char, errlen: usize) -> i32;
-    fn ct2w_free_buf(p: *mut c_void);
-    fn ct2w_detect_language(m: P, enc: P, tokens: *mut *mut c_char, probs: *mut *mut f32, n: *mut usize,
-                            err: *mut c_char, errlen: usize) -> i32;
-    fn ct2w_align(m: P, enc: P, start: *const usize, n_start: usize, text: *const usize, n_text: usize,
-                  num_frames: usize, median: c_long, pairs: *mut *mut i64, n_pairs: *mut usize, probs: *mut *mut f32,
-                  n_probs: *mut usize, err: *mut c_char, errlen: usize) -> i32;
+const SHIM_DLL: (&str, &[u8]) = (env!("CT2SHIM_DLL_NAME"), include_bytes!(env!("CT2SHIM_DLL_PATH")));
+
+/// Where the wrapper is: on Windows, put there first if it is not yet.
+fn shim_path(dir: &Path) -> anyhow::Result<std::path::PathBuf> {
+    #[cfg(all(windows, target_env = "msvc"))]
+    {
+        let (name, bytes) = SHIM_DLL;
+        let path = dir.join(name);
+        if std::fs::metadata(&path).map_or(true, |m| m.len() != bytes.len() as u64) {
+            // через временный файл: двое, начавшие разом, не увидят половины
+            let tmp = dir.join(format!("{name}.{}.tmp", std::process::id()));
+            std::fs::write(&tmp, bytes).with_context(|| format!("cannot write {}", tmp.display()))?;
+            if let Err(e) = std::fs::rename(&tmp, &path) {
+                let _ = std::fs::remove_file(&tmp);
+                // успел другой процесс — тот же файл, раз имя по содержимому
+                anyhow::ensure!(path.is_file(), "cannot put {} in place: {e}", path.display());
+            }
+        }
+        Ok(path)
+    }
+    #[cfg(not(all(windows, target_env = "msvc")))]
+    Ok(dir.join(super::lib_file("ct2shim")))
 }
 
 fn err_text(e: &ErrBuf) -> String {
@@ -106,8 +111,6 @@ fn err_text(e: &ErrBuf) -> String {
 
 impl Api {
     fn load(dir: &Path) -> anyhow::Result<Api> {
-        #[cfg(all(windows, target_env = "msvc"))]
-        let _ = dir; // каталог нужен только там, где обёртка лежит файлом
         // CTranslate2 открывает cuBLAS 12 по имени, когда он понадобится: загруженный
         // заранее глобально находится по этому имени, где бы ни лежал.
         #[cfg(unix)]
@@ -120,23 +123,7 @@ impl Api {
                 }
             }
         }
-        #[cfg(all(windows, target_env = "msvc"))]
-        return Ok(Api {
-            load: ct2w_load,
-            free: ct2w_free,
-            is_multilingual: ct2w_is_multilingual,
-            n_mels: ct2w_n_mels,
-            encode: ct2w_encode,
-            free_sv: ct2w_free_sv,
-            generate: ct2w_generate,
-            free_buf: ct2w_free_buf,
-            detect_language: ct2w_detect_language,
-            align: ct2w_align,
-            _lib: None,
-        });
-        #[cfg(not(all(windows, target_env = "msvc")))]
-        {
-        let lib = super::llama::open_lib(dir, "ct2shim")?;
+        let lib = super::llama::open(&shim_path(dir)?)?;
         macro_rules! f {
             ($n:literal) => {
                 unsafe { *lib.get(concat!($n, "\0").as_bytes())? }
@@ -153,9 +140,8 @@ impl Api {
             free_buf: f!("ct2w_free_buf"),
             detect_language: f!("ct2w_detect_language"),
             align: f!("ct2w_align"),
-            _lib: Some(lib),
+            _lib: lib,
         })
-        }
     }
 }
 
@@ -644,12 +630,12 @@ impl Drop for FasterWhisper {
 
 impl FasterWhisper {
     /// `dir` — a CTranslate2 Whisper model (model.bin, tokenizer.json), as
-    /// faster-whisper downloads it; `vad` — Silero for live speech.
-    pub fn load(dir: &Path, vad: Option<&Path>, gpu: bool) -> anyhow::Result<FasterWhisper> {
+    /// faster-whisper downloads it; `vad` — Silero for live speech; `compute_type`
+    /// — CTranslate2's, float16 on the GPU and int8 on the CPU when None.
+    pub fn load(dir: &Path, vad: Option<&Path>, gpu: bool, compute_type: Option<&str>) -> anyhow::Result<FasterWhisper> {
         let api = Api::load(&super::lib_dir()?)?;
         let device = if gpu { "cuda" } else { "cpu" };
-        let compute_type = std::env::var("STT_COMPUTE_TYPE")
-            .unwrap_or_else(|_| if gpu { "float16".into() } else { "int8".into() });
+        let compute_type = compute_type.map_or_else(|| if gpu { "float16".into() } else { "int8".into() }, String::from);
         let path = CString::new(dir.to_string_lossy().as_bytes())?;
         let ct = CString::new(compute_type.clone())?;
         let mut e: ErrBuf = [0; 1024];

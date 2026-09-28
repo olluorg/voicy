@@ -19,12 +19,16 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 # Каталог меняется окружением — для проверок, чтобы не писать в репозиторий.
 VOICES_DIR = Path(os.environ.get("VOICY_VOICES_DIR") or Path(__file__).parent / "voices")
 INDEX = VOICES_DIR / "voices.json"
+# Поставляемые голоса — в крейте ядра (его include_bytes! не выходит за крейт);
+# рабочий каталог получает их, пока в нём нет индекса. Каталог из окружения не трогаем.
+SHIPPED = Path(__file__).resolve().parents[1] / "rust" / "core" / "assets" / "voices"
 SAMPLE_RATE = 24000
 
 # Буквы любого алфавита, цифры, дефис и подчёркивание — но не в начале:
@@ -50,7 +54,16 @@ class Voice:
                 "reference_text": self.text, "file": self.path.name}
 
 
+def _seed() -> None:
+    if os.environ.get("VOICY_VOICES_DIR") or INDEX.exists() or not SHIPPED.is_dir():
+        return
+    VOICES_DIR.mkdir(parents=True, exist_ok=True)
+    for f in SHIPPED.iterdir():
+        shutil.copyfile(f, VOICES_DIR / f.name)
+
+
 def _load_index() -> dict:
+    _seed()
     if INDEX.exists():
         return json.loads(INDEX.read_text(encoding="utf-8"))
     return {}

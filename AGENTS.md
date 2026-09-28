@@ -172,6 +172,10 @@ curl -s localhost:8080/v1/audio/speech -H 'Content-Type: application/json' \
   -d '{"input":"текст","voice":"turgenev","response_format":"opus"}' -o out.opus
 ```
 
+Программе на Rust сервер не нужен вовсе: те же движки встраиваются крейтом
+`voicy-core` — `Tts::speak`, `Stt::transcribe_file` и т. д. в своём процессе,
+модели из того же кэша (`rust/core/README.md`).
+
 Полный список маршрутов — [`server/README.md`](server/README.md): задания,
 очередь и webhook (`/v1/jobs`), расшифровка с `stream=true`, профили контекста
 (`/v1/contexts`) и голосовой агент по WebSocket: живая речь
@@ -193,7 +197,8 @@ curl -s localhost:8080/v1/audio/speech -H 'Content-Type: application/json' \
 ```
 voicy         этот CLI
 server/       сам сервер: app.py — маршруты, engines/ — модели, static/ — консоль
-data/         исходные тексты и словарь произношений
+data/         исходные тексты экспериментов
+rust/core/    движки как библиотека; assets/ — словарь произношений и голоса
 docs/adr/     почему сделано именно так — читать до того, как менять поведение
 experiments/  что пробовали и чем мерили; results/ — сырые замеры
 article/      итоговая статья со всем аудио

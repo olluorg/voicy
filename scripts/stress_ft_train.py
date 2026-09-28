@@ -1,7 +1,7 @@
 """LoRA fine-tuning of Qwen3-TTS to obey stress marks (U+0301 after the vowel).
 
 The layout is the one voicy generates with — ICL cloning in streaming mode, as in
-Qwen3TTSForConditionalGeneration.generate and rust/src/native/qwen.rs: role
+Qwen3TTSForConditionalGeneration.generate and rust/core/src/native/qwen.rs: role
 header, codec prefix with language and speaker embedding, then reference
 transcript + target text fused step by step with codec bos + reference codes,
 then the target frames, each carrying the leftover text or tts_pad.

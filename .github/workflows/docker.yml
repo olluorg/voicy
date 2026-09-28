@@ -51,7 +51,7 @@ jobs:
         run: |
           python - <<'PY'
           import json, sys
-          d = json.load(open("data/pronunciation.json", encoding="utf-8"))
+          d = json.load(open("rust/core/assets/pronunciation.json", encoding="utf-8"))
           terms = d["terms"]
           missing = [k for k, v in terms.items() if not v.get("say")]
           print(f"терминов: {len(terms)}, подтверждено: {sum(1 for v in terms.values() if v.get('verified'))}")

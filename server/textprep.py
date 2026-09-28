@@ -3,7 +3,7 @@
 Everything here was established by measurement earlier in this repository:
 
   * terms are replaced with the spelling the engine reads correctly, taken from
-    `data/pronunciation.json` (built automatically, 79 entries verified by
+    `rust/core/assets/pronunciation.json` (built automatically, 79 entries verified by
     round-trip recognition);
   * punctuation inside a phrase is what makes the model stop mid-sentence, so
     a "legato" pass removes commas the author did not intend as a pause.
@@ -18,7 +18,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-DICT_PATH = Path(__file__).resolve().parents[1] / "data" / "pronunciation.json"
+DICT_PATH = Path(__file__).resolve().parents[1] / "rust" / "core" / "assets" / "pronunciation.json"
 
 
 @lru_cache(maxsize=1)

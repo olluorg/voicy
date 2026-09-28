@@ -4,6 +4,7 @@
 //! for the platform, loaded at start from one directory: VOICY_LIB_DIR, or
 //! `~/.cache/voicy/lib/<platform>`. Nothing here is compiled for a GPU; which
 //! GPU is used is a matter of which libraries lie in that directory.
+//! Both directories can also be set from code (`set_dirs`).
 
 pub mod accent;
 pub mod decode;
@@ -33,7 +34,22 @@ fn platform() -> &'static str {
     }
 }
 
+static CACHE: OnceLock<PathBuf> = OnceLock::new();
+static LIB_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Where the libraries and the models are, for the whole process: the runtimes
+/// are loaded once and stay. Set before the first engine loads; a directory
+/// already set is not changed, and false says so.
+pub fn set_dirs(cache: Option<PathBuf>, lib: Option<PathBuf>) -> bool {
+    let cache_ok = cache.map_or(true, |c| CACHE.get() == Some(&c) || CACHE.set(c).is_ok());
+    let lib_ok = lib.map_or(true, |l| LIB_DIR.get() == Some(&l) || LIB_DIR.set(l).is_ok());
+    cache_ok && lib_ok
+}
+
 pub fn cache_dir() -> PathBuf {
+    if let Some(c) = CACHE.get() {
+        return c.clone();
+    }
     std::env::var_os("VOICY_CACHE")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os(if cfg!(windows) { "LOCALAPPDATA" } else { "HOME" })
@@ -55,6 +71,9 @@ pub fn trim_heap() {
 
 /// Where the libraries for this platform go; `lib_dir` is this, once it exists.
 pub fn lib_dir_path() -> PathBuf {
+    if let Some(l) = LIB_DIR.get() {
+        return l.clone();
+    }
     std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from).unwrap_or_else(|| cache_dir().join("lib").join(platform()))
 }
 
@@ -127,7 +146,7 @@ fn preload_cuda(dir: &Path) {
                 Some(193) => " — файл повреждён или не для этой системы",
                 _ => "",
             };
-            eprintln!("voicy: {name} не загружается ({e}){why}; движкам на GPU он понадобится — voicy setup libs поставит библиотеки заново");
+            log::warn!("{name} не загружается ({e}){why}; движкам на GPU он понадобится — voicy setup libs поставит библиотеки заново");
         }
         // модуль не выгружается: он нужен до конца работы процесса
     }

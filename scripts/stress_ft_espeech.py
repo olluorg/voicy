@@ -21,8 +21,8 @@ from stress_ft_data import ACUTE, MARK_P, DS, SNAP
 WORK = sb.WORK
 REPO, FNAME = "ESpeech/ESpeech-TTS-1_RL-V2", "espeech_tts_rlv2.pt"
 MODEL_CFG = dict(dim=1024, depth=22, heads=16, ff_mult=2, text_dim=512, conv_layers=4)
-CHECK_VOICE = "server/voices/dostoevsky.wav"
-CHECK_TEXT = json.load(open("server/voices/voices.json", encoding="utf-8"))["dostoevsky"]["text"]
+CHECK_VOICE = "rust/core/assets/voices/dostoevsky.wav"
+CHECK_TEXT = json.load(open("rust/core/assets/voices/voices.json", encoding="utf-8"))["dostoevsky"]["text"]
 
 
 def load_espeech():

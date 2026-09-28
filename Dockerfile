@@ -28,7 +28,8 @@ RUN pip install -r /tmp/requirements.txt
 
 WORKDIR /app
 COPY server/ /app/server/
-COPY data/pronunciation.json /app/data/pronunciation.json
+COPY rust/core/assets/pronunciation.json /app/rust/core/assets/pronunciation.json
+COPY rust/core/assets/voices/ /app/server/voices/
 
 # Голоса лежат в образе, но каталог объявлен томом: добавленные через API
 # переживают перезапуск, а образ остаётся самодостаточным. Контексты

@@ -102,12 +102,14 @@ fn platform() -> anyhow::Result<&'static Platform> {
 /// Кто говорит в строках журнала: setup, или update, когда он качает через те же функции.
 static WHO: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
 
+/// The log target of what setup says: "setup", or what the server names it.
+#[doc(hidden)]
 pub fn speak_as(who: &'static str) {
     let _ = WHO.set(who);
 }
 
 fn say(msg: impl AsRef<str>) {
-    eprintln!("{}: {}", WHO.get().copied().unwrap_or("setup"), msg.as_ref());
+    log::info!(target: WHO.get().copied().unwrap_or("setup"), "{}", msg.as_ref());
 }
 
 fn expand(t: &str) -> String {
@@ -228,6 +230,7 @@ async fn size_of(http: &reqwest::Client, url: &str) -> Option<u64> {
     }
 }
 
+#[doc(hidden)]
 /// Asks before gigabytes go over the wire. Without a terminal there is no one
 /// to ask, and agreement has to come with the command itself.
 pub fn confirm(yes: bool, command: &str) -> anyhow::Result<()> {
@@ -243,6 +246,7 @@ pub fn confirm(yes: bool, command: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[doc(hidden)]
 /// A yes-or-no question in the terminal; Enter means yes.
 pub fn ask(question: &str) -> anyhow::Result<bool> {
     eprint!("{question} [Y/n] ");
@@ -251,6 +255,7 @@ pub fn ask(question: &str) -> anyhow::Result<bool> {
     Ok(matches!(answer.trim().to_lowercase().as_str(), "" | "y" | "yes" | "д" | "да"))
 }
 
+#[doc(hidden)]
 /// The client for everything fetched from outside. read_timeout: a hung
 /// connection has to become an error and a resumed download, not a wait
 /// without end; proxies come from the environment and the system settings,
@@ -263,6 +268,7 @@ pub fn client() -> anyhow::Result<reqwest::Client> {
         .build()?)
 }
 
+#[doc(hidden)]
 /// One file, with the same progress, retries and resuming as setup's own.
 pub async fn download(http: &reqwest::Client, url: &str, to: &Path, size: Option<u64>) -> anyhow::Result<()> {
     let dir = to.parent().unwrap_or(Path::new("."));
@@ -625,8 +631,9 @@ fn untar_all(archive: &Path, dest: &Path) -> anyhow::Result<PathBuf> {
 // ------------------------------------------------------------------- обёртка
 
 /// ct2shim: a C face for CTranslate2's C++ API, and the one thing built here —
-/// on Unix. On Windows it is compiled into the binary instead (build.rs), since
-/// a compiler is not something to ask of whoever just runs the server.
+/// on Unix. On Windows it is built with the program instead (build.rs) and
+/// put in the library directory when Whisper loads, since a compiler is not
+/// something to ask of whoever just runs the server.
 /// Without it recognition falls back to whisper.cpp or to the Python engine.
 fn build_shim(lib: &Path, src_archive: &Path, tmp: &Path) -> anyhow::Result<()> {
     let root = untar_all(src_archive, &tmp.join("ct2-src"))?;
@@ -810,7 +817,7 @@ async fn plan_libs(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyho
     for spec in p.wheels {
         wheels.push(plan.archive(wheel_url(http, &expand(spec), p.wheel_tag).await?, tmp));
     }
-    // заголовки CTranslate2 для обёртки; на Windows она вкомпилирована в бинарник (build.rs)
+    // заголовки CTranslate2 для обёртки; на Windows её собирает build.rs крейта, здесь не нужны
     let ct2_src = (!cfg!(all(windows, target_env = "msvc")))
         .then(|| plan.archive(format!("https://github.com/OpenNMT/CTranslate2/archive/refs/tags/v{CT2}.tar.gz"), tmp));
     Ok(Libs { llama, whisper, wheels, ct2_src })
@@ -872,7 +879,7 @@ fn whisper_dir(root: &Path) -> PathBuf {
 
 /// Говорящая часть — в том варианте, который попросили (q5_k по умолчанию).
 fn talker_variant() -> String {
-    std::env::var("TTS_GGUF_TALKER").unwrap_or_else(|_| "q5_k".into())
+    crate::TtsConfig::from_env().talker
 }
 
 /// What Qwen3-TTS is read from: every one of these, or synthesis fails at its
@@ -893,21 +900,15 @@ fn qwen_files(variant: &str, stress: bool) -> Vec<String> {
     ];
     files.extend((0..16).map(|i| format!("embeddings/codec_embedding_{i}.npy")));
     if stress {
-        files.push(crate::engines::STRESS_MARKER.into());
+        files.push(crate::STRESS_MARKER.into());
     }
     files
 }
 
-/// The Qwen3-TTS directory the server reads: `VOICY_TTS_GGUF_DIR`, else the
-/// model with stress marks once setup has begun to put it here, else the
-/// official weights if they are what is installed.
+/// The Qwen3-TTS directory setup fills and the server reads:
+/// `VOICY_TTS_GGUF_DIR`, else the one in the cache (`voicy_core::tts_dir`).
 pub fn tts_dir() -> PathBuf {
-    if let Some(dir) = std::env::var_os("VOICY_TTS_GGUF_DIR") {
-        return PathBuf::from(dir);
-    }
-    let root = native::cache_dir().join("models");
-    let (stress, base) = (root.join(crate::engines::TTS_STRESS_DIR), root.join(crate::engines::TTS_BASE_DIR));
-    if !stress.is_dir() && base.is_dir() { base } else { stress }
+    crate::TtsConfig::from_env().dir.unwrap_or_else(crate::tts_dir)
 }
 
 /// What the in-process engines need and the cache does not have — checked
@@ -920,7 +921,7 @@ pub fn missing() -> Vec<PathBuf> {
     want.push(root.join("turn").join(TURN_FILE));
     want.push(root.join("vad").join(SILERO));
     let tts = tts_dir();
-    let stress = tts.file_name().is_some_and(|n| n == crate::engines::TTS_STRESS_DIR);
+    let stress = tts.file_name().is_some_and(|n| n == crate::TTS_STRESS_DIR);
     want.extend(qwen_files(&talker_variant(), stress).iter().map(|f| tts.join(f)));
     let accent = native::accent::dir();
     want.extend(native::accent::FILES.iter().map(|f| accent.join(f)));
@@ -973,6 +974,7 @@ fn libs_needed() -> bool {
     !current || shim
 }
 
+#[doc(hidden)]
 /// Whether setup has been run here at all: then what is missing is a download
 /// cut short, not a machine that runs the Python engines instead.
 pub fn started() -> bool {
@@ -1014,7 +1016,7 @@ async fn plan_models(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> any
     let repo = std::env::var("VOICY_TTS_GGUF_REPO").unwrap_or_else(|_| QWEN_STRESS_MODEL.into());
     let stress = repo == QWEN_STRESS_MODEL;
     let gguf = std::env::var_os("VOICY_TTS_GGUF_DIR").map(PathBuf::from).unwrap_or_else(|| {
-        root.join(if stress { crate::engines::TTS_STRESS_DIR } else { crate::engines::TTS_BASE_DIR })
+        root.join(if stress { crate::TTS_STRESS_DIR } else { crate::TTS_BASE_DIR })
     });
     for f in qwen_files(&talker_variant(), stress) {
         plan.hf(&repo, "main", &f, &gguf);
@@ -1039,7 +1041,7 @@ async fn models(m: Models) -> anyhow::Result<()> {
         let dir = accent.clone();
         tokio::task::spawn_blocking(move || native::accent::build_dictionary(&dir)).await??;
     }
-    let old = m.root.join(crate::engines::TTS_BASE_DIR);
+    let old = m.root.join(crate::TTS_BASE_DIR);
     if m.stress && old.is_dir() && std::env::var_os("VOICY_TTS_GGUF_DIR").is_none() {
         say(format!("прежняя модель без ударений больше не используется, её можно удалить: {}", old.display()));
         say(format!("  вернуться к ней: VOICY_TTS_GGUF_REPO={QWEN_MODEL} voicy setup models"));

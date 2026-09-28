@@ -57,7 +57,7 @@ python -m uvicorn app:app --host 0.0.0.0 --port 8080 --app-dir server
 | `HF_HOME` | `/cache/huggingface` | куда складывать веса |
 | `VOICY_QUEUE_MAX` | `32` | сколько заданий может ждать; дальше — 429 |
 | `VOICY_JOB_TTL` | `1800` | сколько секунд помнить готовое задание |
-| `VOICY_VOICES_DIR` / `VOICY_CONTEXTS_DIR` | `server/voices` / `server/contexts` | где хранить голоса и профили контекста |
+| `VOICY_VOICES_DIR` / `VOICY_CONTEXTS_DIR` | `server/voices` / `server/contexts` | где хранить голоса и профили контекста; пустой `server/voices` сервер наполняет голосами из поставки (`rust/core/assets/voices`) |
 | `ESPEECH_NFE_STEP` | `32` | шагов решателя у `espeech`: больше — чище, медленнее |
 | `TTS_FAST` | `1` | `0` — синтез без CUDA graphs, как в 1.2.0: ×0.55 вместо ×1.5 |
 | `VOICY_API_KEY` | — | ключ доступа к `/v1/`; несколько — через запятую |

@@ -5,8 +5,8 @@ name: сборки
 # компилятором, что и обёртка над CTranslate2 внутри него, — поэтому у того,
 # кто просто скачал файл, компилятора быть не должно.
 #
-# По тегу v* — выпуск с файлами и контрольными суммами; вручную — только сборка,
-# чтобы проверить, что она жива.
+# По тегу v* — выпуск с файлами и контрольными суммами и крейт voicy-core
+# на crates.io той же версии; вручную — только сборка, чтобы проверить, что она жива.
 #
 # Подписи удостоверяющего центра у проекта пока нет (docs/code-signing-policy.md),
 # поэтому к каждому файлу прикладывается подтверждение сборки: GitHub заверяет,
@@ -90,3 +90,34 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
             --title "voicy $GITHUB_REF_NAME" --notes-file body.md --verify-tag \
             || gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+  # Движки как библиотека (rust/core) — той же версией, что бинарник: версия одна
+  # на workspace (rust/Cargo.toml). После сборок: крейт не уходит, если бинарник
+  # не собрался на какой-то из систем. Без секрета CARGO_REGISTRY_TOKEN шаг
+  # пропускается, выпуск бинарников от него не зависит.
+  crate:
+    name: крейт voicy-core
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: тег и версия совпадают
+        shell: bash
+        run: |
+          v=$(cargo metadata --no-deps --format-version 1 --manifest-path rust/Cargo.toml \
+                | python3 -c "import json,sys; print(next(p['version'] for p in json.load(sys.stdin)['packages'] if p['name'] == 'voicy-core'))")
+          echo "версия $v, тег $GITHUB_REF_NAME"
+          test "v$v" = "$GITHUB_REF_NAME"
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+      - name: опубликовать
+        if: env.CARGO_REGISTRY_TOKEN != ''
+        shell: bash
+        run: |
+          # перезапуск workflow не должен падать на уже выложенной версии
+          code=$(curl -s -o /dev/null -w '%{http_code}' -A 'voicy release (github.com/olluorg/voicy)' \
+                   "https://crates.io/api/v1/crates/voicy-core/$VERSION")
+          if [ "$code" = 200 ]; then echo "voicy-core $VERSION уже на crates.io"; exit 0; fi
+          cargo publish -p voicy-core --manifest-path rust/Cargo.toml

@@ -14,7 +14,7 @@ said into something expected.
 
 A context is named and stored, like a voice, so a client passes `context=name`
 instead of the whole list every time. `engineering` is built in: its hotwords
-are the terms of the pronunciation dictionary (data/pronunciation.json).
+are the terms of the pronunciation dictionary (rust/core/assets/pronunciation.json).
 """
 from __future__ import annotations
 

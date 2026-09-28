@@ -57,6 +57,8 @@ impl VadStream {
         self.rest.len()
     }
 
+    /// 16 kHz samples in any pieces → speech probabilities of the frames
+    /// (VAD_FRAME samples each) they complete.
     pub fn feed(&mut self, vad: &Vad, x: &[f32]) -> anyhow::Result<Vec<f32>> {
         self.rest.extend_from_slice(x);
         let n = self.rest.len() / VAD_FRAME;

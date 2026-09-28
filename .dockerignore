@@ -8,15 +8,19 @@ experiments
 results
 scripts
 
-# из данных нужен только словарь
-data/*
-!data/pronunciation.json
+# из Rust нужны только словарь и голоса из крейта ядра
+data
+rust/*
+!rust/core/
+rust/core/*
+!rust/core/assets/
 
-# аудио и веса не едут — кроме референсных голосов сервера
+# аудио и веса не едут — кроме поставляемых голосов
 *.wav
 *.pt
 *.onnx
-!server/voices/*.wav
+!rust/core/assets/voices/*.wav
+server/voices
 
 *-venv/
 .venv/

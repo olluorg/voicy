@@ -1,0 +1,58 @@
+[package]
+name = "voicy-core"
+version.workspace = true
+edition.workspace = true
+description = "voicy's speech engines as a library: Qwen3-TTS synthesis, faster-whisper recognition, voice activity and end of turn, in process"
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/voicy-core"
+readme = "README.md"
+keywords = ["tts", "speech-recognition", "whisper", "speech-synthesis", "russian"]
+categories = ["multimedia::audio"]
+# В пакет — только то, что нужно для сборки: заголовки CTranslate2 для обёртки
+# на Windows, словарь и два голоса, которые вшиваются в крейт
+include = ["src/**/*", "assets/**/*", "ct2shim/**/*", "examples/**/*", "build.rs", "README.md", "LICENSE"]
+
+[features]
+default = []
+# Скачивание библиотек и моделей в кэш — то, что делает `voicy setup`
+download = ["dep:reqwest", "dep:tokio", "dep:futures", "dep:tar", "dep:zip"]
+# async-обёртки над движками: тяжёлая работа уходит в spawn_blocking
+tokio = ["dep:tokio"]
+# Привязки к движкам и кодеки для сервера voicy; вне semver, не для внешних программ
+internal = []
+
+[dependencies]
+anyhow = "1"
+audiopus_sys = { version = "0.2", features = ["static"] }
+fancy-regex = "0.19"
+flacenc = "0.5.1"
+flate2 = "1.1.10"
+fst = "0.4"
+half = "2"
+libloading = "0.9"
+log = "0.4"
+matrixmultiply = "0.3"
+memmap2 = "0.9"
+mp3lame-encoder = "0.2.5"
+ogg = "0.9.2"
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-24", "half", "cuda"] }
+realfft = "3"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+soxr-sys = "0.1"
+symphonia = { version = "0.5", features = ["all"] }
+tokenizers = { version = "=0.22.2", default-features = false, features = ["onig"] }
+
+futures = { version = "0.3", optional = true }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream", "system-proxy"], optional = true }
+tar = { version = "0.4.46", optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
+zip = { version = "8.6.0", default-features = false, features = ["deflate"], optional = true }
+
+[package.metadata.docs.rs]
+features = ["tokio", "download"]
+
+[build-dependencies]
+cc = "1"

@@ -32,8 +32,8 @@ TAG = os.path.basename(OUT)  # у каждого варианта адаптер
 EVAL = os.path.join(WORK, "eval", TAG)
 SEEDS = (1, 2)
 MARGIN, FA, SENS = 0.3, 0.10, 0.71
-VOICE = "server/voices/turgenev.wav"
-VOICE_TEXT = json.load(open("server/voices/voices.json", encoding="utf-8"))["turgenev"]["text"]
+VOICE = "rust/core/assets/voices/turgenev.wav"
+VOICE_TEXT = json.load(open("rust/core/assets/voices/voices.json", encoding="utf-8"))["turgenev"]["text"]
 
 
 def mark_all(accented):

@@ -71,6 +71,11 @@ jobs:
         run: cargo build --release --manifest-path rust/Cargo.toml
       - name: свои проверки
         run: cargo test --release --manifest-path rust/Cargo.toml
+      # Крейт движков собирается из своего пакета, без остального репозитория:
+      # так видно, если что-то снова потянулось за его пределы. На Windows это
+      # заодно сборка ct2shim.dll (rust/core/build.rs)
+      - name: пакет voicy-core
+        run: cargo package -p voicy-core --manifest-path rust/Cargo.toml
       - name: проверки API
         env:
           VOICY_IMPL: rust
