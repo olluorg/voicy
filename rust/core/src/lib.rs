@@ -109,6 +109,14 @@ fn models() -> PathBuf {
     cache_dir().join("models")
 }
 
+/// ONNX Runtime from the engine libraries, loaded now. The `ort` crate is one
+/// per program, and in voicy-core it loads ONNX Runtime at run time: a program
+/// that makes its own `ort` sessions calls this first. The engines call it
+/// themselves.
+pub fn init_onnx_runtime() -> anyhow::Result<()> {
+    native::init_onnx(&native::lib_dir()?)
+}
+
 impl Vad {
     /// Silero v6 from the cache.
     pub fn from_cache() -> anyhow::Result<Vad> {

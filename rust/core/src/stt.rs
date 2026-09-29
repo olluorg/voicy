@@ -49,6 +49,8 @@ pub struct TranscribeOptions {
     /// Terms to be heard as written: Kafka, not «кавка».
     pub hotwords: Vec<String>,
     pub temperature: f32,
+    /// Words with their times and probabilities (`Segment::words`); costs an
+    /// alignment pass after decoding.
     pub word_timestamps: bool,
     /// Into English instead of the language spoken.
     pub translate: bool,
@@ -64,6 +66,11 @@ pub struct Word {
     pub start: f64,
     pub end: f64,
     pub word: String,
+    /// How sure the recogniser is of the word, 0–1: the mean of its tokens'
+    /// probabilities, as faster-whisper counts it; 0 when the word has no
+    /// tokens of its own. A mangled term shows here.
+    #[serde(default)]
+    pub probability: f64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

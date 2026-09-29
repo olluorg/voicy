@@ -1068,7 +1068,9 @@ impl FasterWhisper {
                 }
                 let text = text.trim().to_string();
                 let words: Vec<Value> = s.words.iter()
-                    .map(|w| json!({"start": round_to(w.start, 3), "end": round_to(w.end, 3), "word": w.word}))
+                    .map(|w| json!({"start": round_to(w.start, 3), "end": round_to(w.end, 3), "word": w.word,
+                                // слово без своих токенов — NaN, а он в JSON стал бы null
+                                "probability": if w.probability.is_nan() { 0.0 } else { round_to(w.probability, 3) }}))
                     .collect();
                 segments.push(json!({"start": round_to(s.start, 3), "end": round_to(s.end, 3), "text": text, "words": words}));
                 if !on_segment(s.end, duration, &text) {
