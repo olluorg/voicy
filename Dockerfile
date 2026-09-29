@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /src
 COPY rust/ rust/
+# консоль вшивается в бинарник (rust/src/main.rs)
+COPY server/static/index.html server/static/index.html
 RUN cargo build --release --manifest-path rust/Cargo.toml \
     && install -D rust/target/release/voicy /out/voicy
 
