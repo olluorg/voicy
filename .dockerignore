@@ -1,36 +1,6 @@
-# В образ едет только сервер, голоса и словарь произношений.
-# Исследование — статья, замеры, 319 аудиофрагментов — остаётся в репозитории.
-.git
-.github
-article
-docs
-experiments
-results
-scripts
-
-# из Rust нужны только словарь и голоса из крейта ядра
-data
-rust/*
-!rust/core/
-rust/core/*
-!rust/core/assets/
-
-# аудио и веса не едут — кроме поставляемых голосов
-*.wav
-*.pt
-*.onnx
-!rust/core/assets/voices/*.wav
-server/voices
-
-*-venv/
-.venv/
-__pycache__/
-*.pyc
-compose.yml
-README.md
-
-# инструменты и инструкции для работы с сервером снаружи
-voicy
-AGENTS.md
-CLAUDE.md
-.claude
+# Образу нужен только rust/: из него собирается бинарник, в нём же поставляемые
+# голоса (rust/core/assets). Исследование — статья, замеры, аудио, Python-сервер —
+# остаётся в репозитории.
+*
+!rust/
+rust/target/

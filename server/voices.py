@@ -27,7 +27,7 @@ from pathlib import Path
 VOICES_DIR = Path(os.environ.get("VOICY_VOICES_DIR") or Path(__file__).parent / "voices")
 INDEX = VOICES_DIR / "voices.json"
 # Поставляемые голоса — в крейте ядра (его include_bytes! не выходит за крейт);
-# рабочий каталог получает их, пока в нём нет индекса. Каталог из окружения не трогаем.
+# каталог получает их, пока в нём нет индекса, — и каталог из окружения тоже.
 SHIPPED = Path(__file__).resolve().parents[1] / "rust" / "core" / "assets" / "voices"
 SAMPLE_RATE = 24000
 
@@ -55,7 +55,7 @@ class Voice:
 
 
 def _seed() -> None:
-    if os.environ.get("VOICY_VOICES_DIR") or INDEX.exists() or not SHIPPED.is_dir():
+    if INDEX.exists() or not SHIPPED.is_dir():
         return
     VOICES_DIR.mkdir(parents=True, exist_ok=True)
     for f in SHIPPED.iterdir():

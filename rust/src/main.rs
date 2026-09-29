@@ -368,10 +368,9 @@ async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Op
         Some(s) => s.join("voices"),
         None => cache.join("voices"),
     });
-    // поставляемые голоса — в крейте ядра; рабочий каталог получает их, пока пуст
-    if std::env::var_os("VOICY_VOICES_DIR").is_none() {
-        voices::seed(&voices_dir)?;
-    }
+    // поставляемые голоса — в крейте ядра; каталог без индекса получает их, чей бы он ни был:
+    // пустой том или папка хоста в контейнере иначе остались бы без голосов
+    voices::seed(&voices_dir)?;
     let contexts_dir = env_or("VOICY_CONTEXTS_DIR", || match &server_dir {
         Some(s) => s.join("contexts"),
         None => cache.join("contexts"),
@@ -404,8 +403,31 @@ async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Op
         .await
         .with_context(|| format!("cannot listen on {host}:{port}"))?;
     eprintln!("voicy: http://{host}:{port}");
-    axum::serve(listener, router(app)).await?;
+    tokio::select! {
+        r = axum::serve(listener, router(app)) => r?,
+        () = stop_requested() => eprintln!("voicy: остановлен"),
+    }
     Ok(())
+}
+
+/// SIGTERM или Ctrl+C. Без обработчика SIGTERM процессу №1 в контейнере не
+/// доставляется вовсе, и `docker stop` ждал бы десять секунд, чтобы убить сервер.
+async fn stop_requested() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+        match signal(SignalKind::terminate()) {
+            Ok(mut term) => tokio::select! {
+                _ = term.recv() => {}
+                _ = tokio::signal::ctrl_c() => {}
+            },
+            Err(_) => {
+                let _ = tokio::signal::ctrl_c().await;
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    let _ = tokio::signal::ctrl_c().await;
 }
 
 fn probe_listen(wav: PathBuf) -> anyhow::Result<()> {

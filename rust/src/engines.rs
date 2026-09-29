@@ -115,7 +115,7 @@ impl NativeTts {
                     talker: self.files.talker.clone(),
                     predictor: self.files.predictor.clone(),
                 };
-                tokio::task::spawn_blocking(move || native::qwen::Qwen::load(&files, true))
+                tokio::task::spawn_blocking(move || native::qwen::Qwen::load(&files, tts_device() == "cuda"))
                     .await
                     .map_err(|e| err("internal", e.to_string()))?
                     .map(Arc::new)
@@ -129,7 +129,7 @@ impl NativeTts {
         let model = self.stress.as_ref().and_then(|s| s["model"].as_str()).unwrap_or("Qwen/Qwen3-TTS-12Hz-1.7B-Base");
         json!({"engine": "qwen3-tts", "model": format!("{model} ({})", self.variant), "stress_marks": self.stress.is_some(),
                "runtime": "llama.cpp + onnxruntime", "loaded": self.engine.initialized(),
-               "device": self.engine.get().map_or("cuda".into(), |e| e.device.clone())})
+               "device": self.engine.get().map_or_else(|| tts_device().into(), |e| e.device.clone())})
     }
 
     fn info(&self) -> Value {
@@ -168,8 +168,13 @@ enum SttModel {
     Cpp(native::whisper::Whisper),
 }
 
+/// Where synthesis runs: the GPU unless FORCE_CPU=1 or CUDA sees no device.
+fn tts_device() -> &'static str {
+    if native::use_gpu(voicy_core::TtsConfig::from_env().gpu) { "cuda" } else { "cpu" }
+}
+
 fn stt_gpu() -> bool {
-    voicy_core::SttConfig::from_env().gpu
+    native::use_gpu(voicy_core::SttConfig::from_env().gpu)
 }
 
 impl NativeStt {
@@ -214,7 +219,7 @@ impl NativeStt {
                     SttKind::Ct2 { dir, vad } => {
                         native::fwhisper::FasterWhisper::load(&dir, Some(&vad), stt_gpu(), voicy_core::SttConfig::from_env().compute_type.as_deref()).map(SttModel::Ct2)
                     }
-                    SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), true).map(SttModel::Cpp),
+                    SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), stt_gpu()).map(SttModel::Cpp),
                 })
                 .await
                 .map_err(|e| err("internal", e.to_string()))?
@@ -284,7 +289,7 @@ impl Engines {
         let mut info = json!({});
         let host = if all_native {
             eprintln!("voicy: all engines in-process, Python is not needed");
-            info["device"] = json!(if native::lib_dir().is_ok_and(|d| d.to_string_lossy().contains("cuda")) {
+            info["device"] = json!(if native::lib_dir().is_ok_and(|d| d.to_string_lossy().contains("cuda")) && tts_device() == "cuda" {
                 "cuda"
             } else {
                 "cpu"

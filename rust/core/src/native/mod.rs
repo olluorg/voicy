@@ -152,6 +152,45 @@ fn preload_cuda(dir: &Path) {
     }
 }
 
+/// How many CUDA devices this process sees, by the CUDA runtime among the
+/// engine libraries: 0 in a container the GPU was not passed into, or with
+/// CUDA_VISIBLE_DEVICES empty. None where there is no CUDA runtime at all —
+/// then nothing is known, and a GPU of another kind may be there.
+pub fn cuda_devices() -> Option<usize> {
+    static N: OnceLock<Option<usize>> = OnceLock::new();
+    *N.get_or_init(|| {
+        let dir = lib_dir().ok()?;
+        let path = std::fs::read_dir(&dir).ok()?.flatten().map(|e| e.path()).find(|p| {
+            p.file_name().and_then(|n| n.to_str()).is_some_and(|n| {
+                n.starts_with("libcudart.so") || (n.starts_with("cudart64_") && n.ends_with(".dll"))
+            })
+        })?;
+        unsafe {
+            let lib = libloading::Library::new(&path).ok()?;
+            let count = lib.get::<unsafe extern "C" fn(*mut i32) -> i32>(b"cudaGetDeviceCount\0").ok()?;
+            let mut n = 0i32;
+            // ошибка — это и есть «устройств нет»: драйвера нет или GPU не проброшен
+            let n = if count(&mut n) == 0 { n.max(0) as usize } else { 0 };
+            std::mem::forget(lib); // тот же рантайм понадобится движкам
+            Some(n)
+        }
+    })
+}
+
+/// The GPU if it is asked for and there is one: without a CUDA device the
+/// engines load on the CPU instead of failing — the same image then runs with
+/// the GPU passed into the container or without it.
+pub fn use_gpu(wanted: bool) -> bool {
+    if wanted && cuda_devices() == Some(0) {
+        static SAID: OnceLock<()> = OnceLock::new();
+        if SAID.set(()).is_ok() {
+            log::warn!("видеокарты с CUDA не видно — движки работают на процессоре, это заметно медленнее");
+        }
+        return false;
+    }
+    wanted
+}
+
 /// libfoo.so, foo.dll or libfoo.dylib, whichever this platform names it.
 pub fn lib_file(stem: &str) -> String {
     llama::lib_name(stem)

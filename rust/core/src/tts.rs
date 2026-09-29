@@ -31,13 +31,14 @@ impl Default for TtsConfig {
 }
 
 impl TtsConfig {
-    /// What the server reads: `VOICY_TTS_GGUF_DIR` and `TTS_GGUF_TALKER`.
+    /// What the server reads: `VOICY_TTS_GGUF_DIR`, `TTS_GGUF_TALKER`, and
+    /// `FORCE_CPU=1` for the CPU.
     pub fn from_env() -> Self {
         let d = TtsConfig::default();
         TtsConfig {
             dir: std::env::var_os("VOICY_TTS_GGUF_DIR").filter(|v| !v.is_empty()).map(PathBuf::from),
             talker: std::env::var("TTS_GGUF_TALKER").unwrap_or(d.talker),
-            ..d
+            gpu: std::env::var("FORCE_CPU").as_deref() != Ok("1"),
         }
     }
 }
@@ -72,6 +73,7 @@ pub struct Tts {
 
 impl Tts {
     /// Load the model: seconds to a minute, and 3.5 GB of memory on the GPU.
+    /// Asked for the GPU where CUDA sees none, it loads on the CPU.
     pub fn load(cfg: &TtsConfig) -> anyhow::Result<Tts> {
         let dir = cfg.dir.clone().unwrap_or_else(crate::tts_dir);
         let files = qwen::Files {
@@ -82,7 +84,7 @@ impl Tts {
         anyhow::ensure!(files.dir.join(&files.talker).is_file(),
                         "no {} in {} — voicy setup models", files.talker, files.dir.display());
         let stress = files.dir.join(STRESS_MARKER).is_file();
-        Ok(Tts { engine: Qwen::load(&files, cfg.gpu)?, stress })
+        Ok(Tts { engine: Qwen::load(&files, crate::native::use_gpu(cfg.gpu))?, stress })
     }
 
     pub fn sample_rate(&self) -> u32 {
