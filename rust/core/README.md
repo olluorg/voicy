@@ -53,6 +53,11 @@ println!("{}", heard.text);   // heard.srt(), heard.vtt(), heard.segments
 до первой загрузки движка. Наполняет его `voicy setup` (7.8 ГБ) либо сама
 программа — `voicy_core::setup::run("all", true)` с фичей `download`.
 
+Для сборки нужен CMake: кодек Opus собирается из исходников. С CMake 4 задайте
+`CMAKE_POLICY_VERSION_MINIMUM=3.5` (например, в `[env]` своего
+`.cargo/config.toml`): иначе CMake 4 не примет старый `cmake_minimum_required`
+в исходниках Opus.
+
 Обёртку над C++-интерфейсом CTranslate2 на Unix собирает `setup`, и ему нужен
 `g++`. На Windows её собирает `build.rs` этого крейта (нужна Visual Studio
 с C++ — та же, что и для любой сборки Rust под MSVC). Готовая `ct2shim.dll`
