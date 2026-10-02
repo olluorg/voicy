@@ -115,7 +115,7 @@ impl NativeTts {
                     talker: self.files.talker.clone(),
                     predictor: self.files.predictor.clone(),
                 };
-                tokio::task::spawn_blocking(move || native::qwen::Qwen::load(&files, tts_device() == "cuda"))
+                tokio::task::spawn_blocking(move || native::qwen::Qwen::load(&files, tts_gpu()))
                     .await
                     .map_err(|e| err("internal", e.to_string()))?
                     .map(Arc::new)
@@ -129,7 +129,7 @@ impl NativeTts {
         let model = self.stress.as_ref().and_then(|s| s["model"].as_str()).unwrap_or("Qwen/Qwen3-TTS-12Hz-1.7B-Base");
         json!({"engine": "qwen3-tts", "model": format!("{model} ({})", self.variant), "stress_marks": self.stress.is_some(),
                "runtime": "llama.cpp + onnxruntime", "loaded": self.engine.initialized(),
-               "device": self.engine.get().map_or_else(|| tts_device().into(), |e| e.device.clone())})
+               "device": self.engine.get().map_or_else(tts_device, |e| e.device.clone())})
     }
 
     fn info(&self) -> Value {
@@ -168,13 +168,24 @@ enum SttModel {
     Cpp(native::whisper::Whisper),
 }
 
-/// Where synthesis runs: the GPU unless FORCE_CPU=1 or CUDA sees no device.
-fn tts_device() -> &'static str {
-    if native::use_gpu(voicy_core::TtsConfig::from_env().gpu) { "cuda" } else { "cpu" }
+/// Whether synthesis runs on the GPU: unless FORCE_CPU=1, the backend is the
+/// CPU, or CUDA sees no device.
+fn tts_gpu() -> bool {
+    native::use_gpu(voicy_core::TtsConfig::from_env().gpu)
 }
 
-fn stt_gpu() -> bool {
-    native::use_gpu(voicy_core::SttConfig::from_env().gpu)
+/// cuda, vulkan, rocm, sycl or cpu.
+fn tts_device() -> String {
+    native::device_name(tts_gpu())
+}
+
+/// faster-whisper has a GPU only through CUDA; whisper.cpp, on any backend.
+fn stt_device(kind: &SttKind) -> String {
+    let wanted = voicy_core::SttConfig::from_env().gpu;
+    match kind {
+        SttKind::Ct2 { .. } => if native::use_cuda(wanted) { "cuda".into() } else { "cpu".into() },
+        SttKind::Cpp { .. } => native::device_name(native::use_gpu(wanted)),
+    }
 }
 
 impl NativeStt {
@@ -215,11 +226,12 @@ impl NativeStt {
         self.engine
             .get_or_try_init(|| async {
                 let kind = self.kind.clone();
+                let cfg = voicy_core::SttConfig::from_env();
                 tokio::task::spawn_blocking(move || match kind {
                     SttKind::Ct2 { dir, vad } => {
-                        native::fwhisper::FasterWhisper::load(&dir, Some(&vad), stt_gpu(), voicy_core::SttConfig::from_env().compute_type.as_deref()).map(SttModel::Ct2)
+                        native::fwhisper::FasterWhisper::load(&dir, Some(&vad), native::use_cuda(cfg.gpu), cfg.compute_type.as_deref()).map(SttModel::Ct2)
                     }
-                    SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), stt_gpu()).map(SttModel::Cpp),
+                    SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), native::use_gpu(cfg.gpu)).map(SttModel::Cpp),
                 })
                 .await
                 .map_err(|e| err("internal", e.to_string()))?
@@ -250,7 +262,7 @@ impl NativeStt {
                 v["compute_type"] = json!(w.compute_type);
             }
             Some(SttModel::Cpp(w)) => v["device"] = json!(w.device),
-            None => v["device"] = json!(if stt_gpu() { "cuda" } else { "cpu" }),
+            None => v["device"] = json!(stt_device(&self.kind)),
         }
         v
     }
@@ -289,11 +301,7 @@ impl Engines {
         let mut info = json!({});
         let host = if all_native {
             eprintln!("voicy: all engines in-process, Python is not needed");
-            info["device"] = json!(if native::lib_dir().is_ok_and(|d| d.to_string_lossy().contains("cuda")) && tts_device() == "cuda" {
-                "cuda"
-            } else {
-                "cpu"
-            });
+            info["device"] = json!(tts_device());
             info["cuda"] = json!(info["device"] == "cuda");
             None
         } else {

@@ -255,7 +255,7 @@ impl Whisper {
             api,
             ctx: Mutex::new(ctx as usize),
             vad_model: vad_model.filter(|p| p.is_file()).and_then(|p| CString::new(p.to_string_lossy().as_bytes()).ok()),
-            device: if gpu { "cuda".into() } else { "cpu".into() },
+            device: super::device_name(gpu),
         })
     }
 

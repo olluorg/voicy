@@ -1,4 +1,4 @@
-//! Recognition contexts — server/contexts.py: what the speaker is likely to say
+//! Recognition contexts: what the speaker is likely to say
 //! (a prompt, hotwords) and how to write what the model still gets wrong
 //! (replacements, exact and never guessed). `engineering` is built in: its
 //! hotwords are the terms of the pronunciation dictionary.

@@ -306,7 +306,7 @@ impl Qwen {
         };
         super::trim_heap();
         Ok(Qwen {
-            device: if gpu { "cuda".into() } else { "cpu".into() },
+            device: super::device_name(gpu),
             api,
             talker,
             predictor,

@@ -1,5 +1,4 @@
-//! Every request is a job with an id and a place in the queue — server/progress.py
-//! and server/workqueue.py.
+//! Every request is a job with an id and a place in the queue.
 //!
 //! One worker, one line, in submission order: the models share one card, and
 //! running two at once would only split its memory. The OpenAI-compatible routes

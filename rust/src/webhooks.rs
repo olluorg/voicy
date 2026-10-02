@@ -1,4 +1,4 @@
-//! Calling back when a job ends — server/webhooks.py.
+//! Calling back when a job ends.
 //!
 //! The summary of the job is POSTed to the URL the job was given, with a few
 //! retries spread over minutes. With VOICY_WEBHOOK_SECRET set, the body is

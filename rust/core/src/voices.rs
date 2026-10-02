@@ -1,6 +1,6 @@
-//! Named voices — server/voices.py: a reference clip `<name>.wav` plus its
-//! transcript in `voices.json`, in the same directory and the same format, so
-//! both servers read each other's voices.
+//! Named voices: a reference clip `<name>.wav` plus its
+//! transcript in `voices.json`, in the same directory and the same format the
+//! Python server kept, so its voices carry over as they are.
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;

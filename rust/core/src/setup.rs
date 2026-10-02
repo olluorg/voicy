@@ -26,6 +26,8 @@ const LLAMA: &str = "b11090";
 const WHISPER_CPP: &str = "b5130";
 const CT2: &str = "4.8.2";
 const ORT: &str = "1.30.0";
+/// Сборка ONNX Runtime с DirectML выходит реже основной: это последняя.
+const ORT_DML: &str = "1.24.4";
 const CUBLAS12: &str = "12.8.4.1";
 const WHISPER_MODEL: &str = "mobiuslabsgmbh/faster-whisper-large-v3-turbo";
 /// Qwen3-TTS в GGUF и ONNX: те же официальные веса, переведённые
@@ -37,11 +39,13 @@ const TURN_MODEL: &str = "pipecat-ai/smart-turn-v3";
 /// Silero — из колеса faster-whisper: тот же файл, что слышит движок Python.
 const FASTER_WHISPER: &str = "1.2.1";
 
-/// What a platform needs, and where it comes from. A platform is here once its
+/// What a platform needs, and where it comes from: one operating system and
+/// architecture, one backend (`native::Backend`). A platform is here once its
 /// archives are known; being here is not the same as being measured — that is
 /// what rust/README.md says of each.
+#[derive(Clone, Copy)]
 struct Platform {
-    /// Сборки llama.cpp и whisper.cpp из их релизов: ggml с бэкендом CUDA — оттуда же.
+    /// Сборки llama.cpp и whisper.cpp из их релизов: ggml с бэкендом видеокарты — оттуда же.
     llama_assets: &'static [&'static str],
     whisper_asset: &'static str,
     /// Колёса PyPI: чем помечены под эту платформу и что из них берётся.
@@ -88,15 +92,53 @@ const WINDOWS_X64_CUDA13: Platform = Platform {
                 "cudnn_engines_precompiled64_9.dll", "cudnn_engines_runtime_compiled64_9.dll"],
 };
 
-fn platform() -> anyhow::Result<&'static Platform> {
-    match (std::env::consts::OS, std::env::consts::ARCH) {
-        ("linux", "x86_64") => Ok(&LINUX_X64_CUDA13),
-        ("windows", "x86_64") => Ok(&WINDOWS_X64_CUDA13),
-        (os, arch) => bail!(
-            "no engine libraries for {os}-{arch} yet: the archives for this platform are the next step\n\
-             (docs/adr/0022). Where there is a repository with server/, the Python engines still run: voicy serve."
-        ),
+/// Без CUDA: ONNX Runtime — сборка для процессора (на Windows — с DirectML,
+/// чтобы декодер синтеза считала видеокарта), CTranslate2 — то же колесо,
+/// что под CUDA: библиотеки CUDA он грузит сам, когда просят GPU, и без них работает на процессоре.
+const PLAIN_WHEELS: &[&str] = &["onnxruntime=={ort}", "ctranslate2=={ct2}"];
+
+const fn linux_x64(llama: &'static [&'static str]) -> Platform {
+    Platform {
+        llama_assets: llama,
+        whisper_asset: "whisper-bin-ubuntu-x64.tar.gz",
+        wheels: PLAIN_WHEELS,
+        wheel_tag: &["manylinux", "x86_64"],
+        wanted: &["libonnxruntime.so", "libonnxruntime_providers_shared.so", "libctranslate2", "libgomp"],
+        required: &[],
     }
+}
+
+const fn windows_x64(llama: &'static [&'static str]) -> Platform {
+    Platform {
+        llama_assets: llama,
+        whisper_asset: "whisper-bin-x64.zip",
+        wheels: &["onnxruntime-directml=={ort_dml}", "ctranslate2=={ct2}"],
+        wheel_tag: &["win_amd64"],
+        wanted: &["onnxruntime.dll", "onnxruntime_providers_shared.dll", "DirectML.dll", "ctranslate2.dll", "libiomp5md.dll"],
+        required: &[],
+    }
+}
+
+fn platform() -> anyhow::Result<Platform> {
+    use native::Backend::*;
+    let backend = native::backend();
+    Ok(match (std::env::consts::OS, std::env::consts::ARCH, backend) {
+        ("linux", "x86_64", Cuda) => LINUX_X64_CUDA13,
+        ("linux", "x86_64", Vulkan) => linux_x64(&["llama-{v}-bin-ubuntu-vulkan-x64.tar.gz"]),
+        ("linux", "x86_64", Rocm) => linux_x64(&["llama-{v}-bin-ubuntu-rocm-10.0-x64.tar.gz"]),
+        ("linux", "x86_64", Sycl) => linux_x64(&["llama-{v}-bin-ubuntu-sycl-fp16-x64.tar.gz"]),
+        ("linux", "x86_64", Cpu) => linux_x64(&["llama-{v}-bin-ubuntu-x64.tar.gz"]),
+        ("windows", "x86_64", Cuda) => WINDOWS_X64_CUDA13,
+        ("windows", "x86_64", Vulkan) => windows_x64(&["llama-{v}-bin-win-vulkan-x64.zip"]),
+        ("windows", "x86_64", Rocm) => windows_x64(&["llama-{v}-bin-win-rocm-10.0-x64.zip"]),
+        ("windows", "x86_64", Sycl) => windows_x64(&["llama-{v}-bin-win-sycl-x64.zip"]),
+        ("windows", "x86_64", Cpu) => windows_x64(&["llama-{v}-bin-win-cpu-x64.zip"]),
+        (os, arch, b) => bail!(
+            "no engine libraries for {os}-{arch} ({}) yet: the archives for this platform are the next step\n\
+             (docs/adr/0022). Where there is a repository with server/, the Python engines still run: voicy serve.",
+            b.name()
+        ),
+    })
 }
 
 /// Кто говорит в строках журнала: setup, или update, когда он качает через те же функции.
@@ -113,7 +155,7 @@ fn say(msg: impl AsRef<str>) {
 }
 
 fn expand(t: &str) -> String {
-    t.replace("{v}", LLAMA).replace("{ort}", ORT).replace("{ct2}", CT2).replace("{cublas12}", CUBLAS12)
+    t.replace("{v}", LLAMA).replace("{ort_dml}", ORT_DML).replace("{ort}", ORT).replace("{ct2}", CT2).replace("{cublas12}", CUBLAS12)
 }
 
 // ------------------------------------------------------------------ скачивание
@@ -953,7 +995,16 @@ fn missing_libs() -> Vec<PathBuf> {
 const LIB_MARKER: &str = "voicy-libs.txt";
 
 fn lib_set() -> String {
-    format!("llama.cpp {LLAMA}, whisper.cpp {WHISPER_CPP}, CTranslate2 {CT2}, ONNX Runtime {ORT}, cuBLAS 12 {CUBLAS12}\n")
+    match native::backend() {
+        // строка та же, что до появления других бэкендов: поставленное не ставится заново
+        native::Backend::Cuda => {
+            format!("llama.cpp {LLAMA}, whisper.cpp {WHISPER_CPP}, CTranslate2 {CT2}, ONNX Runtime {ORT}, cuBLAS 12 {CUBLAS12}\n")
+        }
+        b => {
+            let ort = if cfg!(windows) { format!("{ORT_DML} DirectML") } else { ORT.into() };
+            format!("llama.cpp {LLAMA} ({}), whisper.cpp {WHISPER_CPP}, CTranslate2 {CT2}, ONNX Runtime {ort}\n", b.name())
+        }
+    }
 }
 
 /// Whether the libraries have to be put in again. Unpacking over installed ones

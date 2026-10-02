@@ -1,5 +1,4 @@
-//! Speech as it is synthesised, for a voice agent that should not go silent —
-//! server/speak.py.
+//! Speech as it is synthesised, for a voice agent that should not go silent.
 //!
 //! The synthesiser returns a piece of text only once the whole of it is
 //! generated, so the text is cut into pieces and each is sent as soon as it is

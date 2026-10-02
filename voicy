@@ -19,8 +19,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import shutil
-import signal
 import subprocess
 import sys
 import time
@@ -83,8 +83,8 @@ def request(url: str, path: str, *, data: bytes | None = None,
         req.add_header("Authorization", f"Bearer {API_KEY}")
     try:
         with _opener(url).open(req, timeout=timeout) as r:
-            # ASGI приводит имена заголовков к нижнему регистру, и через uvicorn
-            # они приходят как x-voice, а не X-Voice.
+            # Регистр имён заголовков у серверов и прокси разный:
+            # x-voice и X-Voice — один заголовок.
             return r.read(), {k.lower(): v for k, v in r.headers.items()}
     except urllib.error.HTTPError as e:
         body = e.read()
@@ -219,13 +219,11 @@ def cmd_say(a) -> int:
     if a.seed is not None:
         payload["seed"] = a.seed
 
-    # Всё, кроме wav и pcm, сервер кодирует через ffmpeg; растяжение темпа — тоже.
-    # В образе он есть, при запуске из исходников это системная зависимость.
+    # ffmpeg серверу нужен только для aac: остальное он кодирует и растягивает сам.
+    # В образе ffmpeg есть, у бинарника на машине — системная зависимость.
     hint = ""
-    if (fmt not in ("wav", "pcm") or a.speed != 1.0) and not shutil.which("ffmpeg"):
-        hint = ("похоже, серверу не хватает ffmpeg: он нужен для " +
-                (f"формата {fmt}" if fmt not in ("wav", "pcm") else "изменения темпа") +
-                ". Поставьте его или синтезируйте в wav")
+    if fmt == "aac" and not shutil.which("ffmpeg"):
+        hint = "похоже, серверу не хватает ffmpeg: он нужен для aac. Поставьте его или возьмите opus"
 
     if a.detach or a.webhook:
         if a.webhook:
@@ -431,17 +429,8 @@ def cmd_prepare(a) -> int:
 def cmd_status(a) -> int:
     h = health(a.url)
     if not h:
-        log(f"voicy не отвечает на {a.url}")
-        pid = read_pid()
-        if pid:
-            log(f"свой процесс {pid} жив, но ещё не отвечает — журнал: {LOG_FILE}")
-        elif not docker_available():
-            log(f"docker недоступен; поднять из исходников: {sys.argv[0]} up --source")
+        log(f"voicy не отвечает на {a.url}; поднять: {sys.argv[0]} up")
         return 1
-    pid = read_pid()
-    # Про чужой сервер известно только то, что он отвечает: он может быть
-    # контейнером, а может быть запущен руками или вовсе на другой машине.
-    log(f"запущен процессом {pid} из исходников" if pid else "запущен не этим CLI")
     print(json.dumps(h, ensure_ascii=False, indent=2))
     return 0
 
@@ -458,14 +447,12 @@ def cmd_warm(a) -> int:
 
 
 IMAGE = os.environ.get("VOICY_IMAGE", "ghcr.io/olluorg/voicy:latest")
-RUNTIME_DIR = HERE / ".voicy"
-PID_FILE = RUNTIME_DIR / "server.pid"
-LOG_FILE = RUNTIME_DIR / "server.log"
-
-# Имена для импорта, а не для установки: python-multipart ставится под одним
-# именем, а импортируется под другим.
-NEEDED = ("fastapi", "uvicorn", "multipart", "numpy", "soundfile", "soxr", "scipy",
-          "onnxruntime", "torch", "transformers", "qwen_tts", "faster_whisper")
+EXE = "voicy.exe" if os.name == "nt" else "voicy"
+BUILT = HERE / "rust" / "target" / "release" / EXE
+# Системы, под которые setup ставит движки в процесс сервера (rust/core/src/setup.rs).
+NATIVE_ENGINES = (sys.platform in ("linux", "win32")
+                  and platform.machine().lower() in ("x86_64", "amd64"))
+BUILD = ["build", "--release", "--manifest-path", str(HERE / "rust" / "Cargo.toml")]
 
 
 def docker_available() -> bool:
@@ -478,133 +465,76 @@ def docker_available() -> bool:
         return False
 
 
-def interpreter() -> Path:
-    """Чем запускать сервер: заданное явно, потом .venv рядом, потом текущее."""
-    explicit = os.environ.get("VOICY_PYTHON")
+def binary() -> Path | None:
+    """Сервер на Rust: заданный явно, собранный здесь, потом из PATH.
+
+    В PATH может оказаться и этот самый скрипт — тогда репозиторий лежит
+    в PATH целиком, и бинарником он не считается.
+    """
+    explicit = os.environ.get("VOICY_BIN")
     if explicit:
         return Path(explicit)
-    for rel in (".venv/bin/python", ".venv/Scripts/python.exe"):
-        p = HERE / rel
-        if p.exists():
-            return p
-    return Path(sys.executable)
+    if BUILT.exists():
+        return BUILT
+    found = shutil.which(EXE)
+    if found and Path(found).resolve() != Path(__file__).resolve():
+        return Path(found)
+    return None
 
 
-def missing_modules(py: Path) -> list[str]:
-    code = ("import importlib.util as u, sys; "
-            "print(' '.join(m for m in sys.argv[1:] if u.find_spec(m) is None))")
-    try:
-        r = subprocess.run([str(py), "-c", code, *NEEDED],
-                           capture_output=True, text=True, timeout=180)
-    except (OSError, subprocess.SubprocessError):
-        return list(NEEDED)
-    return list(NEEDED) if r.returncode != 0 else r.stdout.split()
+def cargo() -> str | None:
+    """rustup кладёт cargo в ~/.cargo/bin, а в PATH его добавляет только новый вход."""
+    found = shutil.which("cargo")
+    if found:
+        return found
+    home = Path(os.environ.get("CARGO_HOME") or Path.home() / ".cargo") / "bin"
+    exe = home / ("cargo.exe" if os.name == "nt" else "cargo")
+    return str(exe) if exe.exists() else None
 
 
-def torch_index() -> str:
-    """Колёса torch под CUDA весят втрое больше и без видеокарты бесполезны."""
-    if os.environ.get("VOICY_TORCH_INDEX"):
-        return os.environ["VOICY_TORCH_INDEX"]
-    return ("https://download.pytorch.org/whl/cu128" if shutil.which("nvidia-smi")
-            else "https://download.pytorch.org/whl/cpu")
-
-
-def install_hint(py: Path) -> str:
-    idx = torch_index()
-    return (f"    uv venv --python 3.12 .venv\n"
-            f"    uv pip install --python .venv torch torchaudio --index-url {idx}\n"
-            f"    uv pip install --python .venv -r server/requirements.txt\n"
-            f"  либо одной командой: {sys.argv[0]} up --source --install")
-
-
-def run_step(cmd: list[str]) -> None:
+def build() -> Path:
+    """Собирает бинарник из rust/. Минуты при первой сборке, дальше быстро."""
+    tool = cargo()
+    if not tool:
+        die("для сборки нужен Rust: https://rustup.rs, затем повторите команду;\n"
+            "  либо возьмите готовый бинарник из выпусков и укажите его в VOICY_BIN")
+    cmd = [tool, *BUILD]
     log("$ " + " ".join(cmd))
     if subprocess.run(cmd, cwd=HERE).returncode != 0:
-        die("установка оборвалась — смотрите вывод выше")
+        die("сборка оборвалась — смотрите вывод выше")
+    return BUILT
 
 
-def install_deps() -> Path:
-    """Ставит окружение в .venv рядом с репозиторием. Качает гигабайты."""
-    venv = HERE / ".venv"
-    uv = shutil.which("uv")
-    idx = torch_index()
-    log(f"ставлю зависимости в {venv} (torch с {idx}); это гигабайты и не быстро")
-    if uv:
-        if not venv.exists():
-            run_step([uv, "venv", "--python", "3.12", str(venv)])
-        run_step([uv, "pip", "install", "--python", str(venv),
-                  "torch", "torchaudio", "--index-url", idx])
-        run_step([uv, "pip", "install", "--python", str(venv),
-                  "-r", str(HERE / "server" / "requirements.txt")])
-    else:
-        if not venv.exists():
-            run_step([sys.executable, "-m", "venv", str(venv)])
-        pip = str(venv / ("Scripts/pip.exe" if os.name == "nt" else "bin/pip"))
-        run_step([pip, "install", "-U", "pip"])
-        run_step([pip, "install", "torch", "torchaudio", "--index-url", idx])
-        run_step([pip, "install", "-r", str(HERE / "server" / "requirements.txt")])
-    return interpreter()
+def up_native(a) -> int:
+    """Сервер на Rust обычным процессом: без docker и без Python.
 
-
-def alive(pid: int) -> bool:
-    if os.name == "nt":
-        # os.kill(pid, 0) на Windows не проверяет процесс, а завершает его
-        import ctypes
-        k = ctypes.windll.kernel32
-        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
-        if not h:
-            return False
-        code = ctypes.c_ulong()
-        ok = k.GetExitCodeProcess(h, ctypes.byref(code))
-        k.CloseHandle(h)
-        return bool(ok) and code.value == 259  # STILL_ACTIVE
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return False
-    return True
-
-
-def read_pid() -> int | None:
-    try:
-        pid = int(PID_FILE.read_text().strip())
-    except (OSError, ValueError):
-        return None
-    return pid if alive(pid) else None
-
-
-def up_source(a, port: int) -> None:
-    """Сервер как обычный процесс: без docker, из исходников этого репозитория."""
-    py = interpreter()
-    missing = missing_modules(py)
-    if missing and a.install:
-        py = install_deps()
-        missing = missing_modules(py)
-    if missing:
-        die(f"в {py} не хватает: {', '.join(missing)}\n"
-            f"  поставить:\n{install_hint(py)}")
-
-    if not shutil.which("ffmpeg"):
-        log("ffmpeg не найден: синтез в opus/mp3/flac/aac и изменение темпа откажут, "
-            "wav и распознавание — нет. Поставить: sudo apt install ffmpeg, "
-            "brew install ffmpeg или winget install Gyan.FFmpeg")
-
-    RUNTIME_DIR.mkdir(exist_ok=True)
-    env = dict(os.environ)
+    Библиотеки и модели бинарник ставит сам (`setup`): при полном кэше это
+    мгновенно и в сеть не ходит, иначе спрашивает, прежде чем качать.
+    Дальше `up` бинарника — он же держит pid и журнал и прогревает модели.
+    """
+    exe = binary()
+    if exe is None and a.install:
+        exe = build()
+    if exe is None:
+        die(f"бинарника voicy нет: ни {BUILT.relative_to(HERE)}, ни в PATH.\n"
+            f"  собрать: cargo build --release --manifest-path rust/Cargo.toml\n"
+            f"  или одной командой: {sys.argv[0]} up --native --install\n"
+            f"  или готовый файл из выпусков — путь в VOICY_BIN")
+    setup = [str(exe), "setup"] + (["--yes"] if a.install else [])
+    code = subprocess.run(setup).returncode
+    if code != 0:
+        if NATIVE_ENGINES:
+            return code                 # почему — setup сказал сам
+        # Библиотек движков под эту систему ещё нет: сервер возьмёт движки на Python
+        # из server/engines — нужен .venv с server/requirements.txt и torch.
+        log("родных движков под эту систему нет — сервер возьмёт Python-движки из .venv "
+            "(server/requirements.txt и torch)")
+    cmd = [str(exe), "--url", a.url, "up", "--wait", str(a.wait)]
     if a.cpu:
-        env["FORCE_CPU"] = "1"
-    cmd = [str(py), "-m", "uvicorn", "app:app",
-           "--host", "127.0.0.1", "--port", str(port), "--app-dir", "server"]
-    log("$ " + " ".join(cmd))
-    with open(LOG_FILE, "ab") as logf:
-        logf.write(f"\n=== {time.strftime('%F %T')} запуск ===\n".encode())
-        # Отдельная сессия — чтобы сервер пережил завершение этой команды.
-        detach = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS}
-                  if os.name == "nt" else {"start_new_session": True})
-        proc = subprocess.Popen(cmd, cwd=HERE, env=env, stdout=logf, stderr=logf,
-                                stdin=subprocess.DEVNULL, **detach)
-    PID_FILE.write_text(str(proc.pid))
-    log(f"процесс {proc.pid}, журнал — {LOG_FILE}")
+        cmd.append("--cpu")
+    if not a.warm:
+        cmd.append("--no-warm")
+    return subprocess.run(cmd).returncode
 
 
 def up_docker(a, port: int) -> None:
@@ -634,21 +564,19 @@ def cmd_up(a) -> int:
         log(f"voicy уже работает на {a.url}")
         return cmd_warm(a) if a.warm else 0
 
-    port = urlsplit(a.url).port or 8080
     mode = a.mode
     if mode == "auto":
-        mode = "docker" if docker_available() else "source"
-        if mode == "source":
-            log("docker недоступен — поднимаю из исходников")
-    if mode == "docker":
-        up_docker(a, port)
-    else:
-        up_source(a, port)
+        mode = "docker" if docker_available() else "native"
+        if mode == "native":
+            log("docker недоступен — поднимаю бинарником на Rust")
+    if mode == "native":
+        return up_native(a)
+
+    up_docker(a, urlsplit(a.url).port or 8080)
     if a.cpu:
         log("режим без GPU: синтез идёт медленнее реального времени")
-
-    # Первый запуск качает около пяти гигабайт весов, поэтому запас большой.
-    log("ждём готовности (первый запуск качает веса, это долго) …")
+    # Первый запуск качает около восьми гигабайт моделей, поэтому запас большой.
+    log("ждём готовности (первый запуск качает модели, это долго) …")
     wait_healthy(a.url, time.time() + a.wait)
     log(f"voicy на {a.url}, консоль там же")
     return cmd_warm(a) if a.warm else 0
@@ -656,17 +584,10 @@ def cmd_up(a) -> int:
 
 def cmd_down(a) -> int:
     stopped = False
-    pid = read_pid()
-    if pid:
-        log(f"останавливаю процесс {pid}")
-        os.kill(pid, signal.SIGTERM)
-        for _ in range(50):
-            if read_pid() is None:
-                break
-            time.sleep(0.2)
-        if read_pid() is not None:
-            os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-        PID_FILE.unlink(missing_ok=True)
+    exe = binary()
+    if exe:
+        # бинарник останавливает только то, что поднял сам; чужое не трогает
+        subprocess.run([str(exe), "--url", a.url, "down"])
         stopped = True
     if docker_available():
         log("$ docker compose down")
@@ -676,7 +597,7 @@ def cmd_down(a) -> int:
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         stopped = True
     if not stopped:
-        log("нечего останавливать: docker недоступен, своего процесса нет")
+        log("нечего останавливать: docker недоступен, бинарника нет")
     return 0
 
 
@@ -760,12 +681,12 @@ def main(argv: list[str]) -> int:
     s.set_defaults(fn=cmd_prepare)
 
     s = sub.add_parser("up", help="поднять сервер и дождаться готовности")
-    s.add_argument("--source", dest="mode", action="store_const", const="source",
-                   default="auto", help="из исходников, без docker")
+    s.add_argument("--native", "--source", dest="mode", action="store_const", const="native",
+                   default="auto", help="бинарником на Rust, без docker")
     s.add_argument("--docker", dest="mode", action="store_const", const="docker",
                    help="только через docker, без запасного пути")
     s.add_argument("--install", action="store_true",
-                   help="доставить зависимости в .venv, если их нет")
+                   help="собрать бинарник, если его нет, и скачать модели не спрашивая")
     s.add_argument("--build", action="store_true", help="собрать образ из исходников")
     s.add_argument("--cpu", action="store_true", help="без GPU")
     s.add_argument("--wait", type=float, default=3600, help="сколько ждать готовности, с")

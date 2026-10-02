@@ -1,5 +1,4 @@
-//! A transcript as plain data, and the formats OpenAI returns it in —
-//! server/transcripts.py.
+//! A transcript as plain data, and the formats OpenAI returns it in.
 
 use axum::http::header;
 use axum::response::{IntoResponse, Response};

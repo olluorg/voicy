@@ -1,9 +1,8 @@
-//! Encoding to the formats the OpenAI audio API advertises, the same bytes as
-//! server/audio_io.py: wav and pcm are written directly, opus, mp3 and flac by
-//! the encoders built into the binary (encode.rs); the tempo change is
-//! tempo.rs, and only aac still goes through ffmpeg. Opus at 24 kbps is half the size of 32 kbps
-//! mp3 and sounds better on speech. Resampling is libsoxr, as in the Python
-//! server.
+//! Encoding to the formats the OpenAI audio API advertises: wav and pcm are
+//! written directly, opus, mp3 and flac by the encoders built into the binary
+//! (encode.rs); the tempo change is tempo.rs, and only aac still goes through
+//! ffmpeg. Opus at 24 kbps is half the size of 32 kbps mp3 and sounds better
+//! on speech. Resampling is libsoxr.
 
 use std::path::Path;
 

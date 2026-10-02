@@ -177,23 +177,29 @@ pub(super) fn open(path: &Path) -> anyhow::Result<Library> {
     Ok(lib.into())
 }
 
-/// ggml and its backends, once per process: llama.cpp and whisper.cpp share them.
-pub fn ggml(dir: &Path) -> anyhow::Result<()> {
-    static DONE: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-    if DONE.get().is_some() {
-        return Ok(());
+/// ggml and its backends, once per process: llama.cpp and whisper.cpp share
+/// them. Says how many GPUs the backends found: a Vulkan driver without a
+/// device, or ROCm without a card, loads and finds none.
+pub fn ggml(dir: &Path) -> anyhow::Result<usize> {
+    static GPUS: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
+    if let Some(&n) = GPUS.get() {
+        return Ok(n);
     }
     let base = open(&dir.join(lib_name("ggml-base")))?;
     let ggml = open(&dir.join(lib_name("ggml")))?;
     let dir_c = CString::new(dir.to_string_lossy().as_bytes())?;
-    unsafe {
+    let gpus = unsafe {
         let load_all: libloading::Symbol<unsafe extern "C" fn(*const c_char)> =
             ggml.get(b"ggml_backend_load_all_from_path\0")?;
         load_all(dir_c.as_ptr());
-    }
+        let count: libloading::Symbol<unsafe extern "C" fn() -> usize> = ggml.get(b"ggml_backend_dev_count\0")?;
+        let get: libloading::Symbol<unsafe extern "C" fn(usize) -> P> = ggml.get(b"ggml_backend_dev_get\0")?;
+        let kind: libloading::Symbol<unsafe extern "C" fn(P) -> i32> = base.get(b"ggml_backend_dev_type\0")?;
+        // GGML_BACKEND_DEVICE_TYPE_GPU и _IGPU; процессор и ускорители при нём не в счёт
+        (0..count()).filter(|&i| matches!(kind(get(i)), 1 | 2)).count()
+    };
     std::mem::forget((base, ggml)); // на всё время работы
-    let _ = DONE.set(());
-    Ok(())
+    Ok(*GPUS.get_or_init(|| gpus))
 }
 
 pub fn open_lib(dir: &Path, stem: &str) -> anyhow::Result<Library> {

@@ -73,7 +73,7 @@ pub struct Tts {
 
 impl Tts {
     /// Load the model: seconds to a minute, and 3.5 GB of memory on the GPU.
-    /// Asked for the GPU where CUDA sees none, it loads on the CPU.
+    /// Asked for the GPU where there is none, it loads on the CPU.
     pub fn load(cfg: &TtsConfig) -> anyhow::Result<Tts> {
         let dir = cfg.dir.clone().unwrap_or_else(crate::tts_dir);
         let files = qwen::Files {

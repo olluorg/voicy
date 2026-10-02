@@ -1,4 +1,4 @@
-//! Optional API key, the way OpenAI clients already send one — server/auth.py.
+//! Optional API key, the way OpenAI clients already send one.
 //!
 //! Off unless VOICY_API_KEY is set (one key or several, comma-separated). Then
 //! every `/v1/` route, WebSocket included, wants `Authorization: Bearer <key>`.

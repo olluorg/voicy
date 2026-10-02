@@ -61,12 +61,12 @@ def main() -> None:
     import numpy as np
     import soxr
 
-    import voices
+    from shipped_voice import default_voice
     from engines import tts_fast
     from engines.stt_whisper import WhisperSTT
     from engines.tts_qwen import QwenTTS
 
-    tts, stt, v = QwenTTS(), WhisperSTT(), voices.default()
+    tts, stt, v = QwenTTS(), WhisperSTT(), default_voice()
     tts.load()
     stt.load()
     tts.speak("Прогрев.", v.path, v.text)

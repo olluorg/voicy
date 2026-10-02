@@ -1,9 +1,9 @@
 """A throwaway server with the training engines, on a free port.
 
 Its voices and contexts live in a temporary directory — the checks add and
-delete them, and the repository must not change under them. Started with the
-same Python that runs the checks, as a plain process: works the same on
-Linux, Windows and macOS.
+delete them, and the repository must not change under them. The server is
+the Rust binary, built beforehand; the training engines run in its child
+Python — the same one that runs the checks.
 """
 from __future__ import annotations
 
@@ -18,8 +18,6 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-# Какой сервер проверять: python (server/) или rust (rust/, собранный заранее).
-IMPL = os.environ.get("VOICY_IMPL", "python")
 RUST_BIN = Path(os.environ.get("VOICY_RUST_BIN") or ROOT / "rust" / "target" / "release" /
                 ("voicy.exe" if sys.platform == "win32" else "voicy"))
 FAKE = {"TTS_ENGINE": "tone", "STT_ENGINE": "script",
@@ -50,16 +48,15 @@ class Server:
         if "VOICY_API_KEY" not in self.env:
             env.pop("VOICY_API_KEY", None)          # ключ из окружения — не для этих проверок
         self.url = f"http://127.0.0.1:{port}"
-        if IMPL == "rust":
-            # сервер на Rust; движки — в дочернем Python того же окружения, что у проверок
-            env.update(VOICY_HOME=str(ROOT), VOICY_PYTHON=sys.executable)
-            # свой кэш: сервер на кэш — один (rust/src/instance.rs), а проверки
-            # поднимают несколько сразу и не должны задевать настоящий voicy
-            env["VOICY_CACHE"] = str(self.dir / "cache")
-            cmd = [str(RUST_BIN), "serve", "--host", "127.0.0.1", "--port", str(port)]
-        else:
-            cmd = [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1",
-                   "--port", str(port), "--app-dir", str(ROOT / "server"), "--log-level", "warning"]
+        if not RUST_BIN.exists():
+            raise RuntimeError(f"no server binary at {RUST_BIN}: "
+                               "cargo build --release --manifest-path rust/Cargo.toml, or VOICY_RUST_BIN")
+        # движки — в дочернем Python того же окружения, что у проверок
+        env.update(VOICY_HOME=str(ROOT), VOICY_PYTHON=sys.executable)
+        # свой кэш: сервер на кэш — один (rust/src/instance.rs), а проверки
+        # поднимают несколько сразу и не должны задевать настоящий voicy
+        env["VOICY_CACHE"] = str(self.dir / "cache")
+        cmd = [str(RUST_BIN), "serve", "--host", "127.0.0.1", "--port", str(port)]
         self.proc = subprocess.Popen(cmd, env=env, stdout=self.log.open("wb"), stderr=subprocess.STDOUT)
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         deadline = time.monotonic() + timeout

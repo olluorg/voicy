@@ -119,9 +119,9 @@ class ScriptSTT(_Loaded):
                    on_segment: Callable[[float, float, str], None] | None = None) -> Transcript:
         self.load()
         if isinstance(audio, (str, Path)):
-            import audio_io
+            from .audio import decode
             try:
-                audio = audio_io.decode(Path(audio).read_bytes(), self.SR)
+                audio = decode(Path(audio).read_bytes(), self.SR)
             except ValueError as e:
                 raise BadAudio(str(e)) from None
         vocab = self.ENGLISH if task == "translate" else self.WORDS

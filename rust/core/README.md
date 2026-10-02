@@ -52,6 +52,9 @@ println!("{}", heard.text);   // heard.srt(), heard.vtt(), heard.segments
 (`%LOCALAPPDATA%\voicy`) или `VOICY_CACHE`; из кода — `voicy_core::use_dirs(...)`,
 до первой загрузки движка. Наполняет его `voicy setup` (7.8 ГБ) либо сама
 программа — `voicy_core::setup::run("all", true)` с фичей `download`.
+Набор библиотек — под видеокарту машины: CUDA, Vulkan, ROCm, SYCL или только
+процессор. Выбирает `VOICY_DEVICE`, по умолчанию — драйверы; из кода —
+`voicy_core::native::backend()`.
 
 Для сборки нужен CMake: кодек Opus собирается из исходников. С CMake 4 задайте
 `CMAKE_POLICY_VERSION_MINIMUM=3.5` (например, в `[env]` своего

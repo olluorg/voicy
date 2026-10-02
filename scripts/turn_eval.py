@@ -25,6 +25,7 @@ model with that text veto — on the same samples.
 import io
 import json
 import random
+import re
 import sys
 import time
 import urllib.request
@@ -36,7 +37,26 @@ import soxr
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "server"))
 from engines.turn_smart import SmartTurn  # noqa: E402
-from live import dangling  # noqa: E402
+
+# Слова, на которых русская фраза не кончается, — та же проверка, что
+# у сервера (rust/src/live.rs): реплике, оборванной на таком слове, конец
+# не засчитывается до долгой паузы.
+DANGLING = frozenset("""
+в во на с со к ко по о об обо от из у за над под про для без до при через между перед
+и а но или либо что чтобы как если когда потому поэтому так то ли будто хотя пока
+это мой моя мое моё мои твой наш ваш их его её ее какой какая какое какие который
+которая которое которые очень самый не ни
+э ээ эээ эм мм м ну вот типа короче значит
+""".split())
+
+
+def dangling(text: str) -> bool:
+    text = text.strip()
+    if not text:
+        return False
+    if text[-1] in ",:;-—(«\"" or text.endswith("..."):   # многоточие Whisper ставит на заминке
+        return True
+    return re.sub(r"[^\w]", "", text.split()[-1].lower().replace("ё", "е")) in DANGLING
 
 URL = "http://127.0.0.1:8080"
 SR = 16000

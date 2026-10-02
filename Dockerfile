@@ -26,9 +26,11 @@ RUN cargo build --release --manifest-path rust/Cargo.toml \
     && install -D rust/target/release/voicy /out/voicy
 
 # Библиотеки движков — в образ, а не в том: их версия закреплена за бинарником
-# (setup.rs), и с новым образом должны приходить новые
+# (setup.rs), и с новым образом должны приходить новые. Образ — под NVIDIA:
+# при сборке видеокарты нет, и угадывать её setup не должен
 ENV VOICY_CACHE=/tmp/voicy-cache \
-    VOICY_LIB_DIR=/opt/voicy/lib
+    VOICY_LIB_DIR=/opt/voicy/lib \
+    VOICY_DEVICE=cuda
 RUN /out/voicy setup libs --yes && rm -rf /tmp/voicy-cache
 
 # ------------------------------------------------------------------ образ

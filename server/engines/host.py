@@ -200,9 +200,9 @@ class Host:
         return {}
 
     def op_audio_decode(self, rid, args, payload):
-        import audio_io
+        from .audio import decode
         try:
-            audio = audio_io.decode(payload, int(args["sample_rate"]))
+            audio = decode(payload, int(args["sample_rate"]))
         except ValueError as e:
             raise BadAudio(str(e)) from None
         return {}, np.ascontiguousarray(audio, dtype="<f4").tobytes()

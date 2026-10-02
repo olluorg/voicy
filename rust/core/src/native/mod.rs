@@ -2,8 +2,9 @@
 //!
 //! Their runtimes — llama.cpp and ONNX Runtime — are prebuilt shared libraries
 //! for the platform, loaded at start from one directory: VOICY_LIB_DIR, or
-//! `~/.cache/voicy/lib/<platform>`. Nothing here is compiled for a GPU; which
-//! GPU is used is a matter of which libraries lie in that directory.
+//! `~/.cache/voicy/lib/<platform>-<backend>`. Nothing here is compiled for a
+//! GPU; which GPU is used is a matter of which libraries lie in that directory
+//! (`Backend`).
 //! Both directories can also be set from code (`set_dirs`).
 
 pub mod accent;
@@ -23,14 +24,126 @@ use anyhow::Context;
 use ort::session::Session;
 use ort::session::builder::GraphOptimizationLevel;
 
-fn platform() -> &'static str {
+/// What the engines compute on: one set of libraries per kind of GPU, and the
+/// CPU. Each is the fastest path its hardware has, not a common denominator
+/// (docs/adr/0022): CUDA stays CUDA where there is NVIDIA.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Backend {
+    /// NVIDIA: every engine on the GPU.
+    Cuda,
+    /// Any GPU with a Vulkan driver — AMD, Intel, NVIDIA: llama.cpp and
+    /// whisper.cpp on the GPU, CTranslate2 and ONNX Runtime on the CPU.
+    Vulkan,
+    /// AMD through HIP; the system ROCm runtime is needed. llama.cpp only.
+    Rocm,
+    /// Intel through oneAPI; the system oneAPI runtime is needed. llama.cpp only.
+    Sycl,
+    Cpu,
+}
+
+impl Backend {
+    pub const ALL: [Backend; 5] = [Backend::Cuda, Backend::Vulkan, Backend::Rocm, Backend::Sycl, Backend::Cpu];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Backend::Cuda => "cuda",
+            Backend::Vulkan => "vulkan",
+            Backend::Rocm => "rocm",
+            Backend::Sycl => "sycl",
+            Backend::Cpu => "cpu",
+        }
+    }
+
+    pub fn from_name(s: &str) -> Option<Backend> {
+        Backend::ALL.into_iter().find(|b| b.name() == s.trim().to_ascii_lowercase())
+    }
+
+    /// The part of the library directory's name: `cuda13` for CUDA, as it was
+    /// before there were others, so an installed set stays where it is.
+    fn dir_suffix(self) -> &'static str {
+        if self == Backend::Cuda { "cuda13" } else { self.name() }
+    }
+
+    /// Which ggml backend library a directory of this set has.
+    fn ggml_lib(self) -> Option<&'static str> {
+        match self {
+            Backend::Cuda => Some("ggml-cuda"),
+            Backend::Vulkan => Some("ggml-vulkan"),
+            Backend::Rocm => Some("ggml-hip"),
+            Backend::Sycl => Some("ggml-sycl"),
+            Backend::Cpu => None,
+        }
+    }
+}
+
+fn os_arch() -> &'static str {
     match (std::env::consts::OS, std::env::consts::ARCH) {
-        ("linux", "x86_64") => "linux-x64-cuda13",
+        ("linux", "x86_64") => "linux-x64",
         ("linux", "aarch64") => "linux-arm64",
-        ("windows", "x86_64") => "windows-x64-cuda13",
+        ("windows", "x86_64") => "windows-x64",
         ("windows", "aarch64") => "windows-arm64",
         ("macos", _) => "macos-arm64",
         _ => "unknown",
+    }
+}
+
+/// `~/.cache/voicy/lib/<os>-<arch>-<backend>`.
+fn backend_dir(b: Backend) -> PathBuf {
+    cache_dir().join("lib").join(format!("{}-{}", os_arch(), b.dir_suffix()))
+}
+
+/// The backend of this process, chosen once: `VOICY_DEVICE` when it names
+/// one; else the set in VOICY_LIB_DIR, by what lies there; else the best set
+/// installed, CUDA first; else, with nothing installed, what the hardware
+/// asks for — that is what setup then fetches.
+pub fn backend() -> Backend {
+    static B: OnceLock<Backend> = OnceLock::new();
+    *B.get_or_init(|| {
+        if let Ok(v) = std::env::var("VOICY_DEVICE") {
+            match Backend::from_name(&v) {
+                Some(b) => return b,
+                None if v.is_empty() || v == "auto" => {}
+                None => log::warn!("VOICY_DEVICE={v} — такого не знаю; есть auto, {}",
+                                   Backend::ALL.map(Backend::name).join(", ")),
+            }
+        }
+        // каталог задан, но ещё пуст (образ docker до setup) — решает железо
+        if let Some(dir) = LIB_DIR.get().cloned().or_else(|| std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from)) {
+            return backend_of(&dir).unwrap_or_else(detect);
+        }
+        if let Some(b) = [Backend::Cuda, Backend::Rocm, Backend::Sycl, Backend::Vulkan, Backend::Cpu]
+            .into_iter()
+            .find(|&b| backend_dir(b).is_dir())
+        {
+            return b;
+        }
+        detect()
+    })
+}
+
+/// A library directory's backend, by its ggml backend library; None while
+/// there is no ggml in it at all.
+fn backend_of(dir: &Path) -> Option<Backend> {
+    if !dir.join(lib_file("ggml")).exists() {
+        return None;
+    }
+    Some(Backend::ALL
+        .into_iter()
+        .find(|b| b.ggml_lib().is_some_and(|l| dir.join(lib_file(l)).exists()))
+        .unwrap_or(Backend::Cpu))
+}
+
+/// What the hardware here asks for, by its drivers: NVIDIA's is CUDA; any
+/// other GPU with a Vulkan driver, Vulkan; none, the CPU. ROCm and SYCL need
+/// their runtimes installed and are not guessed — VOICY_DEVICE names them.
+pub fn detect() -> Backend {
+    let loads = |names: &[&str]| names.iter().any(|&n| unsafe { libloading::Library::new(n) }.is_ok());
+    if loads(&["libcuda.so.1", "nvcuda.dll"]) {
+        Backend::Cuda
+    } else if loads(&["libvulkan.so.1", "vulkan-1.dll"]) {
+        Backend::Vulkan
+    } else {
+        Backend::Cpu
     }
 }
 
@@ -74,7 +187,7 @@ pub fn lib_dir_path() -> PathBuf {
     if let Some(l) = LIB_DIR.get() {
         return l.clone();
     }
-    std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from).unwrap_or_else(|| cache_dir().join("lib").join(platform()))
+    std::env::var_os("VOICY_LIB_DIR").map(PathBuf::from).unwrap_or_else(|| backend_dir(backend()))
 }
 
 pub fn lib_dir() -> anyhow::Result<PathBuf> {
@@ -177,18 +290,37 @@ pub fn cuda_devices() -> Option<usize> {
     })
 }
 
-/// The GPU if it is asked for and there is one: without a CUDA device the
-/// engines load on the CPU instead of failing — the same image then runs with
-/// the GPU passed into the container or without it.
+/// The GPU if it is asked for and there is one: without a device the engines
+/// load on the CPU instead of failing — the same image then runs with the GPU
+/// passed into the container or without it. This is for the engines on ggml
+/// (llama.cpp, whisper.cpp), which run on any backend's GPU.
 pub fn use_gpu(wanted: bool) -> bool {
-    if wanted && cuda_devices() == Some(0) {
+    let b = backend();
+    let none = match b {
+        Backend::Cpu => return false,
+        _ if !wanted => return false,
+        Backend::Cuda => cuda_devices() == Some(0),
+        // устройства видит сам ggml: драйвер Vulkan есть, а карты под ним может не быть
+        _ => lib_dir().ok().and_then(|d| llama::ggml(&d).ok()) == Some(0),
+    };
+    if none {
         static SAID: OnceLock<()> = OnceLock::new();
         if SAID.set(()).is_ok() {
-            log::warn!("видеокарты с CUDA не видно — движки работают на процессоре, это заметно медленнее");
+            log::warn!("видеокарты для {} не видно — движки работают на процессоре, это заметно медленнее",
+                       b.name());
         }
-        return false;
     }
-    wanted
+    !none
+}
+
+/// The same for CTranslate2 and ONNX Runtime: they have a GPU only through CUDA.
+pub fn use_cuda(wanted: bool) -> bool {
+    backend() == Backend::Cuda && use_gpu(wanted)
+}
+
+/// What an engine on ggml reports it runs on: the backend, or the CPU.
+pub fn device_name(gpu: bool) -> String {
+    if gpu { backend().name().into() } else { "cpu".into() }
 }
 
 /// libfoo.so, foo.dll or libfoo.dylib, whichever this platform names it.
@@ -227,10 +359,22 @@ pub fn init_onnx(dir: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// A model on ONNX Runtime; `gpu` puts it on the GPU where ONNX Runtime has
+/// one: CUDA, or DirectML on Windows with any other backend. On Linux without
+/// CUDA it stays on the CPU.
 pub fn session(path: &Path, gpu: bool) -> anyhow::Result<Session> {
     let mut b = Session::builder()?.with_optimization_level(GraphOptimizationLevel::Level3).map_err(|e| anyhow::anyhow!("{e}"))?;
-    if gpu {
+    if gpu && backend() == Backend::Cuda {
         b = b.with_execution_providers([ort::ep::CUDA::default().build()]).map_err(|e| anyhow::anyhow!("{e}"))?;
+    } else if gpu && cfg!(windows) {
+        // DirectML не умеет ни шаблонов памяти, ни параллельного исполнения — так велит его документация
+        b = b
+            .with_memory_pattern(false)
+            .map_err(|e| anyhow::anyhow!("{e}"))?
+            .with_parallel_execution(false)
+            .map_err(|e| anyhow::anyhow!("{e}"))?
+            .with_execution_providers([ort::ep::DirectML::default().build()])
+            .map_err(|e| anyhow::anyhow!("{e}"))?;
     }
     b.commit_from_file(path).with_context(|| format!("cannot load {}", path.display()))
 }

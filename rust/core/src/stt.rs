@@ -131,13 +131,14 @@ pub struct Stt {
 
 impl Stt {
     /// Load the model: seconds, and 1.5 GB of memory on the GPU. Asked for the
-    /// GPU where CUDA sees none, it loads on the CPU.
+    /// GPU where CUDA sees none, it loads on the CPU — and so on any backend
+    /// but CUDA: CTranslate2 has no other GPU.
     pub fn load(cfg: &SttConfig) -> anyhow::Result<Stt> {
         let models = crate::cache_dir().join("models");
         let dir = cfg.dir.clone().unwrap_or_else(|| models.join("whisper").join("faster-whisper-large-v3-turbo"));
         anyhow::ensure!(dir.join("model.bin").is_file(), "no Whisper model in {} — voicy setup models", dir.display());
         let vad = cfg.vad.clone().or_else(|| Some(models.join("vad").join("silero_vad_v6.onnx")).filter(|p| p.is_file()));
-        Ok(Stt { engine: FasterWhisper::load(&dir, vad.as_deref(), crate::native::use_gpu(cfg.gpu), cfg.compute_type.as_deref())? })
+        Ok(Stt { engine: FasterWhisper::load(&dir, vad.as_deref(), crate::native::use_cuda(cfg.gpu), cfg.compute_type.as_deref())? })
     }
 
     pub fn device(&self) -> &str {

@@ -1,4 +1,4 @@
-//! Live speech over a WebSocket, shaped for a voice agent — server/live.py.
+//! Live speech over a WebSocket, shaped for a voice agent.
 //!
 //! The agent needs, in this order of urgency: the user started talking (stop
 //! speaking), the user finished (answer, not a moment earlier), what they said.

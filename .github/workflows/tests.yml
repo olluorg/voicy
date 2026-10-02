@@ -1,9 +1,8 @@
 name: проверки
 
-# Набор проверок API с учебными движками (tests/): без моделей и видеокарты,
-# на всех целевых системах. Отчёт каждой платформы — в артефактах прогона.
-# Вторым заходом — тот же набор против сервера на Rust, чтобы поломка сборки
-# или расхождение реализаций были видны сразу, а не при выпуске.
+# Сборка сервера на Rust и набор проверок API против него (tests/) с учебными
+# движками: без моделей и видеокарты, на всех целевых системах. Отчёт каждой
+# платформы — в артефактах прогона.
 
 on:
   push:
@@ -22,43 +21,18 @@ jobs:
   api:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    # Windows ARM64: у soxr нет готового колеса под cp312 — собирается из исходников,
-    # и пока это не проверено, сбой здесь виден, но прогон не валит.
+    # Бинарник проверен на Linux x86-64 и Windows x86-64; на ARM64 и macOS его
+    # сборка ещё не отлажена (ADR 0022, шаг 7) — сбой там виден, но прогон не валит.
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - { name: linux-x64,     os: ubuntu-24.04,       experimental: false }
-          - { name: linux-arm64,   os: ubuntu-24.04-arm,   experimental: false }
           - { name: windows-x64,   os: windows-2025,       experimental: false }
+          - { name: linux-arm64,   os: ubuntu-24.04-arm,   experimental: true }
           - { name: windows-arm64, os: windows-11-arm,     experimental: true }
-          - { name: macos-arm64,   os: macos-15,           experimental: false }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: зависимости
-        run: python -m pip install -r tests/requirements.txt
-      - name: проверки
-        run: python -m tests --report report-${{ matrix.name }}.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: report-${{ matrix.name }}
-          path: report-${{ matrix.name }}.json
-          if-no-files-found: ignore
-
-  binary:
-    name: бинарник ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { name: linux-x64,   os: ubuntu-24.04 }
-          - { name: windows-x64, os: windows-2025 }
+          - { name: macos-arm64,   os: macos-15,           experimental: true }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -77,12 +51,10 @@ jobs:
       - name: пакет voicy-core
         run: cargo package -p voicy-core --manifest-path rust/Cargo.toml
       - name: проверки API
-        env:
-          VOICY_IMPL: rust
-        run: python -m tests --report report-rust-${{ matrix.name }}.json
+        run: python -m tests --report report-${{ matrix.name }}.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: report-rust-${{ matrix.name }}
-          path: report-rust-${{ matrix.name }}.json
+          name: report-${{ matrix.name }}
+          path: report-${{ matrix.name }}.json
           if-no-files-found: ignore

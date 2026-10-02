@@ -36,7 +36,7 @@ matrixmultiply = "0.3"
 memmap2 = "0.9"
 mp3lame-encoder = "0.2.5"
 ogg = "0.9.2"
-ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-24", "half", "cuda"] }
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-24", "half", "cuda", "directml"] }
 realfft = "3"
 regex = "1"
 serde = { version = "1", features = ["derive"] }

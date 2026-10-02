@@ -1,5 +1,4 @@
-//! Text preparation before synthesis — server/textprep.py, one to one, plus
-//! stress marks.
+//! Text preparation before synthesis, plus stress marks.
 //!
 //! Terms are replaced with the spelling the engine reads correctly, from
 //! data/pronunciation.json; "legato" drops commas inside short sentences, since

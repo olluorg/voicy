@@ -139,11 +139,10 @@ def part_tts() -> dict:
     import soundfile as sf
     import torch
 
-    import voices
+    from shipped_voice import default_voice
     from engines.tts_qwen import QwenTTS
-    from speak import Segmenter
 
-    tts, v = QwenTTS(), voices.default()
+    tts, v = QwenTTS(), default_voice()
     t = time.perf_counter()
     tts.load()
     load_s = time.perf_counter() - t
@@ -165,8 +164,9 @@ def part_tts() -> dict:
             WORK.mkdir(parents=True, exist_ok=True)
             sf.write(WORK / "speech.wav", out.audio, out.sample_rate)
 
-    # поток: сколько ждать первый кусок длинного ответа
-    first = Segmenter().split(TEXTS["long"])[0]
+    # поток: сколько ждать первый кусок длинного ответа — сервер отрезает
+    # его по первому предложению (запятой раньше в этом тексте нет)
+    first = TEXTS["long"].split(". ")[0] + "."
     t = time.perf_counter()
     out = tts.speak(first, v.path, v.text, seed=1)
     stream_first = {"chunk": first, "first_audio_s": round(time.perf_counter() - t, 2),
@@ -185,10 +185,10 @@ def part_tts_min() -> dict:
     mon = VramMonitor()
     import torch
 
-    import voices
+    from shipped_voice import default_voice
     from engines.tts_qwen import QwenTTS
 
-    tts, v = QwenTTS(), voices.default()
+    tts, v = QwenTTS(), default_voice()
     tts.load()
     tts.speak("Прогрев.", v.path, v.text)
     torch.cuda.empty_cache()
@@ -294,12 +294,12 @@ def part_both() -> dict:
     import numpy as np
     import soundfile as sf
 
-    import voices
+    from shipped_voice import default_voice
     from engines.stt_whisper import WhisperSTT
     from engines.tts_qwen import QwenTTS
     from engines.turn_smart import SmartTurn
 
-    tts, stt, turn, v = QwenTTS(), WhisperSTT(), SmartTurn(), voices.default()
+    tts, stt, turn, v = QwenTTS(), WhisperSTT(), SmartTurn(), default_voice()
     tts.load()
     stt.load()
     turn.load()
@@ -346,7 +346,7 @@ def part_fit() -> dict:
         return {"skipped": f"на карте свободно меньше {card_gb} ГБ"}
     ballast = torch.empty(ballast_bytes, dtype=torch.uint8, device="cuda")
 
-    import voices
+    from shipped_voice import default_voice
     from engines.stt_whisper import WhisperSTT
     from engines.tts_qwen import QwenTTS
 
@@ -356,7 +356,7 @@ def part_fit() -> dict:
     res = {"card_gb": float(card_gb), "stt_compute": compute,
            "ballast_gb": round(ballast.numel() / 1024 ** 3, 2)}
     try:
-        tts, stt, v = QwenTTS(), WhisperSTT(), voices.default()
+        tts, stt, v = QwenTTS(), WhisperSTT(), default_voice()
         tts.load()
         stt.load()
         for name in ("long", "xlong"):

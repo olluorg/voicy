@@ -52,8 +52,7 @@
   <rect class="box" x="730" y="122" width="120" height="40" rx="6"/><text class="t" x="790" y="142">синтез потоком</text>
   <rect class="box" x="860" y="122" width="120" height="40" rx="6"/><text class="t" x="920" y="142">живая речь</text>
   <text class="group" x="210" y="189">реализация:</text>
-  <rect class="box" x="290" y="172" width="200" height="34" rx="6"/><text class="t" x="390" y="189">Python · FastAPI</text>
-  <rect class="plan" x="500" y="172" width="200" height="34" rx="6"/><text class="tp" x="600" y="189">Rust · axum</text>
+  <rect class="box" x="290" y="172" width="200" height="34" rx="6"/><text class="t" x="390" y="189">Rust · axum</text>
 
   <!-- шов 2 -->
   <line class="line" x1="10" y1="235" x2="990" y2="235"/>

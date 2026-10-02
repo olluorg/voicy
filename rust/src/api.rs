@@ -1,4 +1,4 @@
-//! The routes — server/app.py and server/jobs.py.
+//! The routes.
 //!
 //! Drop-in compatibility first: anything that speaks to `/v1/audio/speech` and
 //! `/v1/audio/transcriptions` works by changing the base URL. The compatible
