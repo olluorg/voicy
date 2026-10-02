@@ -86,7 +86,7 @@
   <rect class="box" x="210" y="400" width="146" height="40" rx="6"/><text class="t" x="283" y="420">PyTorch</text>
   <rect class="box" x="366" y="400" width="146" height="40" rx="6"/><text class="t" x="439" y="420">CTranslate2</text>
   <rect class="box" x="522" y="400" width="146" height="40" rx="6"/><text class="t" x="595" y="420">ONNX Runtime</text>
-  <rect class="plan" x="678" y="400" width="146" height="40" rx="6"/><text class="tp" x="751" y="420">GGML</text>
+  <rect class="box" x="678" y="400" width="146" height="40" rx="6"/><text class="t" x="751" y="420">GGML</text>
   <rect class="plan" x="834" y="400" width="146" height="40" rx="6"/><text class="tp" x="907" y="420">OpenVINO</text>
 
   <!-- шов 4 -->

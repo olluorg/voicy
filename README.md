@@ -273,6 +273,9 @@ uv pip install --python .venv torch torchaudio -r server/requirements.txt
 наборы под Vulkan (любая видеокарта: AMD, Intel, NVIDIA), ROCm, SYCL и один
 процессор. Выбор — `VOICY_DEVICE`, по умолчанию — по драйверам машины
 (docs/adr/0022). На живых AMD и Arc ещё не мерилось; ARM64 и Apple (Metal) — впереди.
+OpenVINO пробовали для декодера синтеза: на процессоре он в 1.3 раза быстрее,
+но синтез целиком ускоряется лишь на ~9%, а набор вырастает на 130 МБ — в `setup`
+он не вошёл. Видеокарты Intel для проверки не нашлось (experiments/27).
 
 `voicy setup` качает всё сам — показав прежде, что и в какой каталог ляжет,
 и дождавшись согласия (`--yes` — не спрашивать): готовые llama.cpp, CTranslate2 и ONNX Runtime,
