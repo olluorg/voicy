@@ -54,8 +54,15 @@ $envs = [ordered]@{
 }
 foreach ($e in $envs.Keys) {
   $v = Join-Path $Out "venv-$e"
-  if (-not (Test-Path "$v\Scripts\python.exe")) { uv venv -q -p 3.12 $v }
-  uv pip install -q --python "$v\Scripts\python.exe" numpy @($envs[$e])
+  # без -q: первый раз uv качает Python и пакеты, и молчание выглядит как зависание
+  if (-not (Test-Path "$v\Scripts\python.exe")) {
+    # недоделанное окружение после Ctrl+C: uv спросил бы, заменять ли его, и ждал ответа
+    if (Test-Path $v) { Remove-Item -Recurse -Force $v }
+    Write-Host "окружение ${e}: Python 3.12"
+    uv venv -p 3.12 $v
+  }
+  Write-Host "окружение ${e}: пакеты $($envs[$e] -join ', ')"
+  uv pip install --python "$v\Scripts\python.exe" numpy @($envs[$e])
   if ($LASTEXITCODE) { throw "не встало окружение $e" }
 }
 
