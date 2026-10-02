@@ -112,7 +112,7 @@ def decode(sess: ort.InferenceSession, codes: np.ndarray) -> tuple[np.ndarray, l
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("provider", choices=["cpu", "ov-cpu", "ov-gpu"])
+    ap.add_argument("provider", choices=["cpu", "ov-cpu", "ov-gpu", "dml"])
     ap.add_argument("--wav", help="запись 24 кГц; без неё — 200 случайных кадров (16 с)")
     ap.add_argument("--out", help="куда записать декодированный звук")
     ap.add_argument("--precision", help="точность OpenVINO: FP32, FP16, ACCURACY")

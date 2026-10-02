@@ -3,11 +3,15 @@
 # ещё и сквозной синтез выпущенным voicy.exe на Vulkan + DirectML.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\arc_eval.ps1          # ~1 ГБ загрузки
-#   powershell -ExecutionPolicy Bypass -File scripts\arc_eval.ps1 -Full    # + бинарник и модели, ~8 ГБ
+#   powershell -ExecutionPolicy Bypass -File scripts\arc_eval.ps1 -Full -Exe voicy.exe   # + сквозной синтез, ~8 ГБ
+#
+# Для -Full нужен voicy.exe из master: в выпуске 1.10.0 ещё нет набора Vulkan,
+# и setup поставил бы на Arc набор CUDA.
 #
 # Нужны только интернет и драйвер видеокарты; uv и Python скрипт ставит сам.
 # Итог — arc-eval\arc-eval.zip: его и привезти.
-param([switch]$Full, [string]$Out = "arc-eval")
+param([switch]$Full, [string]$Exe, [string]$Out = "arc-eval")
+if ($Full -and -not $Exe) { throw "для -Full укажите -Exe: voicy.exe, собранный из master" }
 
 # не Stop: Windows PowerShell считает ошибкой любую строку в stderr программы,
 # а ONNX Runtime и uv пишут туда предупреждения и ход работы
@@ -96,10 +100,7 @@ foreach ($r in $runs) {
 
 if ($Full) {
   Note "сквозной синтез: voicy.exe, Vulkan + DirectML"
-  $exe = Join-Path $Out "voicy.exe"
-  if (-not (Test-Path $exe)) {
-    curl.exe -L --fail -o $exe https://github.com/olluorg/voicy/releases/latest/download/voicy-windows-x64.exe
-  }
+  $exe = (Resolve-Path $Exe).Path
   $env:VOICY_DEVICE = "vulkan"
   & $exe setup --yes 2>&1 | Tee-Object (Join-Path $Res "setup.txt")
   & $exe up 2>&1 | Tee-Object (Join-Path $Res "up.txt")
