@@ -110,7 +110,7 @@
   <text class="sub" x="26" y="629">где запускается</text>
   <rect class="box" x="210" y="600" width="146" height="40" rx="6"/><text class="t" x="283" y="620">Linux x86-64</text>
   <rect class="plan" x="366" y="600" width="146" height="40" rx="6"/><text class="tp" x="439" y="620">Linux ARM64</text>
-  <rect class="plan" x="522" y="600" width="146" height="40" rx="6"/><text class="tp" x="595" y="620">Windows x86-64</text>
+  <rect class="box" x="522" y="600" width="146" height="40" rx="6"/><text class="t" x="595" y="620">Windows x86-64</text>
   <rect class="plan" x="678" y="600" width="146" height="40" rx="6"/><text class="tp" x="751" y="620">Windows ARM64</text>
   <rect class="plan" x="834" y="600" width="146" height="40" rx="6"/><text class="tp" x="907" y="620">macOS</text>
 
