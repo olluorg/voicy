@@ -3,8 +3,8 @@
 Декодирует потоком по 12 кадров, как decode() в rust/core/src/native/qwen.rs.
 Коды — из настоящей записи (её прогоняет кодировщик кодека) или случайные.
 
-    python scripts/decoder_ep_eval.py cpu    --wav server/voices/turgenev.wav --out cpu.wav
-    python scripts/decoder_ep_eval.py ov-cpu --wav server/voices/turgenev.wav --out ov.wav
+    python scripts/decoder_ep_eval.py cpu    --wav rust/core/assets/voices/turgenev.wav --out cpu.wav
+    python scripts/decoder_ep_eval.py ov-cpu --wav rust/core/assets/voices/turgenev.wav --out ov.wav
 
 Исполнитель задаёт колесо в окружении: `onnxruntime` — `cpu`,
 `onnxruntime-openvino` — `ov-cpu` или `ov-gpu` (видеокарта Intel; на Windows
@@ -38,6 +38,11 @@ if sys.platform == "win32":
         pass
 
 import onnxruntime as ort  # noqa: E402
+
+# консоль Windows — cp1251, в ней нет ни «×», ни многого другого
+sys.stdout.reconfigure(encoding="utf-8")
+# предупреждения о свёртке констант — шум, а PowerShell показывает их как ошибки
+ort.set_default_logger_severity(3)
 
 MODELS = os.path.join(os.environ.get("VOICY_CACHE", os.path.expanduser("~/.cache/voicy")),
                       "models", "qwen3-tts-12hz-1.7b-ru-stress-gguf")

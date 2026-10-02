@@ -12,6 +12,9 @@ param([switch]$Full, [string]$Out = "arc-eval")
 # не Stop: Windows PowerShell считает ошибкой любую строку в stderr программы,
 # а ONNX Runtime и uv пишут туда предупреждения и ход работы
 $ErrorActionPreference = "Continue"
+# Python пишет в UTF-8, и PowerShell должен читать его вывод так же
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$env:PYTHONIOENCODING = "utf-8"
 $Root = Split-Path -Parent $PSScriptRoot
 New-Item -ItemType Directory -Force $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
@@ -72,7 +75,7 @@ Note "устройства OpenVINO"
 
 Note "декодер: процессор, OpenVINO (CPU и GPU), DirectML"
 $eval = Join-Path $Root "scripts\decoder_ep_eval.py"
-$wav = Join-Path $Root "server\voices\turgenev.wav"
+$wav = Join-Path $Root "rust\core\assets\voices\turgenev.wav"
 $json = Join-Path $Res "decoder.jsonl"
 $runs = @(
   @("cpu", "cpu", @()),
