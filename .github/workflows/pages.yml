@@ -6,6 +6,7 @@ on:
     paths:
       - "article/**"
       - "docs/**"
+      - "experiments/28-sound-models/page/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -29,6 +30,9 @@ jobs:
           mkdir -p _site/docs
           cp -r docs/* _site/docs/
           sed -i 's|href="\.\./docs/|href="docs/|g' _site/index.html
+          # сравнение генераторов звуков (experiments/28) — отдельной страницей
+          mkdir -p _site/sounds
+          cp -r experiments/28-sound-models/page/index.html experiments/28-sound-models/page/audio _site/sounds/
           echo "страниц: $(find _site -name '*.html' | wc -l), аудио: $(find _site -name '*.opus' | wc -l)"
 
       - name: Проверить, что ссылки на аудио живые
@@ -46,6 +50,15 @@ jobs:
               docs = set(re.findall(r'href="((?:\.\./)*docs/[^"#]+)"', html))
               n_audio += len(audio); n_docs += len(docs)
               bad += [f"{page}: {p}" for p in sorted(audio | docs) if not (page.parent / p).exists()]
+          # страница sounds/ собирает пути к звуку скриптом из своих данных: проверяем по ним
+          import json
+          page = pathlib.Path("_site/sounds/index.html")
+          data = json.loads(re.search(r"const DATA = (\{.*?\});\n", page.read_text(encoding="utf-8"), re.S).group(1))
+          for model, run in data.items():
+              for name in ["scene"] + [e["id"] for e in run["elements"]]:
+                  n_audio += 1
+                  if not (page.parent / "audio" / model / f"{name}.opus").exists():
+                      bad.append(f"{page}: audio/{model}/{name}.opus")
           print(f"ссылок на аудио: {n_audio}, на документы: {n_docs}, битых: {len(bad)}")
           if bad:
               print("\n".join(bad[:20])); sys.exit(1)
