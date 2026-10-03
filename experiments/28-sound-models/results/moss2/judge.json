@@ -1,0 +1,435 @@
+{
+ "winter_outside": {
+  "all_bad": false,
+  "chosen": "winter_outside__f14446s14",
+  "takes": [
+   {
+    "name": "winter_outside__dsp21",
+    "why": [],
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06"
+   },
+   {
+    "name": "winter_outside__dsp22",
+    "why": [],
+    "heard": "Eruption 0.13, White noise 0.07, Field recording 0.07"
+   },
+   {
+    "name": "winter_outside__f14446s11",
+    "why": [
+     "AST: mic_wind 0.54"
+    ],
+    "heard": "Wind noise (microphone) 0.54, Wind 0.39, Vehicle 0.18"
+   },
+   {
+    "name": "winter_outside__f14446s12",
+    "why": [],
+    "heard": "Eruption 0.45, Field recording 0.23, Fixed-wing aircraft, airplane 0.11"
+   },
+   {
+    "name": "winter_outside__f14446s13",
+    "why": [
+     "AST: mic_wind 0.63"
+    ],
+    "heard": "Wind noise (microphone) 0.63, Wind 0.42, Eruption 0.16"
+   },
+   {
+    "name": "winter_outside__f14446s14",
+    "why": [],
+    "heard": "Field recording 0.37, Eruption 0.17, Rumble 0.11"
+   }
+  ]
+ },
+ "hut_air": {
+  "all_bad": false,
+  "chosen": "hut_air__39b9acs13",
+  "takes": [
+   {
+    "name": "hut_air__39b9acs11",
+    "why": [],
+    "heard": "Rumble 0.73, White noise 0.07, Vehicle 0.06"
+   },
+   {
+    "name": "hut_air__39b9acs12",
+    "why": [],
+    "heard": "Silence 0.09, Hum 0.05, White noise 0.04"
+   },
+   {
+    "name": "hut_air__39b9acs13",
+    "why": [],
+    "heard": "Rumble 0.49, Silence 0.12, White noise 0.07"
+   },
+   {
+    "name": "hut_air__39b9acs14",
+    "why": [],
+    "heard": "Rumble 0.06, Silence 0.05, Cupboard open or close 0.04"
+   }
+  ]
+ },
+ "fire_burning": {
+  "all_bad": false,
+  "chosen": "fire_burning__d0ee6as13",
+  "takes": [
+   {
+    "name": "fire_burning__d0ee6as11",
+    "why": [],
+    "heard": "Fire 0.16, Crushing 0.08, Hands 0.06"
+   },
+   {
+    "name": "fire_burning__d0ee6as12",
+    "why": [],
+    "heard": "Crushing 0.17, Fire 0.15, Crack 0.07"
+   },
+   {
+    "name": "fire_burning__d0ee6as13",
+    "why": [],
+    "heard": "Computer keyboard 0.15, Finger snapping 0.09, Typing 0.04"
+   },
+   {
+    "name": "fire_burning__d0ee6as14",
+    "why": [],
+    "heard": "Crushing 0.08, Fire 0.07, Crack 0.03"
+   }
+  ]
+ },
+ "door_open": {
+  "all_bad": false,
+  "chosen": "door_open__42708ds12",
+  "takes": [
+   {
+    "name": "door_open__42708ds11",
+    "why": [
+     "AST: music 0.35",
+     "AST: слышно Music 0.35, а Door только 0.02"
+    ],
+    "heard": "Music 0.35, Musical instrument 0.14, Knock 0.06"
+   },
+   {
+    "name": "door_open__42708ds12",
+    "why": [],
+    "heard": "Door 0.19, Creak 0.14, Sliding door 0.09"
+   },
+   {
+    "name": "door_open__42708ds13",
+    "why": [
+     "AST: music 0.65",
+     "AST: слышно Music 0.65, а Door только 0.00"
+    ],
+    "heard": "Music 0.65, Musical instrument 0.28, Didgeridoo 0.12"
+   },
+   {
+    "name": "door_open__42708ds14",
+    "why": [
+     "AST: слышно Knock 0.96, а Door только 0.12"
+    ],
+    "heard": "Knock 0.96, Door 0.12, Tap 0.06"
+   },
+   {
+    "name": "door_open__42708ds15",
+    "why": [
+     "AST: слышно Music 0.08, а Door только 0.01"
+    ],
+    "heard": "Music 0.08, Sound effect 0.04, Musical instrument 0.03"
+   },
+   {
+    "name": "door_open__42708ds16",
+    "why": [
+     "AST: слышно Rumble 0.77, а Squeak только 0.00"
+    ],
+    "heard": "Rumble 0.77, Sound effect 0.15, Car 0.04"
+   },
+   {
+    "name": "door_open__42708ds17",
+    "why": [
+     "AST: слышно Knock 0.43, а Door только 0.13"
+    ],
+    "heard": "Knock 0.43, Door 0.13, Heart sounds, heartbeat 0.12"
+   },
+   {
+    "name": "door_open__42708ds18",
+    "why": [
+     "AST: слышно Knock 0.97, а Door только 0.09"
+    ],
+    "heard": "Knock 0.97, Door 0.09, Tap 0.04"
+   }
+  ]
+ },
+ "door_close": {
+  "all_bad": false,
+  "chosen": "door_close__903eb9s16",
+  "takes": [
+   {
+    "name": "door_close__903eb9s11",
+    "why": [
+     "AST: слышно Knock 0.70, а Door только 0.18"
+    ],
+    "heard": "Knock 0.70, Door 0.18, Thunk 0.15"
+   },
+   {
+    "name": "door_close__903eb9s12",
+    "why": [
+     "AST: слышно Knock 0.97, а Door только 0.23"
+    ],
+    "heard": "Knock 0.97, Door 0.23, Slam 0.08"
+   },
+   {
+    "name": "door_close__903eb9s13",
+    "why": [
+     "AST: слышно Knock 0.88, а Door только 0.42"
+    ],
+    "heard": "Knock 0.88, Door 0.42, Thunk 0.07"
+   },
+   {
+    "name": "door_close__903eb9s14",
+    "why": [
+     "AST: слышно Explosion 0.28, а Door только 0.13"
+    ],
+    "heard": "Explosion 0.28, Door 0.13, Slam 0.12"
+   },
+   {
+    "name": "door_close__903eb9s15",
+    "why": [
+     "AST: слышно Knock 0.84, а Door только 0.18"
+    ],
+    "heard": "Knock 0.84, Door 0.18, Thunk 0.07"
+   },
+   {
+    "name": "door_close__903eb9s16",
+    "why": [],
+    "heard": "Knock 0.63, Door 0.41, Slam 0.21"
+   },
+   {
+    "name": "door_close__903eb9s17",
+    "why": [
+     "AST: слышно Knock 0.25, а Door только 0.06"
+    ],
+    "heard": "Knock 0.25, Slam 0.13, Sound effect 0.06"
+   },
+   {
+    "name": "door_close__903eb9s18",
+    "why": [
+     "AST: слышно Knock 0.56, а Door только 0.25"
+    ],
+    "heard": "Knock 0.56, Door 0.25, Slam 0.16"
+   }
+  ]
+ },
+ "floor_walk": {
+  "all_bad": true,
+  "chosen": "floor_walk__9e5a6ds11",
+  "takes": [
+   {
+    "name": "floor_walk__9e5a6ds11",
+    "why": [
+     "AST: слышно Zipper (clothing) 0.11, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Sound effect 0.53, Zipper (clothing) 0.11, Scrape 0.09"
+   },
+   {
+    "name": "floor_walk__9e5a6ds12",
+    "why": [
+     "AST: слышно Music 0.06, а Creak только 0.01"
+    ],
+    "heard": "Sound effect 0.14, Music 0.06, Knock 0.03"
+   },
+   {
+    "name": "floor_walk__9e5a6ds13",
+    "why": [
+     "AST: слышно Knock 0.14, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Knock 0.14, Sound effect 0.11, Door 0.01"
+   },
+   {
+    "name": "floor_walk__9e5a6ds14",
+    "why": [
+     "AST: слышно Roar 0.48, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Roar 0.48, Sound effect 0.42, Grunt 0.05"
+   },
+   {
+    "name": "floor_walk__9e5a6ds15",
+    "why": [
+     "AST: слышно Roar 0.12, а Creak только 0.00",
+     "CLAP: «a car engine revving» 1.00"
+    ],
+    "heard": "Sound effect 0.33, Roar 0.12, Grunt 0.10"
+   },
+   {
+    "name": "floor_walk__9e5a6ds16",
+    "why": [
+     "AST: слышно Roar 0.17, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Sound effect 0.44, Roar 0.17, Grunt 0.11"
+   },
+   {
+    "name": "floor_walk__9e5a6ds17",
+    "why": [
+     "AST: слышно Scrape 0.05, а Walk, footsteps только 0.00",
+     "CLAP: «a car engine revving» 1.00"
+    ],
+    "heard": "Sound effect 0.52, Scrape 0.05, Sigh 0.03"
+   },
+   {
+    "name": "floor_walk__9e5a6ds18",
+    "why": [
+     "AST: слышно Roar 0.70, а Walk, footsteps только 0.00",
+     "CLAP: «a car engine revving» 0.99"
+    ],
+    "heard": "Roar 0.70, Sound effect 0.29, Roaring cats (lions, tigers) 0.05"
+   }
+  ]
+ },
+ "table_thud": {
+  "all_bad": false,
+  "chosen": "table_thud__9565fas11",
+  "takes": [
+   {
+    "name": "table_thud__9565fas11",
+    "why": [],
+    "heard": "Knock 0.42, Sound effect 0.08, Thunk 0.05"
+   },
+   {
+    "name": "table_thud__9565fas12",
+    "why": [
+     "AST: слышно Dishes, pots, and pans 0.17, а Thump, thud только 0.00"
+    ],
+    "heard": "Dishes, pots, and pans 0.17, Cutlery, silverware 0.08, Chink, clink 0.07"
+   },
+   {
+    "name": "table_thud__9565fas13",
+    "why": [
+     "AST: слышно Wood 0.12, а Thunk только 0.00"
+    ],
+    "heard": "Wood 0.12, Hammer 0.04, Sound effect 0.03"
+   },
+   {
+    "name": "table_thud__9565fas14",
+    "why": [
+     "AST: слышно Breaking 0.08, а Knock только 0.00"
+    ],
+    "heard": "Breaking 0.08, Dishes, pots, and pans 0.05, Crack 0.05"
+   }
+  ]
+ },
+ "cough": {
+  "all_bad": true,
+  "chosen": "cough__3a7ac3s11",
+  "takes": [
+   {
+    "name": "cough__3a7ac3s11",
+    "why": [
+     "AST: слышно Grunt 0.08, а Throat clearing только 0.00"
+    ],
+    "heard": "Sound effect 0.25, Grunt 0.08, Sigh 0.08"
+   },
+   {
+    "name": "cough__3a7ac3s12",
+    "why": [
+     "AST: слышно Stomach rumble 0.89, а Throat clearing только 0.00"
+    ],
+    "heard": "Stomach rumble 0.89, Sound effect 0.07, Speech 0.02"
+   },
+   {
+    "name": "cough__3a7ac3s13",
+    "why": [
+     "AST: слышно Roar 0.09, а Throat clearing только 0.00",
+     "CLAP: «a car engine revving» 0.99"
+    ],
+    "heard": "Roar 0.09, Grunt 0.05, Sound effect 0.05"
+   },
+   {
+    "name": "cough__3a7ac3s14",
+    "why": [
+     "AST: слышно Sigh 0.14, а Throat clearing только 0.00"
+    ],
+    "heard": "Sound effect 0.15, Sigh 0.14, Explosion 0.05"
+   },
+   {
+    "name": "cough__3a7ac3s15",
+    "why": [
+     "AST: слышно Vehicle 0.08, а Throat clearing только 0.00"
+    ],
+    "heard": "Vehicle 0.08, Engine 0.07, Accelerating, revving, vroom 0.05"
+   },
+   {
+    "name": "cough__3a7ac3s16",
+    "why": [
+     "AST: слышно Grunt 0.19, а Throat clearing только 0.00"
+    ],
+    "heard": "Sound effect 0.30, Grunt 0.19, Roar 0.09"
+   },
+   {
+    "name": "cough__3a7ac3s17",
+    "why": [
+     "AST: слышно Snort 0.08, а Throat clearing только 0.00",
+     "CLAP: «distorted white noise» 0.95"
+    ],
+    "heard": "Snort 0.08, Sound effect 0.06, Scrape 0.05"
+   },
+   {
+    "name": "cough__3a7ac3s18",
+    "why": [
+     "AST: слышно Sigh 0.11, а Throat clearing только 0.01",
+     "CLAP: «a car engine revving» 0.82"
+    ],
+    "heard": "Sound effect 0.12, Sigh 0.11, Gasp 0.07"
+   }
+  ]
+ },
+ "fire_catching": {
+  "all_bad": false,
+  "chosen": "fire_catching__4a92b0s18",
+  "takes": [
+   {
+    "name": "fire_catching__4a92b0s11",
+    "why": [
+     "AST: слышно Steam 0.13, а Fire только 0.01"
+    ],
+    "heard": "Steam 0.13, Hiss 0.12, White noise 0.08"
+   },
+   {
+    "name": "fire_catching__4a92b0s12",
+    "why": [
+     "AST: слышно White noise 0.11, а Fire только 0.01"
+    ],
+    "heard": "White noise 0.11, Hiss 0.09, Steam 0.08"
+   },
+   {
+    "name": "fire_catching__4a92b0s13",
+    "why": [],
+    "heard": "Fire 0.18, Noise 0.05, Finger snapping 0.02"
+   },
+   {
+    "name": "fire_catching__4a92b0s14",
+    "why": [
+     "AST: слышно Hum 0.08, а Fire только 0.02"
+    ],
+    "heard": "Silence 0.10, Hum 0.08, Static 0.07"
+   },
+   {
+    "name": "fire_catching__4a92b0s15",
+    "why": [],
+    "heard": "Fire 0.16, Rumble 0.11, Vehicle 0.05"
+   },
+   {
+    "name": "fire_catching__4a92b0s16",
+    "why": [
+     "AST: слышно Throbbing 0.14, а Fire только 0.06"
+    ],
+    "heard": "Throbbing 0.14, Fire 0.06, Hum 0.05"
+   },
+   {
+    "name": "fire_catching__4a92b0s17",
+    "why": [
+     "AST: слышно Tick 0.48, а Fire только 0.00",
+     "тихо: RMS 0.0004"
+    ],
+    "heard": "Tick 0.48, Tick-tock 0.17, Clicking 0.09"
+   },
+   {
+    "name": "fire_catching__4a92b0s18",
+    "why": [],
+    "heard": "Sizzle 0.32, Fire 0.21, Frying (food) 0.13"
+   }
+  ]
+ }
+}

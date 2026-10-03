@@ -1,0 +1,406 @@
+{
+ "winter_outside": {
+  "all_bad": false,
+  "chosen": "winter_outside__dsp21",
+  "takes": [
+   {
+    "name": "winter_outside__dsp21",
+    "why": [],
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06"
+   },
+   {
+    "name": "winter_outside__dsp22",
+    "why": [],
+    "heard": "Eruption 0.13, White noise 0.07, Field recording 0.07"
+   },
+   {
+    "name": "winter_outside__f14446s11",
+    "why": [
+     "AST: engine 0.32"
+    ],
+    "heard": "Field recording 0.50, Vehicle 0.32, Eruption 0.17"
+   },
+   {
+    "name": "winter_outside__f14446s12",
+    "why": [
+     "AST: engine 0.46"
+    ],
+    "heard": "Vehicle 0.46, Field recording 0.43, Aircraft 0.36"
+   },
+   {
+    "name": "winter_outside__f14446s13",
+    "why": [
+     "AST: engine 0.31"
+    ],
+    "heard": "Field recording 0.35, Vehicle 0.31, Fixed-wing aircraft, airplane 0.23"
+   },
+   {
+    "name": "winter_outside__f14446s14",
+    "why": [
+     "AST: engine 0.35"
+    ],
+    "heard": "Field recording 0.49, Vehicle 0.35, Aircraft 0.34"
+   }
+  ]
+ },
+ "hut_air": {
+  "all_bad": false,
+  "chosen": "hut_air__39b9acs11",
+  "takes": [
+   {
+    "name": "hut_air__39b9acs11",
+    "why": [],
+    "heard": "Coin (dropping) 0.12, Creak 0.06, Thunk 0.05"
+   },
+   {
+    "name": "hut_air__39b9acs12",
+    "why": [
+     "CLAP: «rustling of dry hay» 1.00"
+    ],
+    "heard": "Thunk 0.18, Music 0.06, Crushing 0.06"
+   },
+   {
+    "name": "hut_air__39b9acs13",
+    "why": [
+     "CLAP: «rustling of dry hay» 0.94"
+    ],
+    "heard": "Wood 0.23, Thunk 0.17, Drawer open or close 0.17"
+   },
+   {
+    "name": "hut_air__39b9acs14",
+    "why": [
+     "CLAP: «rain falling» 0.99"
+    ],
+    "heard": "Mechanisms 0.13, Chop 0.08, Creak 0.03"
+   }
+  ]
+ },
+ "fire_burning": {
+  "all_bad": false,
+  "chosen": "fire_burning__d0ee6as13",
+  "takes": [
+   {
+    "name": "fire_burning__d0ee6as11",
+    "why": [],
+    "heard": "Throbbing 0.16, Heart sounds, heartbeat 0.13, Hum 0.09"
+   },
+   {
+    "name": "fire_burning__d0ee6as12",
+    "why": [],
+    "heard": "Fire 0.21, Throbbing 0.09, Hum 0.04"
+   },
+   {
+    "name": "fire_burning__d0ee6as13",
+    "why": [],
+    "heard": "Fire 0.10, Hands 0.03, Tap 0.03"
+   },
+   {
+    "name": "fire_burning__d0ee6as14",
+    "why": [],
+    "heard": "Fire 0.17, Throbbing 0.11, Heart sounds, heartbeat 0.06"
+   }
+  ]
+ },
+ "door_open": {
+  "all_bad": false,
+  "chosen": "door_open__ab0c00s14",
+  "takes": [
+   {
+    "name": "door_open__ab0c00s11",
+    "why": [],
+    "heard": "Door 0.46, Knock 0.30, Thunk 0.13"
+   },
+   {
+    "name": "door_open__ab0c00s12",
+    "why": [
+     "AST: слышно Knock 0.89, а Door только 0.08"
+    ],
+    "heard": "Knock 0.89, Door 0.08, Music 0.08"
+   },
+   {
+    "name": "door_open__ab0c00s13",
+    "why": [
+     "AST: слышно Knock 0.43, а Door только 0.04"
+    ],
+    "heard": "Knock 0.43, Thunk 0.16, Door 0.04"
+   },
+   {
+    "name": "door_open__ab0c00s14",
+    "why": [],
+    "heard": "Knock 0.54, Thunk 0.42, Door 0.35"
+   },
+   {
+    "name": "door_open__ab0c00s15",
+    "why": [],
+    "heard": "Door 0.29, Knock 0.19, Slam 0.08"
+   },
+   {
+    "name": "door_open__ab0c00s16",
+    "why": [
+     "CLAP: «rustling of dry hay» 0.73"
+    ],
+    "heard": "Door 0.32, Knock 0.26, Thunk 0.12"
+   },
+   {
+    "name": "door_open__ab0c00s17",
+    "why": [
+     "AST: слышно Knock 0.60, а Door только 0.32"
+    ],
+    "heard": "Knock 0.60, Door 0.32, Thunk 0.19"
+   },
+   {
+    "name": "door_open__ab0c00s18",
+    "why": [
+     "CLAP: «rustling of dry hay» 0.91"
+    ],
+    "heard": "Knock 0.23, Door 0.20, Thunk 0.19"
+   }
+  ]
+ },
+ "door_close": {
+  "all_bad": false,
+  "chosen": "door_close__541fdas13",
+  "takes": [
+   {
+    "name": "door_close__541fdas11",
+    "why": [],
+    "heard": "Sound effect 0.26, Door 0.13, Sliding door 0.09"
+   },
+   {
+    "name": "door_close__541fdas12",
+    "why": [],
+    "heard": "Door 0.49, Slam 0.22, Sliding door 0.21"
+   },
+   {
+    "name": "door_close__541fdas13",
+    "why": [],
+    "heard": "Door 0.66, Knock 0.32, Slam 0.17"
+   },
+   {
+    "name": "door_close__541fdas14",
+    "why": [
+     "AST: слышно Knock 0.70, а Door только 0.19"
+    ],
+    "heard": "Knock 0.70, Thunk 0.20, Door 0.19"
+   },
+   {
+    "name": "door_close__541fdas15",
+    "why": [],
+    "heard": "Door 0.67, Slam 0.19, Sliding door 0.18"
+   },
+   {
+    "name": "door_close__541fdas16",
+    "why": [],
+    "heard": "Door 0.55, Thunk 0.24, Sliding door 0.16"
+   },
+   {
+    "name": "door_close__541fdas17",
+    "why": [
+     "AST: слышно Knock 0.58, а Door только 0.19"
+    ],
+    "heard": "Knock 0.58, Thunk 0.22, Door 0.19"
+   },
+   {
+    "name": "door_close__541fdas18",
+    "why": [],
+    "heard": "Door 0.43, Knock 0.12, Sliding door 0.09"
+   }
+  ]
+ },
+ "floor_walk": {
+  "all_bad": true,
+  "chosen": "floor_walk__04d27cs11",
+  "takes": [
+   {
+    "name": "floor_walk__04d27cs11",
+    "why": [
+     "AST: слышно Knock 0.40, а Walk, footsteps только 0.01"
+    ],
+    "heard": "Knock 0.40, Shuffling cards 0.10, Chopping (food) 0.07"
+   },
+   {
+    "name": "floor_walk__04d27cs12",
+    "why": [
+     "AST: слышно Chopping (food) 0.10, а Walk, footsteps только 0.03"
+    ],
+    "heard": "Chopping (food) 0.10, Knock 0.09, Walk, footsteps 0.03"
+   },
+   {
+    "name": "floor_walk__04d27cs13",
+    "why": [
+     "AST: слышно Knock 0.58, а Walk, footsteps только 0.05"
+    ],
+    "heard": "Knock 0.58, Door 0.05, Walk, footsteps 0.05"
+   },
+   {
+    "name": "floor_walk__04d27cs14",
+    "why": [
+     "AST: слышно Knock 0.46, а Walk, footsteps только 0.04"
+    ],
+    "heard": "Knock 0.46, Thunk 0.10, Walk, footsteps 0.04"
+   },
+   {
+    "name": "floor_walk__04d27cs15",
+    "why": [
+     "AST: слышно Knock 0.76, а Walk, footsteps только 0.01"
+    ],
+    "heard": "Knock 0.76, Door 0.07, Wood 0.04"
+   },
+   {
+    "name": "floor_walk__04d27cs16",
+    "why": [
+     "AST: слышно Knock 0.37, а Walk, footsteps только 0.05"
+    ],
+    "heard": "Knock 0.37, Tap 0.08, Shuffling cards 0.06"
+   },
+   {
+    "name": "floor_walk__04d27cs17",
+    "why": [
+     "AST: слышно Knock 0.36, а Walk, footsteps только 0.02"
+    ],
+    "heard": "Knock 0.36, Door 0.12, Tap 0.05"
+   },
+   {
+    "name": "floor_walk__04d27cs18",
+    "why": [
+     "AST: слышно Knock 0.43, а Walk, footsteps только 0.02"
+    ],
+    "heard": "Knock 0.43, Chopping (food) 0.15, Door 0.04"
+   }
+  ]
+ },
+ "table_thud": {
+  "all_bad": false,
+  "chosen": "table_thud__acbbees15",
+  "takes": [
+   {
+    "name": "table_thud__acbbees11",
+    "why": [],
+    "heard": "Knock 0.14, Door 0.11, Slam 0.06"
+   },
+   {
+    "name": "table_thud__acbbees12",
+    "why": [],
+    "heard": "Knock 0.54, Thunk 0.02, Sound effect 0.02"
+   },
+   {
+    "name": "table_thud__acbbees13",
+    "why": [],
+    "heard": "Knock 0.74, Door 0.12, Thunk 0.05"
+   },
+   {
+    "name": "table_thud__acbbees14",
+    "why": [],
+    "heard": "Knock 0.72, Door 0.25, Slam 0.10"
+   },
+   {
+    "name": "table_thud__acbbees15",
+    "why": [],
+    "heard": "Knock 0.45, Door 0.03, Tap 0.03"
+   },
+   {
+    "name": "table_thud__acbbees16",
+    "why": [],
+    "heard": "Knock 0.76, Door 0.04, Thunk 0.02"
+   },
+   {
+    "name": "table_thud__acbbees17",
+    "why": [],
+    "heard": "Door 0.35, Knock 0.26, Thunk 0.10"
+   },
+   {
+    "name": "table_thud__acbbees18",
+    "why": [],
+    "heard": "Knock 0.65, Door 0.09, Tap 0.03"
+   }
+  ]
+ },
+ "cough": {
+  "all_bad": false,
+  "chosen": "cough__fc91c4s11",
+  "takes": [
+   {
+    "name": "cough__fc91c4s11",
+    "why": [],
+    "heard": "Throat clearing 0.55, Cough 0.06, Sound effect 0.05"
+   },
+   {
+    "name": "cough__fc91c4s12",
+    "why": [],
+    "heard": "Throat clearing 0.65, Speech 0.12, Burping, eructation 0.08"
+   },
+   {
+    "name": "cough__fc91c4s13",
+    "why": [],
+    "heard": "Throat clearing 0.25, Speech 0.06, Slap, smack 0.04"
+   },
+   {
+    "name": "cough__fc91c4s14",
+    "why": [],
+    "heard": "Throat clearing 0.83, Cough 0.12, Speech 0.04"
+   }
+  ]
+ },
+ "fire_catching": {
+  "all_bad": true,
+  "chosen": "fire_catching__564219s11",
+  "takes": [
+   {
+    "name": "fire_catching__564219s11",
+    "why": [
+     "AST: слышно Cap gun 0.35, а Crackle только 0.01"
+    ],
+    "heard": "Cap gun 0.35, Camera 0.13, Gunshot, gunfire 0.12"
+   },
+   {
+    "name": "fire_catching__564219s12",
+    "why": [
+     "AST: слышно Cap gun 0.83, а Crackle только 0.00"
+    ],
+    "heard": "Cap gun 0.83, Gunshot, gunfire 0.41, Single-lens reflex camera 0.02"
+   },
+   {
+    "name": "fire_catching__564219s13",
+    "why": [
+     "AST: слышно Cap gun 0.25, а Crackle только 0.00"
+    ],
+    "heard": "Cap gun 0.25, Whip 0.05, Chop 0.05"
+   },
+   {
+    "name": "fire_catching__564219s14",
+    "why": [
+     "AST: слышно Shuffling cards 0.19, а Crackle только 0.00"
+    ],
+    "heard": "Shuffling cards 0.19, Scissors 0.04, Chop 0.04"
+   },
+   {
+    "name": "fire_catching__564219s15",
+    "why": [
+     "AST: слышно Shuffling cards 0.28, а Crackle только 0.00"
+    ],
+    "heard": "Shuffling cards 0.28, Chop 0.15, Cap gun 0.02"
+   },
+   {
+    "name": "fire_catching__564219s16",
+    "why": [
+     "AST: слышно Camera 0.24, а Crackle только 0.01"
+    ],
+    "heard": "Camera 0.24, Single-lens reflex camera 0.08, Cap gun 0.07"
+   },
+   {
+    "name": "fire_catching__564219s17",
+    "why": [
+     "AST: слышно Cap gun 0.15, а Crackle только 0.01"
+    ],
+    "heard": "Cap gun 0.15, Chop 0.06, Scissors 0.03"
+   },
+   {
+    "name": "fire_catching__564219s18",
+    "why": [
+     "AST: слышно Cap gun 0.36, а Crackle только 0.01"
+    ],
+    "heard": "Cap gun 0.36, Gunshot, gunfire 0.11, Arrow 0.10"
+   }
+  ]
+ }
+}

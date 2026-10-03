@@ -1,0 +1,31 @@
+group	en	ru
+event	creaking wooden door slowly opening	медленно открывается скрипучая деревянная дверь
+event	three knocks on a heavy wooden door	три стука в тяжёлую деревянную дверь
+event	a stone dropped into a pond, splash	камень падает в пруд, всплеск
+event	old wooden floorboards creaking under footsteps	скрипят старые половицы под шагами
+event	a match being struck and lit	чиркает и загорается спичка
+event	a glass shattering on a tile floor	стакан разбивается о кафельный пол
+event	a car door closing	хлопает дверь машины
+event	a dog barking twice in the distance	вдалеке дважды лает собака
+event	a church bell ringing once	один удар церковного колокола
+event	pages of a book being turned	перелистываются страницы книги
+texture	gentle stream flowing over rocks	тихий ручей течёт по камням
+texture	strong wind howling through trees	сильный ветер воет в деревьях
+texture	steady rain on a tin roof	ровный дождь по жестяной крыше
+texture	ocean waves crashing on a sandy beach	морские волны накатывают на песчаный берег
+texture	crackling campfire	потрескивает костёр
+texture	light rain on leaves	мелкий дождь по листьям
+texture	distant thunder rumbling	вдалеке рокочет гром
+texture	waterfall roaring	шумит водопад
+texture	wind blowing across an open field	ветер гуляет над открытым полем
+texture	a clock ticking	тикают часы
+place	busy cafe with quiet chatter and clinking cups	людное кафе, тихие разговоры и звон чашек
+place	train station announcements and footsteps	объявления и шаги на вокзале
+place	night forest with crickets and an owl	ночной лес, сверчки и сова
+place	city street traffic with distant horns	городская улица, машины и далёкие гудки
+place	spring morning in a park with birds singing	весеннее утро в парке, поют птицы
+place	quiet library with occasional page turns	тихая библиотека, изредка шуршат страницы
+place	harbor with seagulls and creaking boats	гавань, чайки и скрип лодок
+place	inside a moving train carriage	внутри идущего вагона поезда
+place	busy open-plan office with keyboards typing	шумный опенспейс, стучат клавиатуры
+place	village at dusk with a distant tractor	деревня в сумерках, вдалеке трактор
