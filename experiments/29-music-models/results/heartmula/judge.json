@@ -1,0 +1,683 @@
+[
+ {
+  "id": "bed-piano",
+  "task": "bed",
+  "best": "bed-piano.1",
+  "accepted": false,
+  "takes": [
+   {
+    "take": "bed-piano.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 177.47,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.2657,
+    "vocal": 0.81,
+    "vocal_ast": 0.38,
+    "expect": {
+     "Piano": 0.028,
+     "Ambient music": 0.004
+    },
+    "forbid": {
+     "Singing": 0.044,
+     "Speech": 0.009,
+     "Drum kit": 0.002
+    },
+    "heard": [
+     "Music",
+     "Independent music",
+     "Tender music",
+     "Electric piano",
+     "Singing"
+    ],
+    "clap_rank": 8,
+    "clap": -0.003,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.28,
+     "CU": 7.47,
+     "PC": 5.71,
+     "PQ": 7.97
+    },
+    "reject": [
+     "голос в инструментале (81% секунд)"
+    ],
+    "score": -7.213
+   },
+   {
+    "take": "bed-piano.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 200.43,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.213,
+    "vocal": 0.94,
+    "vocal_ast": 0.88,
+    "expect": {
+     "Piano": 0.015,
+     "Ambient music": 0.002
+    },
+    "forbid": {
+     "Singing": 0.146,
+     "Speech": 0.007,
+     "Drum kit": 0.001
+    },
+    "heard": [
+     "Music",
+     "Singing",
+     "Musical instrument",
+     "Yodeling",
+     "Lullaby"
+    ],
+    "clap_rank": 7,
+    "clap": 0.0,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.1,
+     "CU": 7.65,
+     "PC": 5.08,
+     "PQ": 7.68
+    },
+    "reject": [
+     "голос в инструментале (94% секунд)"
+    ],
+    "score": -6.242
+   }
+  ]
+ },
+ {
+  "id": "bed-lofi",
+  "task": "bed",
+  "best": "bed-lofi.1",
+  "accepted": false,
+  "takes": [
+   {
+    "take": "bed-lofi.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 172.31,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.2328,
+    "vocal": 0.82,
+    "vocal_ast": 0.75,
+    "expect": {
+     "Hip hop music": 0.001,
+     "Electric piano": 0.013
+    },
+    "forbid": {
+     "Singing": 0.083,
+     "Speech": 0.003,
+     "Rapping": 0.0
+    },
+    "heard": [
+     "Music",
+     "Singing",
+     "Tender music",
+     "Christian music",
+     "Christmas music"
+    ],
+    "clap_rank": 4,
+    "clap": -0.006,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.7,
+     "CU": 7.86,
+     "PC": 6.01,
+     "PQ": 8.14
+    },
+    "reject": [
+     "голос в инструментале (82% секунд)"
+    ],
+    "score": -3.186
+   },
+   {
+    "take": "bed-lofi.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 131.51,
+    "vram_peak_gb": 9.95,
+    "seconds": 28.6,
+    "asked": 60,
+    "rms": 0.1225,
+    "vocal": 0.89,
+    "vocal_ast": 1.0,
+    "expect": {
+     "Hip hop music": 0.001,
+     "Electric piano": 0.002
+    },
+    "forbid": {
+     "Singing": 0.106,
+     "Speech": 0.014,
+     "Rapping": 0.0
+    },
+    "heard": [
+     "Music",
+     "Humming",
+     "Singing",
+     "Middle Eastern music",
+     "Mantra"
+    ],
+    "clap_rank": 2,
+    "clap": 0.006,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 6.25,
+     "CU": 6.66,
+     "PC": 4.13,
+     "PQ": 6.97
+    },
+    "reject": [
+     "голос в инструментале (89% секунд)",
+     "короче на 31 с"
+    ],
+    "score": -1.303
+   }
+  ]
+ },
+ {
+  "id": "inst-orchestra",
+  "task": "instrumental",
+  "best": "inst-orchestra.0",
+  "accepted": false,
+  "takes": [
+   {
+    "take": "inst-orchestra.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 126.03,
+    "vram_peak_gb": 9.95,
+    "seconds": 24.3,
+    "asked": 60,
+    "rms": 0.1581,
+    "vocal": 0.92,
+    "vocal_ast": 1.0,
+    "expect": {
+     "Orchestra": 0.0,
+     "Bowed string instrument": 0.002
+    },
+    "forbid": {
+     "Singing": 0.116,
+     "Electric guitar": 0.003
+    },
+    "heard": [
+     "Music",
+     "Singing",
+     "Musical instrument",
+     "Sad music",
+     "Piano"
+    ],
+    "clap_rank": 4,
+    "clap": 0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 5.67,
+     "CU": 6.64,
+     "PC": 4.87,
+     "PQ": 7.09
+    },
+    "reject": [
+     "голос в инструментале (92% секунд)",
+     "короче на 36 с"
+    ],
+    "score": -3.291
+   },
+   {
+    "take": "inst-orchestra.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 187.56,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.0353,
+    "vocal": 0.95,
+    "vocal_ast": 0.5,
+    "expect": {
+     "Orchestra": 0.001,
+     "Bowed string instrument": 0.005
+    },
+    "forbid": {
+     "Singing": 0.017,
+     "Electric guitar": 0.001
+    },
+    "heard": [
+     "Music",
+     "Humming",
+     "Musical instrument",
+     "Tender music",
+     "Flute"
+    ],
+    "clap_rank": 6,
+    "clap": 0.006,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.41,
+     "CU": 7.3,
+     "PC": 4.78,
+     "PQ": 7.47
+    },
+    "reject": [
+     "голос в инструментале (95% секунд)"
+    ],
+    "score": -5.263
+   }
+  ]
+ },
+ {
+  "id": "inst-jazz",
+  "task": "instrumental",
+  "best": "inst-jazz.1",
+  "accepted": false,
+  "takes": [
+   {
+    "take": "inst-jazz.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 149.88,
+    "vram_peak_gb": 9.95,
+    "seconds": 51.4,
+    "asked": 60,
+    "rms": 0.1306,
+    "vocal": 0.9,
+    "vocal_ast": 0.4,
+    "expect": {
+     "Jazz": 0.004,
+     "Double bass": 0.001
+    },
+    "forbid": {
+     "Singing": 0.053,
+     "Electronic music": 0.006
+    },
+    "heard": [
+     "Music",
+     "Electric piano",
+     "Piano",
+     "Humming",
+     "Tender music"
+    ],
+    "clap_rank": 6,
+    "clap": 0.004,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.18,
+     "CU": 7.58,
+     "PC": 5.78,
+     "PQ": 7.83
+    },
+    "reject": [
+     "голос в инструментале (90% секунд)",
+     "короче на 9 с"
+    ],
+    "score": -5.227
+   },
+   {
+    "take": "inst-jazz.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 188.91,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.0936,
+    "vocal": 0.91,
+    "vocal_ast": 0.62,
+    "expect": {
+     "Jazz": 0.002,
+     "Double bass": 0.001
+    },
+    "forbid": {
+     "Singing": 0.064,
+     "Electronic music": 0.005
+    },
+    "heard": [
+     "Music",
+     "Tender music",
+     "Lullaby",
+     "Singing",
+     "Gospel music"
+    ],
+    "clap_rank": 5,
+    "clap": 0.005,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.71,
+     "CU": 7.81,
+     "PC": 5.93,
+     "PQ": 8.16
+    },
+    "reject": [
+     "голос в инструментале (91% секунд)"
+    ],
+    "score": -4.184
+   }
+  ]
+ },
+ {
+  "id": "inst-synthwave",
+  "task": "instrumental",
+  "best": "inst-synthwave.1",
+  "accepted": false,
+  "takes": [
+   {
+    "take": "inst-synthwave.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 172.29,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.1881,
+    "vocal": 0.91,
+    "vocal_ast": 0.38,
+    "expect": {
+     "Synthesizer": 0.0,
+     "Electronic music": 0.001
+    },
+    "forbid": {
+     "Singing": 0.056,
+     "Orchestra": 0.0
+    },
+    "heard": [
+     "Music",
+     "Lullaby",
+     "Tender music",
+     "Christmas music",
+     "Singing"
+    ],
+    "clap_rank": 2,
+    "clap": -0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.78,
+     "CU": 7.84,
+     "PC": 4.73,
+     "PQ": 8.35
+    },
+    "reject": [
+     "голос в инструментале (91% секунд)"
+    ],
+    "score": -1.165
+   },
+   {
+    "take": "inst-synthwave.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 190.59,
+    "vram_peak_gb": 9.95,
+    "seconds": 78.1,
+    "asked": 60,
+    "rms": 0.1561,
+    "vocal": 0.97,
+    "vocal_ast": 1.0,
+    "expect": {
+     "Synthesizer": 0.002,
+     "Electronic music": 0.002
+    },
+    "forbid": {
+     "Singing": 0.072,
+     "Orchestra": 0.0
+    },
+    "heard": [
+     "Music",
+     "Humming",
+     "Singing",
+     "Theremin",
+     "Lullaby"
+    ],
+    "clap_rank": 1,
+    "clap": 0.0,
+    "clap_margin": 0.0,
+    "aes": {
+     "CE": 7.55,
+     "CU": 7.54,
+     "PC": 4.72,
+     "PQ": 8.0
+    },
+    "reject": [
+     "голос в инструментале (97% секунд)"
+    ],
+    "score": -0.2
+   }
+  ]
+ },
+ {
+  "id": "song-ru-pop",
+  "task": "song",
+  "best": "song-ru-pop.1",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-ru-pop.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 153.79,
+    "vram_peak_gb": 9.95,
+    "seconds": 55.1,
+    "asked": 75,
+    "rms": 0.167,
+    "vocal": 0.6,
+    "vocal_ast": 0.67,
+    "expect": {
+     "Singing": 0.047,
+     "Pop music": 0.028
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Music for children",
+     "Happy music",
+     "Flute",
+     "Singing"
+    ],
+    "clap_rank": 8,
+    "clap": 0.004,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.7,
+     "CU": 8.13,
+     "PC": 6.18,
+     "PQ": 8.44
+    },
+    "transcript": "Над рекою тихий вечер, фонари горят вдали. Я иду тебе навстречу по следам своей земли. Не гаси огни над городом, подожди еще чуть-чуть. Мы с тобой пройдем весь холод и найдем обратный путь. Спасибо. Спасибо.",
+    "cer": 0.0,
+    "reject": [
+     "короче на 20 с"
+    ],
+    "score": -7.166
+   },
+   {
+    "take": "song-ru-pop.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 181.36,
+    "vram_peak_gb": 9.95,
+    "seconds": 70.2,
+    "asked": 75,
+    "rms": 0.1176,
+    "vocal": 0.63,
+    "vocal_ast": 0.57,
+    "expect": {
+     "Singing": 0.056,
+     "Pop music": 0.032
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Singing",
+     "Drum kit",
+     "Independent music",
+     "Musical instrument"
+    ],
+    "clap_rank": 8,
+    "clap": 0.007,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.64,
+     "CU": 7.9,
+     "PC": 6.19,
+     "PQ": 8.12
+    },
+    "transcript": "Над рукою тихий вечер, фунари горят вдали. Я иду тебе навстречу по следам своей земли. Не гаси огни над городом, подожди еще чуть-чуть. Мы с тобой пройдем весь холод и найдем обратный путь. Редактор субтитров А.Семкин Корректор А.Егорова",
+    "cer": 0.013,
+    "reject": [],
+    "score": -7.211
+   }
+  ]
+ },
+ {
+  "id": "song-ru-rock",
+  "task": "song",
+  "best": "song-ru-rock.0",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-ru-rock.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 191.64,
+    "vram_peak_gb": 9.95,
+    "seconds": 97.5,
+    "asked": 75,
+    "rms": 0.2759,
+    "vocal": 0.64,
+    "vocal_ast": 0.3,
+    "expect": {
+     "Singing": 0.022,
+     "Rock music": 0.001
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Electronic dance music",
+     "Dance music",
+     "Electronic music",
+     "House music"
+    ],
+    "clap_rank": 3,
+    "clap": 0.001,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.52,
+     "CU": 7.85,
+     "PC": 6.62,
+     "PQ": 8.11
+    },
+    "transcript": "Старый поезд мчится в ночь Стук колес, как сердце стук Никому уже не помочь Кто не вырвался из рук Дальше, дальше до рассвета За окном летит страна Мы споем еще про лето Пусть кончается весна Пусть кончается весна Старый поезд мчится в ночь Стук колес, как сердце стук Никому уже не помочь Кто не вырвался из рук",
+    "cer": 0.006,
+    "reject": [],
+    "score": -2.195
+   },
+   {
+    "take": "song-ru-rock.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 179.48,
+    "vram_peak_gb": 9.95,
+    "seconds": 64.6,
+    "asked": 75,
+    "rms": 0.2296,
+    "vocal": 0.5,
+    "vocal_ast": 0.33,
+    "expect": {
+     "Singing": 0.036,
+     "Rock music": 0.001
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Dance music",
+     "House music",
+     "Pop music",
+     "Music for children"
+    ],
+    "clap_rank": 2,
+    "clap": 0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.61,
+     "CU": 8.0,
+     "PC": 6.19,
+     "PQ": 8.37
+    },
+    "transcript": "Старый поезд мчится в ночь Стук колёс, как сердце стук Никому уже не помочь Кто не вырвался из рук Дальше, дальше до рассвета За окном летит страна Мы споём ещё про лето Пусть кончается весна Дальше, дальше до рассвета Редактор субтитров А.Семкин Корректор А.Кулакова",
+    "cer": 0.006,
+    "reject": [
+     "короче на 10 с"
+    ],
+    "score": -1.169
+   }
+  ]
+ },
+ {
+  "id": "song-en-folk",
+  "task": "song",
+  "best": "song-en-folk.1",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-en-folk.0",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 184.77,
+    "vram_peak_gb": 9.95,
+    "seconds": 75.5,
+    "asked": 75,
+    "rms": 0.1199,
+    "vocal": 0.73,
+    "vocal_ast": 0.75,
+    "expect": {
+     "Singing": 0.084,
+     "Folk music": 0.009
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Singing",
+     "Lullaby",
+     "Tender music",
+     "Christmas music"
+    ],
+    "clap_rank": 6,
+    "clap": 0.007,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.72,
+     "CU": 7.92,
+     "PC": 4.82,
+     "PQ": 8.41
+    },
+    "transcript": "Morning light across the river Frost is fading from the pain I have walked a thousand miles Just to hear your voice again Carry me home, carry me home Over the hills where the wild winds roam Carry me home before the night Back to the place where the fire burns bright Carry me home, carry me home Over the hills where the wild winds roam Carry me home before the night Back to the place where the fire burns bright Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home Carry me home, carry me home",
+    "cer": 0.009,
+    "reject": [],
+    "score": -5.168
+   },
+   {
+    "take": "song-en-folk.1",
+    "model": "heartmula/oss-3B-happy-new-year",
+    "wall": 346.74,
+    "vram_peak_gb": 9.95,
+    "seconds": 97.5,
+    "asked": 75,
+    "rms": 0.1543,
+    "vocal": 0.56,
+    "vocal_ast": 0.3,
+    "expect": {
+     "Singing": 0.042,
+     "Folk music": 0.001
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Soul music",
+     "Happy music",
+     "Music for children",
+     "Rhythm and blues"
+    ],
+    "clap_rank": 5,
+    "clap": 0.005,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.76,
+     "CU": 8.05,
+     "PC": 5.37,
+     "PQ": 8.3
+    },
+    "transcript": "Morning light across the river Frost is fading from the pain I have walked a thousand miles Just to hear your voice again Carry me home Carry me home Over the hills where the wild winds roam Carry me home before the night Back to the place where the fire burns bright Carry me home Over the hills where the wild winds roam Carry me home before the night Back to the place where the fire burns bright Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the place where the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns Back to the fire burns",
+    "cer": 0.009,
+    "reject": [],
+    "score": -4.179
+   }
+  ]
+ }
+]

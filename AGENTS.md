@@ -26,6 +26,10 @@ cat статья.md | ./voicy say - out.opus      # или из потока
 ./voicy hear созвон.opus --hotwords "Helm, Grafana"
 TEXT=$(./voicy hear запись.opus)            # stdout чистый, можно подставлять
 
+./voicy music "lo-fi, mellow piano" bed.opus --instrumental --duration 60   # музыка
+./voicy music "pop ballad, female vocal" song.opus --lyrics @текст.txt --language ru
+./voicy music-models                        # модели музыки: что умеет каждая
+
 ./voicy voices                              # какие голоса есть
 ./voicy status                              # модели, устройство, готовность
 ```
@@ -106,6 +110,20 @@ CLI это запрещает явно.
 клиенты на httpx (включая официальный клиент OpenAI) идут к локальному серверу
 через прокси и получают 503. Лечится `NO_PROXY=127.0.0.1,localhost`.
 CLI обходит прокси для локальных адресов сам.
+
+## Музыка
+
+Моделей может быть несколько, выбирает запрос: `--model` (список —
+`./voicy music-models`, у каждой — что умеет и какая лицензия). Ставятся
+отдельно от речи: `voicy setup music` (ACE-Step 1.5, около 5.5 ГБ). Без
+`--lyrics` и без `--instrumental` текст напишет сама модель, без
+`--duration` — она же выберет длину. Текст песни размечается частями:
+`[verse]`, `[chorus]`, `[bridge]`. Музыка — стерео 48 кГц; на RTX 3080 песня
+в 75 с считается за 8 с, если веса на быстром диске (с диска Windows из WSL
+загрузка частей модели добавляет десятки секунд). Длина с `--duration` — ровно
+та, что просили.
+Подробности — раздел «Музыка» в [`server/README.md`](server/README.md)
+и `docs/adr/0028`.
 
 ## Голоса
 

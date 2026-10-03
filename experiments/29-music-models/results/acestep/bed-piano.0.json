@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 60.0,
+ "wall": 17.91,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 104,
+  "caption": "A delicate and emotional instrumental piece begins with gentle piano arpeggios that establish a hopeful yet slightly melancholic atmosphere. Lush string pads swell underneath, adding cinematic depth and warmth to the arrangement. The composition gradually builds in complexity and dynamic intensity; the strings take over the main melody before it gracefully returns to the initial piano theme for its conclusion. A subtle low-end string bass provides a gentle foundation for the interwoven melodic lines.",
+  "duration": 60,
+  "keyscale": "G major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

@@ -39,17 +39,22 @@ async fn ffmpeg(args: &[&str], purpose: &str) -> ApiResult<()> {
 }
 
 pub async fn encode(x: &[f32], sr: u32, fmt: &str) -> ApiResult<(Vec<u8>, &'static str)> {
+    encode_ch(x, sr, 1, fmt).await
+}
+
+/// The same for `ch` channels interleaved (L R L R …): music is stereo.
+pub async fn encode_ch(x: &[f32], sr: u32, ch: u16, fmt: &str) -> ApiResult<(Vec<u8>, &'static str)> {
     let fmt = fmt.to_lowercase();
     if fmt == "pcm" {
         return Ok((to_pcm16(x), content_type("pcm")));
     }
-    let wav = to_wav(x, sr);
+    let wav = to_wav_ch(x, sr, ch);
     if fmt == "wav" {
         return Ok((wav, content_type("wav")));
     }
     if crate::encode::own(&fmt) {
         let (x, sr, f) = (x.to_vec(), sr, fmt.clone());
-        let data = tokio::task::spawn_blocking(move || crate::encode::encode(&x, sr, &f))
+        let data = tokio::task::spawn_blocking(move || crate::encode::encode_ch(&x, sr, ch, &f))
             .await
             .map_err(|e| ApiError::internal(e.to_string()))?
             .map_err(|e| ApiError::internal(format!("{e:#}")))?;

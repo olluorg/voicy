@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 60.0,
+ "wall": 15.09,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 100,
+  "caption": "A brief, sophisticated jazz trio performance featuring a walking upright bass line and the subtle, swinging rhythm of brushed drums. A clean-toned piano plays a short, elegant melodic phrase, giving the piece a classic, lounge-like character.",
+  "duration": 60,
+  "keyscale": "B♭ major",
+  "language": "unknown",
+  "timesignature": "2"
+ }
+}

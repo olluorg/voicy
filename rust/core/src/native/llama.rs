@@ -144,6 +144,9 @@ api! {
     llama_sampler_sample: fn(P, P, i32) -> Token;
     llama_sampler_accept: fn(P, Token);
     llama_sampler_free: fn(P);
+    llama_free: fn(P);
+    llama_model_free: fn(P);
+    llama_batch_free: fn(Batch);
 }
 
 unsafe extern "C" fn quiet(_level: i32, _text: *const c_char, _data: *mut c_void) {}
@@ -252,6 +255,13 @@ impl Model {
     }
 }
 
+impl Model {
+    /// Give back the weights; contexts made from it must be freed first.
+    pub fn free(self, api: &Api) {
+        unsafe { (api.llama_model_free)(self.ptr) }
+    }
+}
+
 pub struct Context {
     pub ptr: P,
     pub batch: Batch,
@@ -286,6 +296,14 @@ impl Context {
             }
             let batch = (api.llama_batch_init)(batch_cap as i32, model.n_embd as i32, 1);
             Ok(Context { ptr, batch, n_vocab: model.n_vocab, n_embd: model.n_embd, batch_cap })
+        }
+    }
+
+    /// Give back the context's memory; the model stays.
+    pub fn free(self, api: &Api) {
+        unsafe {
+            (api.llama_batch_free)(self.batch);
+            (api.llama_free)(self.ptr);
         }
     }
 

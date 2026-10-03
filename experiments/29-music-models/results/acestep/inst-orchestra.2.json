@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 60.0,
+ "wall": 16.62,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 107,
+  "caption": "A grand, sweeping orchestral piece in the style of a classic Hollywood film score. It opens with a powerful, heroic fanfare led by soaring strings and triumphant brass, underpinned by thunderous timpani rolls. The arrangement is dense and dynamic, with layers of fast string runs, powerful brass stabs, and dramatic swells that build tension and excitement. The piece transitions through various thematic sections, maintaining its epic and adventurous mood with a full symphony orchestra creating a rich, cinematic soundscape.",
+  "duration": 60,
+  "keyscale": "D minor",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

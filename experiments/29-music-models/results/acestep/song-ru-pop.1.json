@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 75.0,
+ "wall": 19.63,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 100,
+  "caption": "A gentle and melancholic pop ballad featuring a clear, emotive female vocal performance in Russian. The arrangement is built around a prominent acoustic piano playing arpeggiated chords and a flowing melody. A subtle, steady drum machine beat and a soft bass guitar provide a gentle rhythmic foundation, while atmospheric synth pads add depth to the background. The song transitions from a vocal-led verse and chorus that concludes with an expressive piano-led instrumental section.",
+  "duration": 75,
+  "keyscale": "A minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

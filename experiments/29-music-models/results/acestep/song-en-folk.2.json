@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 75.0,
+ "wall": 18.63,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 111,
+  "caption": "A gentle and intimate indie folk track featuring a warm, fingerpicked acoustic guitar as its foundation. A clear, earnest male vocal delivers a heartfelt melody with a touch of natural reverb. The arrangement is highlighted by a melodic harmonica that weaves in and out, taking center stage for an expressive solo in the middle of the song and returning with a soulful feel during the outro as the track fades.",
+  "duration": 75,
+  "keyscale": "C major",
+  "language": "en",
+  "timesignature": "2"
+ }
+}

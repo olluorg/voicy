@@ -244,6 +244,60 @@ def cmd_say(a) -> int:
     return 0
 
 
+# -------------------------------------------------------------------- music
+
+def cmd_music(a) -> int:
+    prompt = read_text(a.prompt).strip()
+    if not prompt:
+        die("пустое описание музыки")
+    lyrics = read_text(a.lyrics).strip() if a.lyrics else ""
+    out = Path(a.out) if a.out else Path(f"voicy-music-{int(time.time())}.{a.format}")
+    if str(out) == "-":
+        die("аудио в stdout не пишется — бинарь засорит вывод. Укажите файл: "
+            f"{sys.argv[0]} music \"...\" out.{a.format}")
+    fmt = a.format
+    if a.out and out.suffix.lstrip(".").lower() in AUDIO_FORMATS:
+        fmt = out.suffix.lstrip(".").lower()
+
+    h = require_server(a.url)
+    if not (h.get("music") or {}).get("default"):
+        die("на сервере нет моделей музыки: voicy setup music")
+
+    payload = {"prompt": prompt, "force_instrumental": a.instrumental, "response_format": fmt}
+    for k, v in (("lyrics", lyrics), ("language", a.language), ("duration_seconds", a.duration),
+                 ("model", a.model), ("seed", a.seed)):
+        if v not in (None, ""):
+            payload[k] = v
+    if a.detach or a.webhook:
+        if a.webhook:
+            payload["webhook_url"] = a.webhook
+        body, _ = post_json(a.url, "/v1/jobs/music", payload, 60)
+        return detached(json.loads(body), f"{out}")
+
+    started = time.perf_counter()
+    audio, headers = post_json(a.url, "/v1/music", payload, a.timeout)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(audio)
+    secs = headers.get("x-audio-seconds", "?")
+    gen = headers.get("x-generation-seconds", f"{time.perf_counter() - started:.1f}")
+    log(f"{headers.get('x-model', '?')}: {secs} с музыки за {gen} с, {len(audio) / 1024:.0f} КиБ")
+    print(out)
+    return 0
+
+
+def cmd_music_models(a) -> int:
+    body, _ = request(a.url, "/v1/music/models", timeout=30)
+    models = json.loads(body).get("models", [])
+    if not models:
+        log("моделей музыки нет: voicy setup music")
+    for m in models:
+        can = ", ".join(w for k, w in (("vocals", "поёт"), ("instrumental", "инструментал")) if m.get(k))
+        lic = m.get("license", "?") + ("" if m.get("commercial") else ", некоммерческая")
+        print(f"{m['id']}{' (по умолчанию)' if m.get('default') else ''}\t{m.get('name', '')}; "
+              f"{m.get('min_seconds')}–{m.get('max_seconds')} с; {can}; {lic}")
+    return 0
+
+
 # --------------------------------------------------------------------- hear
 
 def cmd_hear(a) -> int:
@@ -322,7 +376,7 @@ def cmd_job(a) -> int:
             print(json.dumps(job, ensure_ascii=False, indent=2))
         return 3 if job["state"] in ("queued", "running") else 1
 
-    if job["kind"] == "speech":
+    if job["kind"] in ("speech", "music"):
         if not a.out:
             print(json.dumps(job, ensure_ascii=False, indent=2))
             log(f"звук готов — укажите файл: {sys.argv[0]} job {a.id} out.{job['result']['format']}")
@@ -331,7 +385,8 @@ def cmd_job(a) -> int:
         out = Path(a.out)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes(audio)
-        log(f"{job['result']['voice']}: {job['result']['seconds']} с звука")
+        who = job["result"].get("voice") or job["result"].get("model", "?")
+        log(f"{who}: {job['result']['seconds']} с звука")
         print(out)
         return 0
 
@@ -627,6 +682,24 @@ def main(argv: list[str]) -> int:
     s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
     s.add_argument("--timeout", type=float, default=1800)
     s.set_defaults(fn=cmd_say)
+
+    s = sub.add_parser("music", help="описание (и текст песни) → музыка")
+    s.add_argument("prompt", help="жанр, инструменты, настроение, голос; либо @файл, либо - для stdin")
+    s.add_argument("out", nargs="?", help="куда писать; расширение задаёт формат")
+    s.add_argument("--lyrics", help="текст песни с разметкой [verse], [chorus]; @файл — из файла")
+    s.add_argument("--instrumental", action="store_true", help="без голоса")
+    s.add_argument("--language", help="язык текста: ru, en …")
+    s.add_argument("--duration", type=float, help="секунд; без него длину выбирает модель")
+    s.add_argument("--model", help="модель; список — music-models")
+    s.add_argument("--format", default="opus", choices=AUDIO_FORMATS)
+    s.add_argument("--seed", type=int)
+    s.add_argument("--detach", action="store_true", help="не ждать: напечатать id задания и выйти")
+    s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_music)
+
+    s = sub.add_parser("music-models", help="модели музыки и что каждая умеет")
+    s.set_defaults(fn=cmd_music_models)
 
     s = sub.add_parser("hear", help="аудиофайл → текст")
     s.add_argument("file")

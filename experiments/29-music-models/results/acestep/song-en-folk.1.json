@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 75.0,
+ "wall": 19.65,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 120,
+  "caption": "A gentle and heartfelt indie folk song featuring a warm, clear male vocal performance over a fingerpicked acoustic guitar. The arrangement begins sparsely, establishing an intimate and nostalgic mood. It gradually builds with the introduction of a steady, simple drum beat and a foundational bassline, lifting the dynamics for the chorus. The production is clean and direct, focusing on the sincerity of the vocal and the melodic acoustic guitar work.",
+  "duration": 75,
+  "keyscale": "B♭ major",
+  "language": "en",
+  "timesignature": "2"
+ }
+}

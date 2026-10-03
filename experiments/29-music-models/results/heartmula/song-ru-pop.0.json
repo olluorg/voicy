@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1000,
+ "seconds": 55.12,
+ "wall": 153.79,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "russian pop ballad,female vocal,acoustic guitar and piano,gentle,90 bpm"
+}

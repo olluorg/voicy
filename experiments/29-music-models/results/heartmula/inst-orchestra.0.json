@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1000,
+ "seconds": 24.32,
+ "wall": 126.03,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "epic orchestral film score,strings,french horns,timpani,building tension to a heroic climax"
+}

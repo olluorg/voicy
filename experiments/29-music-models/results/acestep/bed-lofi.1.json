@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 60.0,
+ "wall": 15.94,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 30,
+  "caption": "A gentle, atmospheric instrumental piece opens with shimmering synth pads creating an ambient soundscape before settling into a relaxed lo-fi hip-hop groove driven by a soft drum machine beat and a warm sub-bass line. A clean electric piano carries the main melody over mellow chord progressions played on gentle keys. The track maintains a consistent, calming energy throughout its simple structure, making it feel like a classic study or relaxation beat loop. It concludes by fading back to the initial dreamy synth textures.",
+  "duration": 60,
+  "keyscale": "B♭ major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

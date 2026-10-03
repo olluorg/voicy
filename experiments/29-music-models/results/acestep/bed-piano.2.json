@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 60.0,
+ "wall": 17.13,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 106,
+  "caption": "A gentle and contemplative instrumental piece begins with soft piano chords echoing through a spacious reverb, accompanied by subtle atmospheric pads that create an introspective mood. A delicate glockenspiel melody emerges, adding a touch of innocence before the arrangement settles into its main theme carried by the thoughtful piano progression. At the midpoint, a simple electronic drum beat enters alongside a warm synth bassline, giving the track a steady, downtempo groove which propels through several melodic sections while maintaining a peaceful and reflective character. The track concludes by gracefully stripping back to the initial piano elements and fading out peacefully.",
+  "duration": 60,
+  "keyscale": "C# major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 60.0,
+ "wall": 16.29,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 80,
+  "caption": "An upbeat, swinging jazz trio performance featuring a prominent, woody upright bass playing a walking bassline, accompanied by a crisp drum kit with distinct brushwork on the snare and ride cymbal. A lively piano takes the lead, first stating the playful main melody, followed by an improvisational and energetic piano solo full of classic jazz phrasing and block chords. The track has a sophisticated, cool, and lively feel, characteristic of a classic bebop or swing jazz session.",
+  "duration": 60,
+  "keyscale": "G major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

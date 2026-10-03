@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 60.0,
+ "wall": 17.74,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 60,
+  "caption": "An energetic and driving synthwave instrumental loop. The track is built on a foundation of a punchy, gated-reverb drum machine beat and a pulsing synth bassline. Bright, brassy synthesizer chords provide the harmonic structure, while a catchy, melodic synth lead carries the main theme. The production is clean and polished with a distinct retro-futuristic feel, characteristic of 80s electronic music.",
+  "duration": 60,
+  "keyscale": "F major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

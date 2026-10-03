@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 60.0,
+ "wall": 16.28,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 60,
+  "caption": "An energetic and triumphant chiptune-inspired electronic track. A fast-paced, driving rhythm is established by punchy synthesized drums and a rapid, arpeggiated synth bassline. Layered on top are bright, synthesized brass-like chords and a prominent, fast-paced lead synth melody, creating a dense and exciting soundscape reminiscent of classic 16-bit video game music.",
+  "duration": 60,
+  "keyscale": "C# major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

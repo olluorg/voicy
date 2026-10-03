@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 75.0,
+ "wall": 19.2,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 50,
+  "caption": "An energetic Russian rock track driven by a powerful, slightly raspy male vocal. The song kicks off with a high-energy, melodic lead guitar intro over a driving rhythm section of punchy drums and a solid bassline. The verses maintain a steady, powerful groove, leading into an anthemic chorus where the vocals become more forceful and sustained. The production is clean and direct, characteristic of hard rock or alternative rock, with the lead guitar weaving melodic fills and a fiery, expressive solo in the latter half of the track.",
+  "duration": 75,
+  "keyscale": "A minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

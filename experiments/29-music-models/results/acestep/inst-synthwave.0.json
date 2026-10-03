@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 60.0,
+ "wall": 16.56,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 60,
+  "caption": "An energetic and punchy synth-funk instrumental sting. A tight, gated-reverb drum machine lays down a driving beat, immediately joined by a funky, slap-style synth bassline. Bright, brassy synthesizer stabs punctuate the rhythm, creating a classic 80s boogie or electro-funk feel. The short phrase ends abruptly, functioning like a concise musical logo or jingle.",
+  "duration": 60,
+  "keyscale": "A minor",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

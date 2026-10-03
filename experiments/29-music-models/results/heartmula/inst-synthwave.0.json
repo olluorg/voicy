@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1000,
+ "seconds": 78.08,
+ "wall": 172.29,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "synthwave,retro 80s analog synthesizers,gated reverb drums,driving bassline,110 bpm"
+}

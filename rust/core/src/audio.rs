@@ -27,6 +27,11 @@ pub fn to_pcm16(x: &[f32]) -> Vec<u8> {
 }
 
 pub fn to_wav(x: &[f32], sr: u32) -> Vec<u8> {
+    to_wav_ch(x, sr, 1)
+}
+
+/// `x` — отсчёты вперемешку по каналам (L R L R …).
+pub fn to_wav_ch(x: &[f32], sr: u32, ch: u16) -> Vec<u8> {
     let pcm = to_pcm16(x);
     let mut out = Vec::with_capacity(44 + pcm.len());
     out.extend_from_slice(b"RIFF");
@@ -34,10 +39,10 @@ pub fn to_wav(x: &[f32], sr: u32) -> Vec<u8> {
     out.extend_from_slice(b"WAVEfmt ");
     out.extend_from_slice(&16u32.to_le_bytes());
     out.extend_from_slice(&1u16.to_le_bytes());
-    out.extend_from_slice(&1u16.to_le_bytes());
+    out.extend_from_slice(&ch.to_le_bytes());
     out.extend_from_slice(&sr.to_le_bytes());
-    out.extend_from_slice(&(sr * 2).to_le_bytes());
-    out.extend_from_slice(&2u16.to_le_bytes());
+    out.extend_from_slice(&(sr * 2 * ch as u32).to_le_bytes());
+    out.extend_from_slice(&(2 * ch).to_le_bytes());
     out.extend_from_slice(&16u16.to_le_bytes());
     out.extend_from_slice(b"data");
     out.extend_from_slice(&(pcm.len() as u32).to_le_bytes());
@@ -110,10 +115,15 @@ pub fn decode(raw: &[u8], sr: u32) -> anyhow::Result<Vec<f32>> {
 /// Samples → a file in `fmt`: wav, pcm (16-bit, no header), opus, mp3 or
 /// flac, by the encoders built in. aac needs ffmpeg and is not here.
 pub fn encode(x: &[f32], sr: u32, fmt: &str) -> anyhow::Result<Vec<u8>> {
+    encode_ch(x, sr, 1, fmt)
+}
+
+/// The same for `ch` channels interleaved (L R L R …): music is stereo.
+pub fn encode_ch(x: &[f32], sr: u32, ch: u16, fmt: &str) -> anyhow::Result<Vec<u8>> {
     match fmt {
         "pcm" => Ok(to_pcm16(x)),
-        "wav" => Ok(to_wav(x, sr)),
-        f if crate::encode::own(f) => crate::encode::encode(x, sr, f),
+        "wav" => Ok(to_wav_ch(x, sr, ch)),
+        f if crate::encode::own(f) => crate::encode::encode_ch(x, sr, ch, f),
         f => anyhow::bail!("unsupported format: {f}; wav, pcm, opus, mp3 and flac are"),
     }
 }

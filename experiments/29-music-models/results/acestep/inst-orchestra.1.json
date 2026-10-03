@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 60.0,
+ "wall": 17.32,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 100,
+  "caption": "A grand, sweeping orchestral piece in the style of a classic Hollywood film score. It opens with a majestic, heroic theme carried by a full string section, soaring French horns, and powerful brass fanfares. The arrangement is lush and dynamic, building through a series of dramatic crescendos with powerful timpani rolls and cymbal crashes. The middle section shifts to a more urgent, adventurous motif before swelling into a massive, emotionally charged climax with the entire orchestra playing at full force. The piece concludes with a gentle, reflective coda featuring a delicate piano melody over sustained string chords, fading into a serene and peaceful resolution.",
+  "duration": 60,
+  "keyscale": "B♭ major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

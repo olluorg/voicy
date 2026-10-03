@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 75.0,
+ "wall": 18.8,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 70,
+  "caption": "An energetic and driving Russian rock track kicks off with a full-band assault. Two crunchy, distorted electric guitars lay down a foundation of powerful chord progressions and melodic lead lines, propelled by a punchy, straightforward acoustic drum beat and a solid bass guitar. A passionate male lead vocal, delivered with a slight rasp and high energy, soars over the mix. The chorus intensifies with layered backing vocals adding depth and power to the main vocal line.",
+  "duration": 75,
+  "keyscale": "A minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

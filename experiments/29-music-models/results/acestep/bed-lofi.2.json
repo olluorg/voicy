@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 60.0,
+ "wall": 17.06,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 80,
+  "caption": "A chill, instrumental lo-fi hip-hop track built around a warm, looping electric piano melody and a relaxed, steady drum machine groove. A smooth, round synth bass provides a gentle foundation. The production is clean and spacious, with a subtle vinyl crackle texture adding to the classic lo-fi aesthetic. The arrangement evolves through distinct sections, including a brief breakdown where the drums drop out, allowing the melodic elements to breathe before the main groove returns for a final section and fades out.",
+  "duration": 60,
+  "keyscale": "E major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

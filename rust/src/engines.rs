@@ -28,6 +28,7 @@ pub struct Engines {
     stt: Option<NativeStt>,
     vad: Option<Arc<native::listen::Vad>>,
     turn: Option<Arc<native::listen::Turn>>,
+    pub music: Music,
 }
 
 /// One live session's voice detector: in the host process or in this one.
@@ -288,6 +289,305 @@ fn native_listen() -> (Option<Arc<native::listen::Vad>>, Option<Arc<native::list
     (vad, turn)
 }
 
+// ------------------------------------------------------------------ музыка
+
+/// Языки, на которых поёт ACE-Step: перечень его LM (metadata-fsm.h).
+const ACE_LANGUAGES: [&str; 50] = [
+    "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es", "fa", "fi", "fr", "he", "hi", "hr",
+    "ht", "hu", "id", "is", "it", "ja", "ko", "la", "lt", "ms", "ne", "nl", "no", "pa", "pl", "pt", "ro",
+    "ru", "sa", "sk", "sr", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "yue", "zh",
+];
+
+/// What a music request asks, in the API's terms; each engine turns it into
+/// what its model takes (docs/adr/0021).
+#[derive(Clone)]
+pub struct MusicAsk {
+    pub prompt: String,
+    /// `Some("")` never comes: no lyrics is `None`
+    pub lyrics: Option<String>,
+    pub instrumental: bool,
+    pub language: Option<String>,
+    pub seconds: Option<f64>,
+    pub seed: Option<i64>,
+}
+
+/// One step of progress: the stage, and its step of total when the model knows.
+pub struct MusicStep {
+    pub stage: &'static str,
+    pub step: usize,
+    pub total: Option<usize>,
+}
+
+pub struct MusicPiece {
+    /// Interleaved, L R L R …
+    pub audio: Vec<f32>,
+    pub channels: u16,
+    pub sample_rate: u32,
+    /// What the model chose itself: bpm, key, language, lyrics; null when nothing.
+    pub plan: Value,
+}
+
+#[derive(Clone)]
+enum MusicKind {
+    Ace(native::acestep::Files),
+    Sa3 { models: PathBuf, variant: String },
+    HeartMuLa(native::heartmula::Files),
+}
+
+/// One music model the server offers, and what it says about itself
+/// (docs/adr/0028): the request picks it by `model`.
+pub struct MusicModel {
+    pub id: String,
+    pub card: Value,
+    kind: MusicKind,
+}
+
+#[derive(Clone)]
+enum Loaded {
+    Ace(Arc<native::acestep::AceStep>),
+    Sa3(Arc<native::sa3::Sa3>),
+    HeartMuLa(Arc<native::heartmula::HeartMuLa>),
+}
+
+/// Every music model installed, at most one of them in memory: a model the
+/// next request does not want is dropped before the next one loads — two do
+/// not fit on a 10 GB card beside speech.
+pub struct Music {
+    pub models: Vec<MusicModel>,
+    pub default: Option<String>,
+    loaded: tokio::sync::Mutex<Option<(String, Loaded)>>,
+}
+
+/// GGUF in `dir` whose name starts with `prefix`; with several, the first by name.
+fn gguf(dir: &Path, prefix: &str) -> Option<PathBuf> {
+    let mut names: Vec<String> = std::fs::read_dir(dir).ok()?.flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.starts_with(prefix) && n.ends_with(".gguf"))
+        .collect();
+    names.sort();
+    names.first().map(|n| dir.join(n))
+}
+
+/// Keep every part of the model in VRAM between pieces (MUSIC_KEEP_LOADED=1):
+/// faster, but beside speech it fits only on a big card.
+fn music_keep_loaded() -> bool {
+    std::env::var("MUSIC_KEEP_LOADED").is_ok_and(|v| v == "1")
+}
+
+impl Music {
+    fn find() -> Music {
+        let mut models = vec![];
+        if let Ok(lib) = native::lib_dir() {
+            if native::acestep::lib_path(&lib).exists() {
+                models.extend(Self::ace_models());
+            }
+            if native::sa3::lib_path(&lib).exists() {
+                models.extend(Self::sa3_models());
+            }
+            // HeartMuLa — на llama.cpp и ONNX Runtime, своей библиотеки ей не нужно
+            models.extend(Self::heartmula_models());
+        }
+        let default = std::env::var("MUSIC_MODEL").ok().filter(|m| models.iter().any(|x: &MusicModel| &x.id == m))
+            .or_else(|| models.first().map(|m| m.id.clone()));
+        Music { models, default, loaded: Default::default() }
+    }
+
+    /// ACE-Step in `models/music/ace-step`: the turbo DiT is `ace-step`, the
+    /// 4B XL turbo `ace-step-xl`; they share the LM (the larger one when there
+    /// are two), the text encoder and the VAE.
+    fn ace_models() -> Vec<MusicModel> {
+        let dir = crate::setup::music_dir();
+        let lm = std::env::var("MUSIC_LM").ok().map(|n| dir.join(n))
+            .or_else(|| gguf(&dir, "acestep-5Hz-lm-1.7B"))
+            .or_else(|| gguf(&dir, "acestep-5Hz-lm-0.6B"));
+        let (Some(lm), Some(text_encoder), Some(vae)) = (lm, gguf(&dir, "Qwen3-Embedding"), gguf(&dir, "vae")) else {
+            return vec![];
+        };
+        let mut out = vec![];
+        for (id, prefix, name, size) in [
+            ("ace-step", "acestep-v15-turbo-Q", "ACE-Step 1.5 turbo", "2B DiT"),
+            ("ace-step-xl", "acestep-v15-xl-turbo-Q", "ACE-Step 1.5 XL turbo", "4B DiT"),
+        ] {
+            let Some(dit) = gguf(&dir, prefix) else { continue };
+            let file = |p: &Path| p.file_name().map(|n| n.to_string_lossy().into_owned());
+            let card = json!({
+                "id": id, "name": name, "engine": "acestep.cpp", "runtime": "ggml",
+                "weights": {"dit": file(&dit), "lm": file(&lm), "size": size},
+                "sample_rate": native::acestep::SAMPLE_RATE, "channels": 2,
+                "min_seconds": 10, "max_seconds": 600, "length": "exact", "chooses_length": true,
+                "vocals": true, "instrumental": true, "writes_lyrics": true,
+                "languages": ACE_LANGUAGES.as_slice(),
+                "prompt_languages": ACE_LANGUAGES.as_slice(),
+                "license": "MIT", "commercial": true,
+            });
+            out.push(MusicModel { id: id.into(), card, kind: MusicKind::Ace(native::acestep::Files {
+                lm: lm.clone(), text_encoder: text_encoder.clone(), dit, vae: vae.clone() }) });
+        }
+        out
+    }
+
+    /// Stable Audio 3 Medium in `models/music/sa3`, as sa3.cpp names its GGUF.
+    fn sa3_models() -> Vec<MusicModel> {
+        let dir = crate::setup::sa3_dir();
+        if gguf(&dir, "stable-audio-3-medium-dit").is_none() || gguf(&dir, "t5gemma").is_none() {
+            return vec![];
+        }
+        let card = json!({
+            "id": "stable-audio-3", "name": "Stable Audio 3 Medium", "engine": "sa3.cpp", "runtime": "ggml",
+            "weights": {"size": "1.5B DiT"},
+            "sample_rate": 44100, "channels": 2,
+            "min_seconds": 1, "max_seconds": 380, "length": "exact", "chooses_length": false, "default_seconds": 30,
+            "vocals": false, "instrumental": true, "writes_lyrics": false,
+            "languages": [], "prompt_languages": ["en"],
+            "license": "Stability AI Community (до $1 млн выручки в год); T5Gemma — Gemma Terms", "commercial": true,
+        });
+        vec![MusicModel { id: "stable-audio-3".into(), card,
+                          kind: MusicKind::Sa3 { models: dir, variant: "medium".into() } }]
+    }
+
+    /// HeartMuLa in `models/music/heartmula`, as scripts/convert_heartmula.py
+    /// and convert_heartcodec.py lay it out.
+    fn heartmula_models() -> Vec<MusicModel> {
+        let dir = crate::setup::heartmula_dir();
+        let pick = |stem: &str| ["q8_0", "f16"].iter().map(|q| format!("{stem}.{q}.gguf")).find(|f| dir.join(f).is_file());
+        let (Some(backbone), Some(decoder)) = (pick("heartmula_backbone"), pick("heartmula_decoder")) else { return vec![] };
+        if !dir.join("heartcodec_dit.onnx").is_file() {
+            return vec![];
+        }
+        let card = json!({
+            "id": "heartmula", "name": "HeartMuLa-oss-3B", "engine": "heartmula", "runtime": "llama.cpp + onnxruntime",
+            "weights": {"backbone": backbone, "decoder": decoder, "size": "3B"},
+            "sample_rate": native::heartmula::SAMPLE_RATE, "channels": 2,
+            "min_seconds": 10, "max_seconds": 240, "length": "ceiling", "chooses_length": true, "default_seconds": 120,
+            "vocals": true, "instrumental": false, "writes_lyrics": false, "needs_lyrics": true,
+            "languages": ACE_LANGUAGES.as_slice(), "prompt_languages": ["en"],
+            "license": "Apache-2.0", "commercial": true,
+        });
+        vec![MusicModel { id: "heartmula".into(), card,
+                          kind: MusicKind::HeartMuLa(native::heartmula::Files { dir, backbone, decoder }) }]
+    }
+
+    pub fn get(&self, id: &str) -> Option<&MusicModel> {
+        self.models.iter().find(|m| m.id == id)
+    }
+
+    /// Cards for `/v1/music/models`, with what is in memory now.
+    pub async fn cards(&self) -> Vec<Value> {
+        let loaded = self.loaded.lock().await.as_ref().map(|(id, _)| id.clone());
+        self.models.iter().map(|m| {
+            let mut c = m.card.clone();
+            c["default"] = json!(self.default.as_deref() == Some(m.id.as_str()));
+            c["loaded"] = json!(loaded.as_deref() == Some(m.id.as_str()));
+            c
+        }).collect()
+    }
+
+    /// The model, loaded; another one in memory is dropped first.
+    async fn model(&self, id: &str) -> Result<Loaded, HostError> {
+        let mut slot = self.loaded.lock().await;
+        if let Some((have, m)) = slot.as_ref() {
+            if have == id {
+                return Ok(m.clone());
+            }
+        }
+        *slot = None; // прежняя модель освобождает память до загрузки новой
+        let kind = self.get(id).ok_or_else(|| err("unsupported", format!("no music model '{id}'")))?.kind.clone();
+        let lib = native::lib_dir().map_err(|e| err("internal", e.to_string()))?;
+        let keep = music_keep_loaded();
+        let m = tokio::task::spawn_blocking(move || match kind {
+            MusicKind::Ace(files) => native::acestep::AceStep::load(&lib, &files, keep).map(|m| Loaded::Ace(Arc::new(m))),
+            MusicKind::Sa3 { models, variant } =>
+                native::sa3::Sa3::load(&lib, &models, &variant, keep).map(|m| Loaded::Sa3(Arc::new(m))),
+            MusicKind::HeartMuLa(files) =>
+                native::heartmula::HeartMuLa::load(&files, native::use_gpu(true), keep).map(|m| Loaded::HeartMuLa(Arc::new(m))),
+        })
+        .await
+        .map_err(|e| err("internal", e.to_string()))?
+        .map_err(|e| err("internal", format!("{e:#}")))?;
+        native::trim_heap();
+        *slot = Some((id.to_string(), m.clone()));
+        Ok(m)
+    }
+
+    /// One piece. `on_progress` gets each step and says whether to go on.
+    pub async fn generate(&self, id: &str, ask: MusicAsk,
+                          mut on_progress: impl FnMut(MusicStep) -> bool + Send + 'static)
+                          -> Result<MusicPiece, Stop> {
+        let m = self.model(id).await.map_err(Stop::Failed)?;
+        let default_seconds = self.get(id).and_then(|m| m.card["default_seconds"].as_f64()).unwrap_or(30.0);
+        let piece = tokio::task::spawn_blocking(move || match m {
+            Loaded::Ace(m) => {
+                use native::acestep::Stage;
+                m.generate(&ace_request(&ask), |s, n| on_progress(match s {
+                    Stage::Plan => MusicStep { stage: "planning", step: n, total: None },
+                    // turbo-модели — 8 шагов DiT
+                    Stage::Render => MusicStep { stage: "rendering", step: n, total: Some(8) },
+                    Stage::Decode => MusicStep { stage: "decoding", step: n, total: None },
+                }))
+                .map(|o| o.map(|s| MusicPiece { audio: s.audio, channels: 2, sample_rate: s.sample_rate, plan: ace_plan(&s.plan) }))
+            }
+            Loaded::Sa3(m) => {
+                use native::sa3::Stage;
+                let seconds = ask.seconds.unwrap_or(default_seconds);
+                m.generate(&ask.prompt, "", seconds, ask.seed.unwrap_or(-1), 0, 0.0, |s, step, total| {
+                    let stage = match s {
+                        Stage::Loading => "loading",
+                        Stage::Encoding => "planning",
+                        Stage::Sampling => "rendering",
+                        Stage::Decoding => "decoding",
+                        Stage::Done => return true,
+                    };
+                    on_progress(MusicStep { stage, step, total: (total > 0).then_some(total) })
+                })
+                .map(|o| o.map(|p| MusicPiece { audio: p.audio, channels: p.channels, sample_rate: p.sample_rate,
+                                               plan: json!({"seed": ask.seed}) }))
+            }
+            Loaded::HeartMuLa(m) => {
+                use native::heartmula::{FRAME_RATE, SAMPLE_RATE, Stage};
+                // описание — теги через запятую, как их учили (assets/tags.txt у heartlib)
+                let tags = ask.prompt.split(',').map(str::trim).filter(|t| !t.is_empty()).collect::<Vec<_>>().join(",");
+                let ceiling = ask.seconds.unwrap_or(default_seconds);
+                let frames = (ceiling * FRAME_RATE).ceil() as usize;
+                let seed = ask.seed.map(|s| s as u64).unwrap_or_else(|| {
+                    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos() as u64).unwrap_or(1)
+                });
+                m.generate(&tags, ask.lyrics.as_deref().unwrap_or(""), ceiling, seed, |s| on_progress(match s {
+                    Stage::Frames(n) => MusicStep { stage: "rendering", step: n, total: Some(frames) },
+                    Stage::Codec { window, windows } => MusicStep { stage: "decoding", step: window, total: Some(windows) },
+                }))
+                .map(|o| o.map(|audio| MusicPiece { audio, channels: 2, sample_rate: SAMPLE_RATE,
+                                                   plan: json!({"seed": seed, "tags": tags}) }))
+            }
+        })
+        .await
+        .map_err(|e| Stop::Failed(err("internal", e.to_string())))?
+        .map_err(|e| Stop::Failed(err("internal", format!("{e:#}"))))?;
+        native::trim_heap();
+        piece.ok_or(Stop::Cancelled)
+    }
+}
+
+/// acestep.cpp's request. An instrumental is "[Instrumental]": so the model
+/// was trained. Without lyrics and without that, its LM writes them.
+fn ace_request(a: &MusicAsk) -> Value {
+    let lyrics = if a.instrumental { "[Instrumental]" } else { a.lyrics.as_deref().unwrap_or("") };
+    let mut r = json!({"caption": a.prompt, "lyrics": lyrics, "output_format": "wav32",
+                       "vocal_language": if a.instrumental { "unknown" } else { a.language.as_deref().unwrap_or("") }});
+    if let Some(s) = a.seconds {
+        r["duration"] = json!(s);
+    }
+    if let Some(s) = a.seed {
+        r["seed"] = json!(s);
+        r["lm_seed"] = json!(s);
+    }
+    r
+}
+
+fn ace_plan(p: &Value) -> Value {
+    json!({"bpm": p["bpm"], "key": p["keyscale"], "time_signature": p["timesignature"],
+           "language": p["vocal_language"], "lyrics": p["lyrics"], "seed": p["seed"]})
+}
+
 const TURN_INFO: &str = r#"{"engine": "smart-turn", "model": "pipecat-ai/smart-turn-v3/smart-turn-v3.2-cpu.onnx",
     "loaded": true, "device": "cpu", "runtime": "onnxruntime", "sample_rate": 16000}"#;
 
@@ -331,7 +631,11 @@ impl Engines {
         if turn.is_some() {
             info["turn"] = serde_json::from_str(TURN_INFO).expect("json");
         }
-        Ok(Engines { host, info, tts, stt, vad, turn })
+        let music = Music::find();
+        for m in &music.models {
+            eprintln!("voicy: music model {} in-process ({})", m.id, m.card["engine"].as_str().unwrap_or("?"));
+        }
+        Ok(Engines { host, info, tts, stt, vad, turn, music })
     }
 
     fn host(&self) -> Result<&Arc<Host>, HostError> {

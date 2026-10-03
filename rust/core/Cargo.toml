@@ -56,3 +56,19 @@ features = ["tokio", "download"]
 
 [build-dependencies]
 cc = "1"
+
+[[example]]
+name = "music"
+required-features = ["internal"]
+
+[[example]]
+name = "heartmula_probe"
+required-features = ["internal"]
+
+[[example]]
+name = "heartmula_song"
+required-features = ["internal"]
+
+[[example]]
+name = "heartcodec_dit_bench"
+required-features = ["internal"]

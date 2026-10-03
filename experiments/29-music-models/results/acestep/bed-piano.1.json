@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 60.0,
+ "wall": 17.72,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 106,
+  "caption": "A gentle and contemplative instrumental piece led by an expressive grand piano playing arpeggiated chords with a warm tone and spacious reverb. The composition begins with a simple, melancholic melody that gradually builds in complexity and dynamic intensity. Around the midpoint, subtle atmospheric pads swell underneath the evolving piano lines, adding depth to the soundscape. A soft electronic drum beat enters midway through, providing a steady yet unobtrusive rhythmic foundation without overpowering the delicate mood. The track reaches an emotional peak before gracefully deconstructing back to its core elements for a quiet conclusion.",
+  "duration": 60,
+  "keyscale": "C major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

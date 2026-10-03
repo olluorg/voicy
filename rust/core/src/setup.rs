@@ -36,6 +36,22 @@ const QWEN_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-base-gguf";
 /// По умолчанию — та же модель, дообученная слушаться знака ударения (docs/adr/0023).
 const QWEN_STRESS_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-ru-stress-gguf";
 const TURN_MODEL: &str = "pipecat-ai/smart-turn-v3";
+/// ACE-Step 1.5 в GGUF для acestep.cpp (веса MIT); ревизия закреплена, как у остальных
+const MUSIC_REPO: &str = "Serveurperso/ACE-Step-1.5-GGUF";
+const MUSIC_REVISION: &str = "666ac70204440867d8c01ba4b119cc79c95b370a";
+/// LM 1.7B, а не 4B: поодиночке в памяти части модели помещаются рядом с речью на 10 ГБ
+const MUSIC_FILES: [&str; 4] = ["acestep-5Hz-lm-1.7B-Q8_0.gguf", "Qwen3-Embedding-0.6B-Q8_0.gguf", "vae-BF16.gguf",
+                                "acestep-v15-turbo-Q8_0.gguf"];
+const MUSIC_XL_FILE: &str = "acestep-v15-xl-turbo-Q8_0.gguf";
+/// Stable Audio 3 Medium в GGUF для sa3.cpp (Stability AI Community License;
+/// кодировщик T5Gemma — Gemma Terms of Use)
+const SA3_REPO: &str = "thepatch/stable-audio-3-medium-GGUF";
+const SA3_REVISION: &str = "380a7b25ba6b3b12563b01193227580a9ae7dac0";
+const SA3_FILES: [&str; 3] = ["stable-audio-3-medium-dit-1.5B-v1.0-F16.gguf", "stable-audio-3-medium-same-l-v1.0-F16.gguf",
+                              "stable-audio-3-medium-conditioner-v1.0-F32.gguf"];
+const T5GEMMA_REPO: &str = "thepatch/t5gemma-b-b-ul2-GGUF";
+const T5GEMMA_REVISION: &str = "26caadf5cb1b6523370caff61f6a32337f46625e";
+const T5GEMMA_FILES: [&str; 2] = ["t5gemma-b-b-ul2-encoder-0.3B-v1.0-F16.gguf", "t5gemma-b-b-ul2-v1.0-vocab.gguf"];
 /// Silero — из колеса faster-whisper: тот же файл, что слышит движок Python.
 const FASTER_WHISPER: &str = "1.2.1";
 
@@ -1104,6 +1120,12 @@ async fn models(m: Models) -> anyhow::Result<()> {
 /// `yes` — согласие на скачивание дано заранее; без него план показывается и
 /// ждёт ответа.
 pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
+    if what == "music" || what == "music-xl" {
+        return music(what == "music-xl", yes).await;
+    }
+    if what == "music-sa3" {
+        return music_sa3(yes).await;
+    }
     let tmp = native::cache_dir().join("downloads");
     fs::create_dir_all(&tmp)?;
     let http = client()?;
@@ -1139,5 +1161,75 @@ pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
         bail!("{}", describe(&left));
     }
     say(format!("скачанные архивы можно удалить: {}", tmp.display()));
+    Ok(())
+}
+
+/// Where HeartMuLa's GGUF, tables and codec lie (scripts/convert_heartmula.py).
+pub fn heartmula_dir() -> PathBuf {
+    native::cache_dir().join("models").join("music").join("heartmula")
+}
+
+/// Where sa3.cpp's GGUF of Stable Audio 3 lie.
+pub fn sa3_dir() -> PathBuf {
+    native::cache_dir().join("models").join("music").join("sa3")
+}
+
+/// Where ACE-Step's GGUF lie: the server finds its music models there.
+pub fn music_dir() -> PathBuf {
+    native::cache_dir().join("models").join("music").join("ace-step")
+}
+
+/// Music is not part of `all`: gigabytes most users of speech do not need.
+/// `xl` adds the 4B DiT (5.3 GB) beside the 2B one.
+async fn music(xl: bool, yes: bool) -> anyhow::Result<()> {
+    let http = client()?;
+    let dir = music_dir();
+    let mut plan = Plan::default();
+    for f in MUSIC_FILES.iter().copied().chain(xl.then_some(MUSIC_XL_FILE)) {
+        plan.hf(MUSIC_REPO, MUSIC_REVISION, f, &dir);
+    }
+    if plan.items.is_empty() {
+        say(format!("модели музыки уже скачаны: {}", dir.display()));
+    } else {
+        plan.measure(&http).await;
+        plan.show(None);
+        confirm(yes, "voicy setup music")?;
+        plan.fetch_all(&http).await?;
+    }
+    let lib = native::acestep::lib_path(&native::lib_dir_path());
+    if !lib.exists() {
+        say(format!("нет библиотеки {} — без неё сервер музыку не делает. Готовой сборки пока нет; \
+                     собрать: ACESTEP_SRC=<acestep.cpp> rust/core/acestep/build.sh {}",
+                    lib.display(), native::lib_dir_path().display()));
+    }
+    Ok(())
+}
+
+/// Stable Audio 3 Medium: instrumentals from an English description, ~3.6 GB.
+async fn music_sa3(yes: bool) -> anyhow::Result<()> {
+    let http = client()?;
+    let dir = sa3_dir();
+    let mut plan = Plan::default();
+    for f in SA3_FILES {
+        plan.hf(SA3_REPO, SA3_REVISION, f, &dir);
+    }
+    for f in T5GEMMA_FILES {
+        plan.hf(T5GEMMA_REPO, T5GEMMA_REVISION, f, &dir);
+    }
+    if plan.items.is_empty() {
+        say(format!("Stable Audio 3 уже скачан: {}", dir.display()));
+    } else {
+        plan.measure(&http).await;
+        plan.show(None);
+        say("лицензия весов — Stability AI Community: бесплатно при выручке до $1 млн в год; T5Gemma — Gemma Terms of Use");
+        confirm(yes, "voicy setup music-sa3")?;
+        plan.fetch_all(&http).await?;
+    }
+    let lib = native::sa3::lib_path(&native::lib_dir_path());
+    if !lib.exists() {
+        say(format!("нет библиотеки {} — без неё сервер эту модель не видит. Готовой сборки пока нет; \
+                     собрать: SA3_SRC=<sa3.cpp> rust/core/sa3/build.sh {}",
+                    lib.display(), native::lib_dir_path().display()));
+    }
     Ok(())
 }

@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 60.0,
+ "wall": 17.29,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 30,
+  "caption": "A chill, instrumental lo-fi hip-hop track built around a warm, slightly muffled electric piano playing a relaxed chord progression. A classic, steady boom-bap drum loop with a soft kick and snappy snare provides the backbone, complemented by a smooth, round sub-bass line. The production has a characteristic lo-fi texture, with subtle vinyl crackle and tape hiss adding to the cozy, nostalgic atmosphere. The arrangement is simple and cyclical, focusing on the hypnotic groove until a brief breakdown where the drums drop out, before returning to the main loop for a gentle fade-out.",
+  "duration": 60,
+  "keyscale": "D major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

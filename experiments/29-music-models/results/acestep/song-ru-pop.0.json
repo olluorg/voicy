@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 75.0,
+ "wall": 21.46,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 33,
+  "caption": "A gentle and melancholic pop ballad opens with a clean, arpeggiated acoustic guitar melody layered over soft piano chords and atmospheric synth pads. A clear, breathy female vocal enters, delivering an emotional and wistful melody in Russian. The arrangement is supported by a simple, steady drum machine beat and a subtle bassline. The chorus introduces a slightly fuller texture, with the vocals enhanced by a touch of reverb, creating a sense of longing and space. The song maintains a consistent, gentle dynamic throughout, focusing on the interplay between the acoustic guitar and the heartfelt vocal performance.",
+  "duration": 75,
+  "keyscale": "D minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

@@ -212,6 +212,83 @@ pub async fn say(url: &str, text: &str, out: Option<PathBuf>, voice: Option<Stri
     Ok(())
 }
 
+// ------------------------------------------------------------------- music
+
+pub struct MusicArgs {
+    pub lyrics: Option<String>,
+    pub instrumental: bool,
+    pub language: Option<String>,
+    pub duration: Option<f64>,
+    pub model: Option<String>,
+    pub format: String,
+    pub seed: Option<i64>,
+}
+
+pub async fn music(url: &str, prompt: &str, out: Option<PathBuf>, a: MusicArgs, detach: bool,
+                   webhook: Option<String>) -> anyhow::Result<()> {
+    let prompt = read_text(prompt)?.trim().to_string();
+    anyhow::ensure!(!prompt.is_empty(), "пустое описание музыки");
+    let lyrics = a.lyrics.as_deref().map(read_text).transpose()?.map(|l| l.trim().to_string()).filter(|l| !l.is_empty());
+    let out = out.unwrap_or_else(|| {
+        PathBuf::from(format!("voicy-music-{}.{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs()).unwrap_or(0), a.format))
+    });
+    if out.as_os_str() == "-" {
+        bail!("аудио в stdout не пишется — бинарь засорит вывод. Укажите файл: voicy music \"...\" out.{}", a.format);
+    }
+    let fmt = out.extension().map(|e| e.to_string_lossy().to_lowercase()).filter(|e| FORMATS.contains(&e.as_str()))
+        .unwrap_or(a.format);
+
+    let api = Api::new(url)?;
+    let health = api.require().await?;
+    if health["music"]["default"].is_null() {
+        bail!("на сервере нет моделей музыки: voicy setup music");
+    }
+    let mut payload = json!({"prompt": prompt, "force_instrumental": a.instrumental, "response_format": fmt});
+    for (k, v) in [("lyrics", lyrics.map(Value::from)), ("language", a.language.map(Value::from)),
+                   ("duration_seconds", a.duration.map(Value::from)), ("model", a.model.map(Value::from)),
+                   ("seed", a.seed.map(Value::from))] {
+        if let Some(v) = v {
+            payload[k] = v;
+        }
+    }
+    if detach || webhook.is_some() {
+        if let Some(w) = webhook {
+            payload["webhook_url"] = json!(w);
+        }
+        let job: Value = api.post_json("/v1/jobs/music", payload).await?.json().await?;
+        return detached(&job, &out.display().to_string());
+    }
+    let started = Instant::now();
+    let r = api.post_json("/v1/music", payload).await?;
+    let head = |k: &str| r.headers().get(k).and_then(|v| v.to_str().ok()).unwrap_or("?").to_string();
+    let (secs, spent, model) = (head("x-audio-seconds"), head("x-generation-seconds"), head("x-model"));
+    let audio = r.bytes().await?;
+    write_out(&out, &audio)?;
+    let spent = if spent == "?" { format!("{:.1}", started.elapsed().as_secs_f64()) } else { spent };
+    log(format!("{model}: {secs} с музыки за {spent} с, {:.0} КиБ", audio.len() as f64 / 1024.0));
+    println!("{}", out.display());
+    Ok(())
+}
+
+pub async fn music_models(url: &str) -> anyhow::Result<()> {
+    let api = Api::new(url)?;
+    let v: Value = api.get("/v1/music/models").await?.json().await?;
+    let models = v["models"].as_array().cloned().unwrap_or_default();
+    if models.is_empty() {
+        log("моделей музыки нет: voicy setup music");
+    }
+    for m in models {
+        let can: Vec<&str> = [("vocals", "поёт"), ("instrumental", "инструментал")].iter()
+            .filter(|(k, _)| m[*k] == json!(true)).map(|(_, w)| *w).collect();
+        println!("{}{}\t{}; {}–{} с; {}; {}{}", m["id"].as_str().unwrap_or("?"),
+                 if m["default"] == json!(true) { " (по умолчанию)" } else { "" },
+                 m["name"].as_str().unwrap_or(""), m["min_seconds"], m["max_seconds"], can.join(", "),
+                 m["license"].as_str().unwrap_or("?"), if m["commercial"] == json!(true) { "" } else { ", некоммерческая" });
+    }
+    Ok(())
+}
+
 // -------------------------------------------------------------------- hear
 
 #[allow(clippy::too_many_arguments)]
@@ -289,7 +366,7 @@ pub async fn job(url: &str, id: String, out: Option<PathBuf>, wait: bool, format
         std::process::exit(if ["queued", "running"].contains(&state) { 3 } else { 1 });
     }
 
-    if job["kind"] == json!("speech") {
+    if job["kind"] == json!("speech") || job["kind"] == json!("music") {
         let Some(out) = out else {
             println!("{}", serde_json::to_string_pretty(&job)?);
             log(format!("звук готов — укажите файл: voicy job {id} out.{}",
@@ -298,7 +375,8 @@ pub async fn job(url: &str, id: String, out: Option<PathBuf>, wait: bool, format
         };
         let audio = api.get(&format!("/v1/jobs/{id}/audio")).await?.bytes().await?;
         write_out(&out, &audio)?;
-        log(format!("{}: {} с звука", job["result"]["voice"].as_str().unwrap_or("?"), job["result"]["seconds"]));
+        let who = job["result"]["voice"].as_str().or(job["result"]["model"].as_str()).unwrap_or("?");
+        log(format!("{who}: {} с звука", job["result"]["seconds"]));
         println!("{}", out.display());
         return Ok(());
     }

@@ -1,0 +1,951 @@
+[
+ {
+  "id": "bed-piano",
+  "task": "bed",
+  "best": "bed-piano.2",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "bed-piano.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.91,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.0906,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Piano": 0.026,
+     "Ambient music": 0.019
+    },
+    "forbid": {
+     "Singing": 0.001,
+     "Speech": 0.004,
+     "Drum kit": 0.0
+    },
+    "heard": [
+     "Music",
+     "New-age music",
+     "Sad music",
+     "Background music",
+     "Tender music"
+    ],
+    "clap_rank": 7,
+    "clap": 0.004,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 6.77,
+     "CU": 7.54,
+     "PC": 4.33,
+     "PQ": 7.48
+    },
+    "reject": [],
+    "score": -6.262
+   },
+   {
+    "take": "bed-piano.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.72,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.0781,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Piano": 0.156,
+     "Ambient music": 0.004
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Speech": 0.001,
+     "Drum kit": 0.0
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Piano",
+     "Harp",
+     "Keyboard (musical)"
+    ],
+    "clap_rank": 7,
+    "clap": 0.006,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.23,
+     "CU": 7.49,
+     "PC": 3.7,
+     "PQ": 7.34
+    },
+    "reject": [],
+    "score": -6.276
+   },
+   {
+    "take": "bed-piano.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.13,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1219,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Piano": 0.024,
+     "Ambient music": 0.055
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Speech": 0.003,
+     "Drum kit": 0.001
+    },
+    "heard": [
+     "Music",
+     "New-age music",
+     "Vibraphone",
+     "Ambient music",
+     "Musical instrument"
+    ],
+    "clap_rank": 7,
+    "clap": 0.007,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.39,
+     "CU": 7.92,
+     "PC": 4.96,
+     "PQ": 7.84
+    },
+    "reject": [],
+    "score": -6.226
+   }
+  ]
+ },
+ {
+  "id": "bed-lofi",
+  "task": "bed",
+  "best": "bed-lofi.1",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "bed-lofi.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.29,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1075,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Hip hop music": 0.007,
+     "Electric piano": 0.097
+    },
+    "forbid": {
+     "Singing": 0.008,
+     "Speech": 0.007,
+     "Rapping": 0.001
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Keyboard (musical)",
+     "Piano",
+     "Electric piano"
+    ],
+    "clap_rank": 2,
+    "clap": 0.008,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.38,
+     "CU": 7.57,
+     "PC": 5.19,
+     "PQ": 7.54
+    },
+    "reject": [],
+    "score": -1.246
+   },
+   {
+    "take": "bed-lofi.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 15.94,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1153,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Hip hop music": 0.01,
+     "Electric piano": 0.066
+    },
+    "forbid": {
+     "Singing": 0.003,
+     "Speech": 0.002,
+     "Rapping": 0.001
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Singing bowl",
+     "Keyboard (musical)",
+     "Electric piano"
+    ],
+    "clap_rank": 2,
+    "clap": 0.006,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.58,
+     "CU": 8.05,
+     "PC": 4.93,
+     "PQ": 8.03
+    },
+    "reject": [],
+    "score": -1.197
+   },
+   {
+    "take": "bed-lofi.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.06,
+    "vram_peak_gb": 7.64,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1371,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Hip hop music": 0.015,
+     "Electric piano": 0.013
+    },
+    "forbid": {
+     "Singing": 0.003,
+     "Speech": 0.007,
+     "Rapping": 0.002
+    },
+    "heard": [
+     "Music",
+     "Drum machine",
+     "Glockenspiel",
+     "Musical instrument",
+     "Marimba, xylophone"
+    ],
+    "clap_rank": 3,
+    "clap": 0.009,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.21,
+     "CU": 7.93,
+     "PC": 5.66,
+     "PQ": 7.92
+    },
+    "reject": [],
+    "score": -2.208
+   }
+  ]
+ },
+ {
+  "id": "inst-orchestra",
+  "task": "instrumental",
+  "best": "inst-orchestra.2",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "inst-orchestra.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 18.07,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1588,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Orchestra": 0.017,
+     "Bowed string instrument": 0.012
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Electric guitar": 0.001
+    },
+    "heard": [
+     "Music",
+     "Organ",
+     "Electronic organ",
+     "Hammond organ",
+     "Keyboard (musical)"
+    ],
+    "clap_rank": 5,
+    "clap": 0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 6.8,
+     "CU": 7.53,
+     "PC": 5.18,
+     "PQ": 7.68
+    },
+    "reject": [],
+    "score": -4.232
+   },
+   {
+    "take": "inst-orchestra.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.32,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.15,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Orchestra": 0.032,
+     "Bowed string instrument": 0.032
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Electric guitar": 0.001
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Piano",
+     "Keyboard (musical)",
+     "Background music"
+    ],
+    "clap_rank": 4,
+    "clap": 0.005,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.16,
+     "CU": 7.82,
+     "PC": 5.25,
+     "PQ": 7.61
+    },
+    "reject": [],
+    "score": -3.239
+   },
+   {
+    "take": "inst-orchestra.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 16.62,
+    "vram_peak_gb": 7.64,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1618,
+    "vocal": 0.02,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Orchestra": 0.038,
+     "Bowed string instrument": 0.067
+    },
+    "forbid": {
+     "Singing": 0.001,
+     "Electric guitar": 0.0
+    },
+    "heard": [
+     "Music",
+     "Background music",
+     "Theme music",
+     "Musical instrument",
+     "Bowed string instrument"
+    ],
+    "clap_rank": 4,
+    "clap": 0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.25,
+     "CU": 8.1,
+     "PC": 5.37,
+     "PQ": 8.17
+    },
+    "reject": [],
+    "score": -3.183
+   }
+  ]
+ },
+ {
+  "id": "inst-jazz",
+  "task": "instrumental",
+  "best": "inst-jazz.2",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "inst-jazz.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 15.09,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1891,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Jazz": 0.025,
+     "Double bass": 0.02
+    },
+    "forbid": {
+     "Singing": 0.004,
+     "Electronic music": 0.004
+    },
+    "heard": [
+     "Music",
+     "Bass guitar",
+     "Musical instrument",
+     "Guitar",
+     "Plucked string instrument"
+    ],
+    "clap_rank": 5,
+    "clap": 0.004,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.52,
+     "CU": 7.82,
+     "PC": 4.89,
+     "PQ": 7.95
+    },
+    "reject": [],
+    "score": -4.205
+   },
+   {
+    "take": "inst-jazz.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 16.92,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1499,
+    "vocal": 0.0,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Jazz": 0.012,
+     "Double bass": 0.001
+    },
+    "forbid": {
+     "Singing": 0.001,
+     "Electronic music": 0.072
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Drum machine",
+     "Electronic music",
+     "Sampler"
+    ],
+    "clap_rank": 6,
+    "clap": 0.008,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 6.95,
+     "CU": 8.04,
+     "PC": 5.33,
+     "PQ": 8.1
+    },
+    "reject": [],
+    "score": -5.19
+   },
+   {
+    "take": "inst-jazz.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 16.29,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1232,
+    "vocal": 0.02,
+    "vocal_ast": 0.0,
+    "expect": {
+     "Jazz": 0.009,
+     "Double bass": 0.002
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Electronic music": 0.017
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Synthesizer",
+     "Drum machine",
+     "Funny music"
+    ],
+    "clap_rank": 4,
+    "clap": 0.007,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.47,
+     "CU": 8.03,
+     "PC": 5.75,
+     "PQ": 8.05
+    },
+    "reject": [],
+    "score": -3.195
+   }
+  ]
+ },
+ {
+  "id": "inst-synthwave",
+  "task": "instrumental",
+  "best": "inst-synthwave.2",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "inst-synthwave.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 16.56,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1285,
+    "vocal": 0.0,
+    "vocal_ast": 0.5,
+    "expect": {
+     "Synthesizer": 0.007,
+     "Electronic music": 0.05
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Orchestra": 0.0
+    },
+    "heard": [
+     "Music",
+     "Disco",
+     "House music",
+     "Speech",
+     "Electronic music"
+    ],
+    "clap_rank": 1,
+    "clap": 0.005,
+    "clap_margin": 0.0,
+    "aes": {
+     "CE": 7.06,
+     "CU": 7.77,
+     "PC": 5.61,
+     "PQ": 8.09
+    },
+    "reject": [],
+    "score": -0.191
+   },
+   {
+    "take": "inst-synthwave.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 17.74,
+    "vram_peak_gb": 7.64,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1415,
+    "vocal": 0.0,
+    "vocal_ast": 0.67,
+    "expect": {
+     "Synthesizer": 0.006,
+     "Electronic music": 0.025
+    },
+    "forbid": {
+     "Singing": 0.005,
+     "Orchestra": 0.002
+    },
+    "heard": [
+     "Music",
+     "Musical instrument",
+     "Speech",
+     "Hip hop music",
+     "Rhythm and blues"
+    ],
+    "clap_rank": 1,
+    "clap": 0.006,
+    "clap_margin": 0.0,
+    "aes": {
+     "CE": 7.65,
+     "CU": 8.16,
+     "PC": 5.74,
+     "PQ": 8.35
+    },
+    "reject": [],
+    "score": -0.165
+   },
+   {
+    "take": "inst-synthwave.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 16.28,
+    "vram_peak_gb": 7.63,
+    "seconds": 60.0,
+    "asked": 60,
+    "rms": 0.1265,
+    "vocal": 0.02,
+    "vocal_ast": 0.83,
+    "expect": {
+     "Synthesizer": 0.007,
+     "Electronic music": 0.022
+    },
+    "forbid": {
+     "Singing": 0.002,
+     "Orchestra": 0.0
+    },
+    "heard": [
+     "Music",
+     "Disco",
+     "Ringtone",
+     "Speech",
+     "House music"
+    ],
+    "clap_rank": 1,
+    "clap": 0.013,
+    "clap_margin": 0.0,
+    "aes": {
+     "CE": 7.66,
+     "CU": 8.29,
+     "PC": 6.08,
+     "PQ": 8.43
+    },
+    "reject": [],
+    "score": -0.157
+   }
+  ]
+ },
+ {
+  "id": "song-ru-pop",
+  "task": "song",
+  "best": "song-ru-pop.0",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-ru-pop.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 21.46,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1432,
+    "vocal": 0.39,
+    "vocal_ast": 0.43,
+    "expect": {
+     "Singing": 0.037,
+     "Pop music": 0.018
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Lullaby",
+     "Musical instrument",
+     "Harp",
+     "Electric piano"
+    ],
+    "clap_rank": 8,
+    "clap": 0.003,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.73,
+     "CU": 8.01,
+     "PC": 5.48,
+     "PQ": 8.27
+    },
+    "transcript": "Субтитры создавал DimaTorzok Над рекою тихий вечер Фонари горят вдали Я иду тебе навстречу По следам своей земли Не гости огни над городом Подожди еще чуть-чуть Мы с тобой пройдем весь холод И найдем обратно путь Субтитры создавал DimaTorzok",
+    "cer": 0.027,
+    "reject": [],
+    "score": -7.21
+   },
+   {
+    "take": "song-ru-pop.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 19.63,
+    "vram_peak_gb": 7.63,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1384,
+    "vocal": 0.41,
+    "vocal_ast": 0.57,
+    "expect": {
+     "Singing": 0.066,
+     "Pop music": 0.009
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Harp",
+     "Lullaby",
+     "Tender music",
+     "Music for children"
+    ],
+    "clap_rank": 8,
+    "clap": 0.005,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.89,
+     "CU": 8.1,
+     "PC": 5.7,
+     "PQ": 8.42
+    },
+    "transcript": "Над лекою тихий вечер Фонари горят вдали Я иду тебе навстречу По следам своей земли Не коси огни над городом Подожди еще чуть-чуть Мы с тобой пройдем весь холод И найдем брат и путь Субтитры создавал DimaTorzok Субтитры создавал DimaTorzok Субтитры создавал DimaTorzok ДимаTorzok",
+    "cer": 0.047,
+    "reject": [],
+    "score": -7.215
+   },
+   {
+    "take": "song-ru-pop.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 20.35,
+    "vram_peak_gb": 7.63,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1479,
+    "vocal": 0.71,
+    "vocal_ast": 0.57,
+    "expect": {
+     "Singing": 0.088,
+     "Pop music": 0.011
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Lullaby",
+     "Singing",
+     "Tender music",
+     "Soul music"
+    ],
+    "clap_rank": 8,
+    "clap": 0.002,
+    "clap_margin": -0.001,
+    "aes": {
+     "CE": 7.88,
+     "CU": 8.02,
+     "PC": 5.94,
+     "PQ": 8.4
+    },
+    "transcript": "Над рекою тихие вечи Фонари горят вдали Я иду тебе навстречу По следам своей земли Не гаси огни над городом Подожди еще чуть-чуть И найдем обратный путь Субтитры сделал DimaTorzok Субтитры сделал DimaTorzok",
+    "cer": 0.18,
+    "reject": [],
+    "score": -7.35
+   }
+  ]
+ },
+ {
+  "id": "song-ru-rock",
+  "task": "song",
+  "best": "song-ru-rock.1",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-ru-rock.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 18.8,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1696,
+    "vocal": 0.56,
+    "vocal_ast": 0.43,
+    "expect": {
+     "Singing": 0.07,
+     "Rock music": 0.081
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Grunge",
+     "Progressive rock",
+     "Independent music",
+     "Rock music"
+    ],
+    "clap_rank": 2,
+    "clap": 0.002,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.46,
+     "CU": 7.77,
+     "PC": 6.42,
+     "PQ": 8.19
+    },
+    "transcript": "Старый дождь Поезд мчится в ночь Стук колёс, как сердце стук Никоём уже не помочь Кто не вырвался из рук Дальше, дальше до рассвета За окном летит страна Мы споём ещё про лето Пусть кончается весна Субтитры создавал DimaTorzok",
+    "cer": 0.052,
+    "reject": [],
+    "score": -1.233
+   },
+   {
+    "take": "song-ru-rock.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 19.2,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1844,
+    "vocal": 0.64,
+    "vocal_ast": 0.57,
+    "expect": {
+     "Singing": 0.062,
+     "Rock music": 0.056
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Progressive rock",
+     "Grunge",
+     "Musical instrument",
+     "Pop music"
+    ],
+    "clap_rank": 1,
+    "clap": 0.007,
+    "clap_margin": 0.0,
+    "aes": {
+     "CE": 7.25,
+     "CU": 7.66,
+     "PC": 6.58,
+     "PQ": 8.01
+    },
+    "transcript": "Старый поезд мчится в ночь, Стук колёс, как сердце стук. Никоём уже не помочь, Кто не вырвался из рук. Дальше, дальше, до рассвета За окном летит страна. Мы споём ещё про лето, Пусть кончается весна. Субтитры подогнал «Симон»! Субтитры подогнал «Симон»! Субтитры подогнал «Симон»!",
+    "cer": 0.019,
+    "reject": [],
+    "score": -0.218
+   },
+   {
+    "take": "song-ru-rock.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 19.17,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1718,
+    "vocal": 0.64,
+    "vocal_ast": 0.43,
+    "expect": {
+     "Singing": 0.094,
+     "Rock music": 0.055
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Progressive rock",
+     "Grunge",
+     "Independent music",
+     "Singing"
+    ],
+    "clap_rank": 2,
+    "clap": 0.002,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.2,
+     "CU": 7.73,
+     "PC": 6.37,
+     "PQ": 8.07
+    },
+    "transcript": "Старый поезд Дальше до рассвета За окном летит страна Мы споём ещё про лето Пусть скончается весна Редактор субтитров А.Сёмкин",
+    "cer": 0.484,
+    "reject": [],
+    "score": -1.677
+   }
+  ]
+ },
+ {
+  "id": "song-en-folk",
+  "task": "song",
+  "best": "song-en-folk.1",
+  "accepted": true,
+  "takes": [
+   {
+    "take": "song-en-folk.0",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 19.17,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1302,
+    "vocal": 0.63,
+    "vocal_ast": 0.71,
+    "expect": {
+     "Singing": 0.063,
+     "Folk music": 0.003
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Lullaby",
+     "Mantra",
+     "Humming",
+     "Musical instrument"
+    ],
+    "clap_rank": 5,
+    "clap": 0.003,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.1,
+     "CU": 7.39,
+     "PC": 4.52,
+     "PQ": 7.64
+    },
+    "transcript": "Morning mean light across the river Frost is fading from the pain I have walked a thousand miles Just to hear your voice again Carry me home, carry me home Over the hills where the wild winds roam Carry me home before the night Back to the place where the fire burns bright I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles I have walked a thousand miles",
+    "cer": 0.028,
+    "reject": [],
+    "score": -4.264
+   },
+   {
+    "take": "song-en-folk.1",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 19.65,
+    "vram_peak_gb": 7.64,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1205,
+    "vocal": 0.69,
+    "vocal_ast": 0.71,
+    "expect": {
+     "Singing": 0.084,
+     "Folk music": 0.004
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Soul music",
+     "Singing",
+     "Lullaby",
+     "Tender music"
+    ],
+    "clap_rank": 5,
+    "clap": 0.005,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.78,
+     "CU": 7.94,
+     "PC": 5.29,
+     "PQ": 8.3
+    },
+    "transcript": "morning light across the river frost is fading from the pain i have walked a thousand miles just to hear your voice again carry me home carry me home over the hills where the wild winds roam carry me home before the night back to the place where the fire burns bright you uh",
+    "cer": 0.009,
+    "reject": [],
+    "score": -4.179
+   },
+   {
+    "take": "song-en-folk.2",
+    "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+    "wall": 18.63,
+    "vram_peak_gb": 7.63,
+    "seconds": 75.0,
+    "asked": 75,
+    "rms": 0.1521,
+    "vocal": 0.65,
+    "vocal_ast": 0.86,
+    "expect": {
+     "Singing": 0.105,
+     "Folk music": 0.009
+    },
+    "forbid": {},
+    "heard": [
+     "Music",
+     "Harmonica",
+     "Singing",
+     "Wind instrument, woodwind instrument",
+     "Rhythm and blues"
+    ],
+    "clap_rank": 5,
+    "clap": 0.002,
+    "clap_margin": -0.0,
+    "aes": {
+     "CE": 7.8,
+     "CU": 7.94,
+     "PC": 5.73,
+     "PQ": 8.3
+    },
+    "transcript": "Morning light across the river, frost is fading from the pain. I have walked a thousand miles just to hear your voice again. Carry me home, carry me home, over the hills where the wild winds roam. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright. Carry me home, before the night, back to the place where the fire burns bright.",
+    "cer": 0.009,
+    "reject": [],
+    "score": -4.179
+   }
+  ]
+ }
+]

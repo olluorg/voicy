@@ -12,6 +12,9 @@ use std::os::raw::c_int;
 use anyhow::{Context, bail};
 
 const OPUS_BITRATE: i32 = 24_000; // mp3 задаётся перечислением LAME: Bitrate::Kbps64
+/// Музыка — 48 кГц стерео: речевые 24 кбит/с на ней слышно рассыпаются.
+/// Речь всегда моно 24 кГц и кодируется как раньше, байт в байт.
+const OPUS_BITRATE_MUSIC: i32 = 128_000;
 
 /// Что кодируется здесь; остальное — забота ffmpeg.
 pub fn own(fmt: &str) -> bool {
@@ -19,10 +22,16 @@ pub fn own(fmt: &str) -> bool {
 }
 
 pub fn encode(x: &[f32], sr: u32, fmt: &str) -> anyhow::Result<Vec<u8>> {
+    encode_ch(x, sr, 1, fmt)
+}
+
+/// `x` — отсчёты вперемешку по каналам (L R L R …), `ch` — 1 или 2.
+pub fn encode_ch(x: &[f32], sr: u32, ch: u16, fmt: &str) -> anyhow::Result<Vec<u8>> {
+    anyhow::ensure!(ch == 1 || ch == 2, "каналов {ch}: умею 1 и 2");
     match fmt {
-        "opus" => opus(x, sr),
-        "mp3" => mp3(x, sr),
-        "flac" => flac(x, sr),
+        "opus" => opus(x, sr, ch),
+        "mp3" => mp3(x, sr, ch),
+        "flac" => flac(x, sr, ch),
         _ => bail!("формат {fmt} кодируется не здесь"),
     }
 }
@@ -38,19 +47,29 @@ fn to_i16(x: &[f32]) -> Vec<i16> {
 /// Частоты, которые понимает кодировщик, — 8, 12, 16, 24 и 48 кГц; синтез
 /// отдаёт 24 кГц. Позиции в контейнере считаются в отсчётах 48 кГц независимо
 /// от входной частоты — так устроен формат.
-fn opus(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
+fn opus(x: &[f32], sr: u32, ch: u16) -> anyhow::Result<Vec<u8>> {
     const FRAME_MS: usize = 20;
-    anyhow::ensure!([8000, 12000, 16000, 24000, 48000].contains(&sr), "opus не берёт {sr} Гц");
+    // 44.1 кГц (Stable Audio) и прочие частоты кодировщик не берёт: пересчёт в 48, канал за каналом
+    if ![8000, 12000, 16000, 24000, 48000].contains(&sr) {
+        let ch_n = ch as usize;
+        let parts: Vec<Vec<f32>> = (0..ch_n)
+            .map(|c| crate::audio::Resampler::whole(sr, 48000, &x.iter().skip(c).step_by(ch_n).copied().collect::<Vec<_>>()))
+            .collect();
+        let n = parts.iter().map(Vec::len).min().unwrap_or(0);
+        let y: Vec<f32> = (0..n).flat_map(|i| parts.iter().map(move |p| p[i])).collect();
+        return opus(&y, 48000, ch);
+    }
     let frame = sr as usize * FRAME_MS / 1000;
+    let bitrate = if ch == 2 { OPUS_BITRATE_MUSIC } else { OPUS_BITRATE };
 
     let mut err: c_int = 0;
-    let enc = unsafe { audiopus_sys::opus_encoder_create(sr as i32, 1, audiopus_sys::OPUS_APPLICATION_AUDIO, &mut err) };
+    let enc = unsafe { audiopus_sys::opus_encoder_create(sr as i32, ch as c_int, audiopus_sys::OPUS_APPLICATION_AUDIO, &mut err) };
     if enc.is_null() || err != 0 {
         bail!("opus: кодировщик не создан ({err})");
     }
     let _guard = scopeguard(|| unsafe { audiopus_sys::opus_encoder_destroy(enc) });
     unsafe {
-        audiopus_sys::opus_encoder_ctl(enc, audiopus_sys::OPUS_SET_BITRATE_REQUEST, OPUS_BITRATE);
+        audiopus_sys::opus_encoder_ctl(enc, audiopus_sys::OPUS_SET_BITRATE_REQUEST, bitrate);
     }
     // задержка кодировщика: столько отсчётов в начале проигрыватель пропускает
     let mut lookahead: c_int = 0;
@@ -62,7 +81,7 @@ fn opus(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
     let mut head = Vec::with_capacity(19);
     head.extend_from_slice(b"OpusHead");
     head.push(1); // версия
-    head.push(1); // каналов
+    head.push(ch as u8); // каналов
     head.extend_from_slice(&(pre_skip as u16).to_le_bytes());
     head.extend_from_slice(&sr.to_le_bytes());
     head.extend_from_slice(&0u16.to_le_bytes()); // усиление
@@ -82,10 +101,11 @@ fn opus(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
 
     let mut buf = vec![0u8; 4000];
     let mut granule = pre_skip;
-    let total = x.len().div_ceil(frame);
-    for (i, chunk) in x.chunks(frame).enumerate() {
+    let step = frame * ch as usize;
+    let total = x.len().div_ceil(step);
+    for (i, chunk) in x.chunks(step).enumerate() {
         let mut pcm = chunk.to_vec();
-        pcm.resize(frame, 0.0); // последний кусок дописывается тишиной
+        pcm.resize(step, 0.0); // последний кусок дописывается тишиной
         let n = unsafe {
             audiopus_sys::opus_encode_float(enc, pcm.as_ptr(), frame as i32, buf.as_mut_ptr(), buf.len() as i32)
         };
@@ -113,19 +133,24 @@ fn scopeguard<F: FnMut()>(f: F) -> impl Drop {
 
 // ----------------------------------------------------------------------- mp3
 
-fn mp3(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
-    use mp3lame_encoder::{Bitrate, Builder, FlushNoGap, MonoPcm, Quality};
+fn mp3(x: &[f32], sr: u32, ch: u16) -> anyhow::Result<Vec<u8>> {
+    use mp3lame_encoder::{Bitrate, Builder, FlushNoGap, InterleavedPcm, MonoPcm, Quality};
 
     let mut b = Builder::new().context("mp3: кодировщик не создан")?;
-    b.set_num_channels(1).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
+    b.set_num_channels(ch as u8).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     b.set_sample_rate(sr).map_err(|e| anyhow::anyhow!("mp3: {sr} Гц — {e}"))?;
-    b.set_brate(Bitrate::Kbps64).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
+    b.set_brate(if ch == 2 { Bitrate::Kbps192 } else { Bitrate::Kbps64 }).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     b.set_quality(Quality::Good).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     let mut enc = b.build().map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
 
     let pcm = to_i16(x);
     let mut out = Vec::with_capacity(mp3lame_encoder::max_required_buffer_size(pcm.len()));
-    let n = enc.encode(MonoPcm(&pcm), out.spare_capacity_mut()).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
+    let n = if ch == 2 {
+        enc.encode(InterleavedPcm(&pcm), out.spare_capacity_mut())
+    } else {
+        enc.encode(MonoPcm(&pcm), out.spare_capacity_mut())
+    }
+    .map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     unsafe { out.set_len(out.len() + n) };
     let n = enc.flush::<FlushNoGap>(out.spare_capacity_mut()).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     unsafe { out.set_len(out.len() + n) };
@@ -134,13 +159,13 @@ fn mp3(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
 
 // ---------------------------------------------------------------------- flac
 
-fn flac(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
+fn flac(x: &[f32], sr: u32, ch: u16) -> anyhow::Result<Vec<u8>> {
     use flacenc::component::BitRepr;
     use flacenc::error::Verify;
 
     let samples: Vec<i32> = to_i16(x).into_iter().map(i32::from).collect();
     let config = flacenc::config::Encoder::default().into_verified().map_err(|e| anyhow::anyhow!("flac: {e:?}"))?;
-    let source = flacenc::source::MemSource::from_samples(&samples, 1, 16, sr as usize);
+    let source = flacenc::source::MemSource::from_samples(&samples, ch as usize, 16, sr as usize);
     let stream = flacenc::encode_with_fixed_block_size(&config, source, config.block_size)
         .map_err(|e| anyhow::anyhow!("flac: {e:?}"))?;
     let mut sink = flacenc::bitsink::ByteSink::new();
@@ -161,7 +186,7 @@ mod tests {
 
     #[test]
     fn opus_is_ogg_with_head() {
-        let data = opus(&tone(0.5, 24000), 24000).expect("opus");
+        let data = opus(&tone(0.5, 24000), 24000, 1).expect("opus");
         assert_eq!(&data[..4], b"OggS");
         assert!(data.windows(8).any(|w| w == b"OpusHead"));
         assert!(data.len() > 500, "слишком коротко: {}", data.len());
@@ -169,10 +194,35 @@ mod tests {
 
     #[test]
     fn mp3_and_flac_have_their_marks() {
-        let mp3 = mp3(&tone(0.5, 24000), 24000).expect("mp3");
+        let mp3 = mp3(&tone(0.5, 24000), 24000, 1).expect("mp3");
         assert!(mp3.len() > 500);
         assert!(mp3[0] == 0xFF || &mp3[..3] == b"ID3", "не похоже на mp3");
-        let flac = flac(&tone(0.5, 24000), 24000).expect("flac");
+        let flac = flac(&tone(0.5, 24000), 24000, 1).expect("flac");
         assert_eq!(&flac[..4], b"fLaC");
+    }
+
+    /// 44.1 кГц opus не берёт: кодировщик пересчитывает их в 48.
+    #[test]
+    fn opus_takes_44k_stereo() {
+        let lr: Vec<f32> = tone(0.5, 44100).iter().flat_map(|&v| [v, -v]).collect();
+        let o = opus(&lr, 44100, 2).expect("opus 44.1k");
+        assert_eq!(&o[..4], b"OggS");
+    }
+
+    /// Музыка — стерео 48 кГц: заголовки говорят о двух каналах, opus шире речи.
+    #[test]
+    fn stereo_music() {
+        let mono = tone(1.0, 48000);
+        let lr: Vec<f32> = mono.iter().flat_map(|&v| [v, -v]).collect();
+        let o = opus(&lr, 48000, 2).expect("opus stereo");
+        let head = o.windows(8).position(|w| w == b"OpusHead").expect("OpusHead");
+        assert_eq!(o[head + 9], 2, "каналов в OpusHead");
+        assert!(o.len() > opus(&mono, 48000, 1).unwrap().len() * 2);
+        let m = mp3(&lr, 48000, 2).expect("mp3 stereo");
+        assert!(m.len() > 500);
+        let f = flac(&lr, 48000, 2).expect("flac stereo");
+        // STREAMINFO: каналы - 1 — три бита после 20 бит частоты
+        let ch = ((f[8 + 12] >> 1) & 0x7) + 1;
+        assert_eq!(ch, 2, "каналов в STREAMINFO");
     }
 }

@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1000,
+ "seconds": 97.52,
+ "wall": 191.64,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "russian rock,male vocal,distorted electric guitars,bass,energetic drums,130 bpm"
+}

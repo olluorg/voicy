@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 75.0,
+ "wall": 19.17,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 37,
+  "caption": "A gentle and intimate indie-folk track carried by a clean, fingerpicked acoustic guitar playing a steady, arpeggiated pattern. A soft, breathy male vocal delivers a heartfelt and romantic melody with a touch of light reverb, creating a warm and personal atmosphere. The arrangement is sparse and direct, focusing entirely on the interplay between the guitar and the sincere vocal performance, evoking a feeling of a quiet, rainy day romance.",
+  "duration": 75,
+  "keyscale": "F major",
+  "language": "en",
+  "timesignature": "4"
+ }
+}

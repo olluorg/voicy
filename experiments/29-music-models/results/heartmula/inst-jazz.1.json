@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1001,
+ "seconds": 78.08,
+ "wall": 188.91,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "small jazz trio,upright double bass walking line,brushed drums,piano improvisation,swing feel"
+}

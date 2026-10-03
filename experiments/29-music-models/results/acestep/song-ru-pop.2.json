@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 75.0,
+ "wall": 20.35,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 33,
+  "caption": "A gentle and melodic Russian pop ballad driven by a clean, nylon-string acoustic guitar playing intricate arpeggios and chord progressions. A clear, emotive female vocal leads the track, supported by a simple, steady drum machine beat and a subtle bassline. The chorus introduces layered vocal harmonies, adding richness and emotional weight. The arrangement includes a brief, melodic acoustic guitar interlude before reprising the opening verse with a slightly more reflective delivery, creating a narrative arc that is both wistful and hopeful.",
+  "duration": 75,
+  "keyscale": "C minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

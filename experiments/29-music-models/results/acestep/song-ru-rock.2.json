@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1002,
+ "seconds": 75.0,
+ "wall": 19.17,
+ "vram_peak_gb": 7.64,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 70,
+  "caption": "An energetic and driving Russian rock track kicks off with a powerful vocal exclamation before launching into a full-band arrangement. The sound is defined by crunchy, distorted electric guitars playing a catchy, melodic riff over a solid, propulsive bassline and a straightforward, powerful acoustic drum beat. A clear, passionate male lead vocal delivers the lyrics with force and conviction, carrying the song's high-energy, anthemic quality.",
+  "duration": 75,
+  "keyscale": "A minor",
+  "language": "ru",
+  "timesignature": "4"
+ }
+}

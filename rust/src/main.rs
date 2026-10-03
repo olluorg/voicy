@@ -20,6 +20,7 @@ mod host;
 mod instance;
 mod jobs;
 mod live;
+mod music;
 mod speak;
 mod textprep;
 mod transcripts;
@@ -119,6 +120,40 @@ enum Command {
         #[arg(long, value_name = "URL")]
         webhook: Option<String>,
     },
+    /// Описание (и текст песни) → музыка
+    Music {
+        /// описание: жанр, инструменты, настроение, голос; либо @файл, либо - для stdin
+        prompt: String,
+        /// куда писать; расширение задаёт формат
+        out: Option<PathBuf>,
+        /// текст песни с разметкой [verse], [chorus]; @файл — из файла
+        #[arg(long)]
+        lyrics: Option<String>,
+        /// без голоса
+        #[arg(long)]
+        instrumental: bool,
+        /// язык текста: ru, en …
+        #[arg(long)]
+        language: Option<String>,
+        /// секунд; без него длину выбирает модель
+        #[arg(long)]
+        duration: Option<f64>,
+        /// модель; список — voicy music-models
+        #[arg(long)]
+        model: Option<String>,
+        #[arg(long, default_value = "opus", value_parser = ["opus", "wav", "mp3", "flac", "aac", "pcm"])]
+        format: String,
+        #[arg(long)]
+        seed: Option<i64>,
+        /// не ждать: напечатать id задания и выйти
+        #[arg(long)]
+        detach: bool,
+        /// POST сюда, когда готово (подразумевает --detach)
+        #[arg(long, value_name = "URL")]
+        webhook: Option<String>,
+    },
+    /// Модели музыки на сервере и что каждая умеет
+    MusicModels,
     /// Аудиофайл → текст
     Hear {
         file: PathBuf,
@@ -209,8 +244,8 @@ enum Command {
     Warm,
     /// Скачать библиотеки и модели для движков в процессе сервера (~/.cache/voicy)
     Setup {
-        /// libs, models или всё сразу
-        #[arg(default_value = "all", value_parser = ["all", "libs", "models"])]
+        /// libs, models или всё сразу; music, music-xl, music-sa3 — модели музыки (в all не входят)
+        #[arg(default_value = "all", value_parser = ["all", "libs", "models", "music", "music-xl", "music-sa3"])]
         what: String,
         /// скачать не спрашивая: без этого setup показывает, что и куда ляжет, и ждёт согласия
         #[arg(long, short)]
@@ -318,6 +353,9 @@ fn router(app: Arc<App>) -> Router {
         .route("/v1/text/prepare", post(prepare_text))
         .route("/v1/jobs/speech", post(job_speech))
         .route("/v1/jobs/transcribe", post(job_transcribe))
+        .route("/v1/music", post(music::compose))
+        .route("/v1/music/models", get(music::models))
+        .route("/v1/jobs/music", post(music::job))
         .route("/v1/jobs", get(list_jobs))
         .route("/v1/jobs/{id}", get(get_job_route).delete(cancel_job))
         .route("/v1/jobs/{id}/events", get(job_events))
@@ -697,6 +735,10 @@ async fn main() -> anyhow::Result<()> {
         Command::Update { yes, check } => update::run(yes, check).await,
         Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
             cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
+        Command::Music { prompt, out, lyrics, instrumental, language, duration, model, format, seed, detach, webhook } =>
+            cli::music(&url, &prompt, out, cli::MusicArgs { lyrics, instrumental, language, duration, model, format, seed },
+                       detach, webhook).await,
+        Command::MusicModels => cli::music_models(&url).await,
         Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>
             cli::hear(&url, file, language, format, prompt, temperature, words, context, hotwords, detach, webhook).await,
         Command::Job { id, out, wait, format } => cli::job(&url, id, out, wait, format).await,

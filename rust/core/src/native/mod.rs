@@ -8,13 +8,16 @@
 //! Both directories can also be set from code (`set_dirs`).
 
 pub mod accent;
+pub mod acestep;
 pub mod decode;
 pub mod fwhisper;
+pub mod heartmula;
 pub mod listen;
 pub mod llama;
 pub mod mel;
 pub mod npy;
 pub mod qwen;
+pub mod sa3;
 pub mod whisper;
 
 use std::path::{Path, PathBuf};
@@ -362,6 +365,33 @@ pub fn init_onnx(dir: &Path) -> anyhow::Result<()> {
 /// A model on ONNX Runtime; `gpu` puts it on the GPU where ONNX Runtime has
 /// one: CUDA, or DirectML on Windows with any other backend. On Linux without
 /// CUDA it stays on the CPU.
+/// A session that takes as little VRAM as it can: the arena grows by what is
+/// asked rather than doubling, and convolutions pick their algorithm by
+/// heuristic, not by trying each with the largest workspace. For the music
+/// codecs, which run beside speech on one card (heartmula.rs).
+pub fn lean_session(path: &Path, gpu: bool) -> anyhow::Result<Session> {
+    if !(gpu && backend() == Backend::Cuda) {
+        return session(path, gpu);
+    }
+    let cuda = ort::ep::CUDA::default()
+        .with_arena_extend_strategy(ort::ep::ArenaExtendStrategy::SameAsRequested)
+        .with_conv_algorithm_search(ort::ep::cuda::ConvAlgorithmSearch::Heuristic)
+        .with_conv_max_workspace(false)
+        .build();
+    // переключатели для замера памяти кодека (heartmula.rs)
+    let pattern = std::env::var("VOICY_ORT_MEM_PATTERN").map_or(true, |v| v != "0");
+    let level = if std::env::var("VOICY_ORT_OPT").is_ok_and(|v| v == "1") { GraphOptimizationLevel::Level1 } else { GraphOptimizationLevel::Level3 };
+    Session::builder()?
+        .with_optimization_level(level)
+        .map_err(|e| anyhow::anyhow!("{e}"))?
+        .with_memory_pattern(pattern)
+        .map_err(|e| anyhow::anyhow!("{e}"))?
+        .with_execution_providers([cuda])
+        .map_err(|e| anyhow::anyhow!("{e}"))?
+        .commit_from_file(path)
+        .with_context(|| format!("cannot load {}", path.display()))
+}
+
 pub fn session(path: &Path, gpu: bool) -> anyhow::Result<Session> {
     let mut b = Session::builder()?.with_optimization_level(GraphOptimizationLevel::Level3).map_err(|e| anyhow::anyhow!("{e}"))?;
     if gpu && backend() == Backend::Cuda {

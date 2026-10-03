@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1001,
+ "seconds": 28.56,
+ "wall": 131.51,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "lo-fi hip hop instrumental,mellow electric piano,soft vinyl crackle,relaxed boom bap drums,80 bpm"
+}

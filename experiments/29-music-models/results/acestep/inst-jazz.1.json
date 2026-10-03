@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1001,
+ "seconds": 60.0,
+ "wall": 16.92,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 100,
+  "caption": "An upbeat, swinging jazz trio performance featuring a prominent, walking upright bass line that establishes a steady, infectious groove. A crisp drum kit with brushed snares and a ride cymbal drives the rhythm forward with a classic swing feel. A clean-toned piano enters, first laying down chords and then weaving melodic fills and improvisational lines that explore the harmonic complexity. The arrangement feels like a live, in-the-moment studio session, with a clean mix and a natural acoustic sound.",
+  "duration": 60,
+  "keyscale": "G major",
+  "language": "unknown",
+  "timesignature": "4"
+ }
+}

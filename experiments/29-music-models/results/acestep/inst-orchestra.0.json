@@ -1,0 +1,16 @@
+{
+ "model": "ace-step/acestep-v15-turbo+acestep-5Hz-lm-0.6B",
+ "seed": 1000,
+ "seconds": 60.0,
+ "wall": 18.07,
+ "vram_peak_gb": 7.63,
+ "sample_rate": 48000,
+ "lm": {
+  "bpm": 100,
+  "caption": "A grand, sweeping orchestral piece that evokes the feeling of an epic film score. It opens with a majestic, heroic theme carried by a full string section, featuring soaring French horn melodies over powerful timpani rolls and cymbal crashes. The arrangement transitions into a more poignant and emotional middle section, where a lyrical cello melody emerges, supported by gentle woodwinds and pizzicato strings. The piece then builds back to a powerful recapitulation of the main theme, with the entire orchestra swelling to a triumphant and emotionally resonant climax before a final, resolute chord.",
+  "duration": 60,
+  "keyscale": "G major",
+  "language": "unknown",
+  "timesignature": "3"
+ }
+}

@@ -165,6 +165,54 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
   <div class="err" id="tts-err"></div>
 </div>
 
+<!-- ------------------------------------------------------------------ МУЗЫКА -->
+<div class="card" id="music-card">
+  <h2>Музыка</h2>
+  <div class="note" id="mus-none" hidden>На сервере нет моделей музыки. Поставить:
+    <code>voicy setup music</code> (ACE-Step 1.5, около 5.5 ГБ), затем перезапустить сервер.</div>
+  <div id="mus-form">
+    <label for="mus-prompt">Описание</label>
+    <textarea id="mus-prompt" placeholder="Жанр, инструменты, настроение, голос. Например: russian pop ballad, female vocal, acoustic guitar and piano, gentle"></textarea>
+    <div class="note">Описание модель понимает по-английски: по-русски она теряет смысл и пишет
+      текст на чужом или выдуманном языке. Текст песни — на любом языке, его она поёт как есть.</div>
+    <label class="chk"><input type="checkbox" id="mus-inst"> без голоса — инструментал</label>
+    <div id="mus-lyrics-box">
+      <label for="mus-lyrics">Текст песни <span class="note" id="mus-lyrics-note">— необязательно: без него модель напишет текст сама</span></label>
+      <textarea id="mus-lyrics" placeholder="[verse]&#10;Над рекою тихий вечер&#10;Фонари горят вдали&#10;&#10;[chorus]&#10;Не гаси огни над городом"></textarea>
+    </div>
+    <div class="row r3" style="margin-top:12px">
+      <div><label for="mus-dur">Длина, с</label>
+        <input type="number" id="mus-dur" min="10" max="600" step="1" value="60" placeholder="выберет модель"></div>
+      <div class="adv"><label for="mus-lang">Язык текста</label><select id="mus-lang"></select></div>
+      <div class="adv"><label for="mus-model">Модель</label><select id="mus-model"></select></div>
+    </div>
+    <div class="adv">
+      <div class="row r3" style="margin-top:12px">
+        <div><label for="mus-fmt">Формат</label>
+          <select id="mus-fmt"><option>opus</option><option>mp3</option><option>wav</option>
+            <option>flac</option><option>aac</option></select></div>
+        <div><label for="mus-seed">Сид</label><input type="number" id="mus-seed" placeholder="случайный"></div>
+      </div>
+      <div class="note" id="mus-card-info"></div>
+    </div>
+    <div style="margin-top:14px">
+      <button class="act big" id="mus-go">Сочинить</button>
+      <button class="ghost" id="mus-dl" style="margin-top:8px" disabled>Скачать</button>
+    </div>
+    <div class="prog" id="mus-prog">
+      <div class="bar est" id="mus-barbox"><i id="mus-bar"></i></div>
+      <div class="prog-line">
+        <span id="mus-msg">…</span>
+        <span class="tag" title="Доля работы по этапам модели: точно известны только шаги DiT">по этапам</span>
+      </div>
+    </div>
+    <audio id="mus-player" controls hidden></audio>
+    <div class="stats" id="mus-stats"></div>
+    <pre class="note" id="mus-written" hidden style="white-space:pre-wrap"></pre>
+    <div class="err" id="mus-err"></div>
+  </div>
+</div>
+
 <!-- ------------------------------------------------------------------ РЕЧЬ → ТЕКСТ -->
 <div class="card">
   <h2>Речь → текст</h2>
@@ -247,6 +295,7 @@ kbd{font:inherit;font-size:11.5px;background:var(--raised);border:1px solid var(
   <div class="row r2">
     <button class="ghost" id="s-py">Python, клиент OpenAI</button>
     <button class="ghost" id="s-curl">curl</button>
+    <button class="ghost" id="s-music">музыка, curl</button>
   </div>
 </div>
 
@@ -462,6 +511,143 @@ $('#dl').onclick = () => {
   if (!lastBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(lastBlob); a.download = `speech.${lastFmt}`; a.click();
+};
+
+/* ------------------------------------------------------------------ музыка
+
+   Моделей может быть несколько, запрос выбирает нужную (ADR 0028); у каждой
+   карточка — что умеет. Прогресс — по этапам модели: LM планирует песню,
+   DiT рисует (его шаги известны точно), VAE делает звук. Доля полосы внутри
+   планирования и декодирования — не измерение, а отметка этапа. */
+let musModels = [], musBlob = null, musFmt = 'opus', musTimer = null;
+const LANG_NAMES = {ru:'русский', en:'английский', de:'немецкий', fr:'французский', es:'испанский',
+  it:'итальянский', pt:'португальский', ja:'японский', ko:'корейский', zh:'китайский', uk:'украинский'};
+
+async function loadMusic(){
+  try{
+    const r = await (await fetch('v1/music/models')).json();
+    musModels = r.models || [];
+  }catch(e){ musModels = []; }
+  $('#mus-none').hidden = musModels.length > 0;
+  $('#mus-form').hidden = musModels.length === 0;
+  $('#mus-model').innerHTML = musModels.map(m =>
+    `<option value="${esc(m.id)}"${m.default ? ' selected' : ''}>${esc(m.name || m.id)}</option>`).join('');
+  musCard();
+}
+function musCard(){
+  const m = musModels.find(x => x.id === $('#mus-model').value) || musModels[0];
+  if (!m) return;
+  const cur = $('#mus-lang').value || 'ru';
+  $('#mus-lang').innerHTML = '<option value="">определит модель</option>' + (m.languages || []).map(l =>
+    `<option value="${esc(l)}">${esc(LANG_NAMES[l] ? `${LANG_NAMES[l]} (${l})` : l)}</option>`).join('');
+  $('#mus-lang').value = (m.languages || []).includes(cur) ? cur : '';
+  const can = [m.vocals && 'поёт', m.instrumental && 'инструментал'].filter(Boolean).join(', ');
+  $('#mus-card-info').textContent = `${m.name || m.id}: ${can}; ${m.min_seconds}–${m.max_seconds} с, ` +
+    `${m.length === 'exact' ? 'длина ровно заданная' : 'длину модель решает сама'}; ` +
+    `${m.sample_rate / 1000} кГц, ${m.channels === 2 ? 'стерео' : 'моно'}; лицензия ${m.license}` +
+    (m.commercial ? '' : ', некоммерческая') + (m.loaded ? '; в памяти' : '');
+  $('#mus-dur').min = m.min_seconds; $('#mus-dur').max = m.max_seconds;
+  // модель, которая длину не выбирает сама, без неё не работает
+  $('#mus-dur').placeholder = m.chooses_length ? 'выберет модель' : String(m.default_seconds || 30);
+  // модель без голоса: только инструментал; модель без инструментала: только песня
+  const box = $('#mus-inst');
+  if (!m.vocals){ box.checked = true; box.disabled = true; }
+  else if (!m.instrumental){ box.checked = false; box.disabled = true; }
+  else box.disabled = false;
+  box.onchange();
+  // модель, которая поёт только заданный текст и своего не пишет
+  $('#mus-lyrics-note').textContent = m.needs_lyrics
+    ? '— обязательно: эта модель поёт только заданный текст'
+    : '— необязательно: без него модель напишет текст сама';
+}
+$('#mus-model').onchange = musCard;
+$('#mus-inst').onchange = () => {
+  $('#mus-lyrics-box').hidden = $('#mus-inst').checked;
+  $('#mus-lang').disabled = $('#mus-inst').checked;    // у инструментала нет языка
+};
+
+const MUS_STAGES = {planning: 'модель планирует песню', rendering: 'рисует музыку',
+  decoding: 'делает звук', encoding: 'кодирую'};
+async function compose(){
+  const prompt = $('#mus-prompt').value.trim();
+  $('#mus-err').textContent = '';
+  if (!prompt){ $('#mus-err').textContent = 'Опиши, какую музыку сделать.'; return; }
+  const adv = document.body.dataset.mode === 'advanced';
+  const inst = $('#mus-inst').checked;
+  const lyrics = inst ? '' : $('#mus-lyrics').value.trim();
+  const dur = $('#mus-dur').value;
+  const body = {prompt, force_instrumental: inst, response_format: adv ? $('#mus-fmt').value : 'opus'};
+  if (lyrics) body.lyrics = lyrics;
+  if (dur) body.duration_seconds = +dur;
+  if (adv){
+    body.model = $('#mus-model').value || undefined;
+    if ($('#mus-lang').value && !inst) body.language = $('#mus-lang').value;
+    if ($('#mus-seed').value) body.seed = +$('#mus-seed').value;
+  }   // без языка его определит сервер — по письменности текста или описания
+  const btn = $('#mus-go');
+  btn.disabled = true; btn.textContent = 'Сочиняю…';
+  $('#mus-prog').classList.add('on');
+  $('#mus-bar').style.width = '0%';
+  $('#mus-msg').textContent = 'готовлю…';
+  $('#mus-written').hidden = true;
+  try{
+    const t0 = performance.now();
+    const start = await fetch('v1/jobs/music', {
+      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+    if (!start.ok) throw new Error(await errText(start));
+    const {id, model} = await start.json();
+    // секундомер идёт сам: события LM приходят редко, а загрузка частей модели — без событий вовсе
+    let stageText = 'модель загружается…';
+    const tick = () => { $('#mus-msg').innerHTML = `${stageText} · <b>${((performance.now() - t0) / 1000).toFixed(1)} с</b>`; };
+    musTimer = setInterval(tick, 200);
+    await follow(id, d => {
+      const w = {planning: [0, 45], rendering: [45, 75], decoding: [75, 95], encoding: [95, 99]}[d.stage];
+      if (w){
+        const inside = d.stage === 'rendering' && d.done != null ? d.done : 0;
+        $('#mus-bar').style.width = (w[0] + (w[1] - w[0]) * inside).toFixed(1) + '%';
+        const extra = d.stage === 'rendering' && d.steps ? ` · шаг ${d.step} из ${d.steps}` : '';
+        stageText = `${MUS_STAGES[d.stage]}${extra}`;
+      } else if (waiting(d)){
+        stageText = d.stage === 'running' ? 'модель загружается…' : waiting(d);
+      }
+      tick();
+    });
+    clearInterval(musTimer);
+    $('#mus-bar').style.width = '100%';
+    const res = await fetch(`v1/jobs/${id}/audio`);
+    if (!res.ok) throw new Error(await errText(res));
+    musFmt = body.response_format;
+    musBlob = await res.blob();
+    const p = $('#mus-player');
+    p.src = URL.createObjectURL(musBlob);
+    p.hidden = false;
+    p.play().catch(()=>{});
+    $('#mus-dl').disabled = false;
+    const info = await (await fetch(`v1/jobs/${id}/result`)).json();
+    const plan = info.plan || {}, secs = info.seconds, gen = (performance.now() - t0) / 1000;
+    $('#mus-msg').innerHTML = `готово: <b>${fmt(secs)} с</b> музыки за <b>${gen.toFixed(1)} с</b>`;
+    $('#mus-stats').innerHTML = `<span>модель <b>${esc(info.model || model)}</b></span>` +
+      `<span>×<b>${(secs / gen).toFixed(1)}</b> к реальному времени</span>` +
+      (plan.bpm ? `<span>темп <b>${esc(plan.bpm)}</b></span>` : '') +
+      (plan.key ? `<span>тональность <b>${esc(plan.key)}</b></span>` : '') +
+      (plan.seed != null ? `<span>сид <b>${esc(plan.seed)}</b></span>` : '');
+    // текст, который модель написала сама, — чтобы его можно было поправить и спеть заново
+    if (!lyrics && !inst && plan.lyrics && plan.lyrics !== '[Instrumental]'){
+      $('#mus-written').textContent = 'Текст написала модель:\n\n' + plan.lyrics;
+      $('#mus-written').hidden = false;
+    }
+    loadMusic();
+  }catch(e){
+    $('#mus-err').textContent = 'Не вышло: ' + e.message;
+    $('#mus-prog').classList.remove('on');
+  }
+  finally{ clearInterval(musTimer); btn.disabled = false; btn.textContent = 'Сочинить'; }
+}
+$('#mus-go').onclick = compose;
+$('#mus-dl').onclick = () => {
+  if (!musBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(musBlob); a.download = `music.${musFmt}`; a.click();
 };
 
 /* ------------------------------------------------------------------ распознавание */
@@ -855,6 +1041,18 @@ with open("out.opus", "rb") as f:
 
 curl ${base}/v1/audio/transcriptions \\
   -F file=@out.opus -F model=whisper-1 -F response_format=text`,
+  music: `# форма — как у ElevenLabs /v1/music; модели — GET ${base}/v1/music/models
+curl ${base}/v1/music \\
+  -H "content-type: application/json" \\
+  -d '{"prompt":"russian pop ballad, female vocal, acoustic guitar",
+       "lyrics":"[verse]\\nНад рекою тихий вечер\\n[chorus]\\nНе гаси огни над городом",
+       "language":"ru","duration_seconds":60,"response_format":"opus"}' \\
+  --output song.opus
+
+curl ${base}/v1/music \\
+  -H "content-type: application/json" \\
+  -d '{"prompt":"calm ambient piano","force_instrumental":true,"music_length_ms":60000}' \\
+  --output bed.mp3`,
 };
 function snippet(kind){
   const v = $('#voice').value || 'default';
@@ -862,6 +1060,7 @@ function snippet(kind){
 }
 $('#s-py').onclick = () => snippet('py');
 $('#s-curl').onclick = () => snippet('curl');
+$('#s-music').onclick = () => snippet('music');
 
 /* ------------------------------------------------------------------ клавиши
 
@@ -878,6 +1077,10 @@ document.addEventListener('keydown', e => {
     if (!$('#asr').disabled){ e.preventDefault(); $('#asr').click(); }
     return;
   }
+  if ($('#music-card').contains(document.activeElement)){
+    if (!$('#mus-go').disabled){ e.preventDefault(); $('#mus-go').click(); }
+    return;
+  }
   const btn = document.body.dataset.mode === 'advanced' ? $('#say-adv') : $('#say-easy');
   if (!btn.disabled && $('#tts-text').value.trim()){
     e.preventDefault();
@@ -885,7 +1088,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-(async () => { await health(); await loadVoices(); loadContexts(); snippet('py'); })();
+(async () => { await health(); await loadVoices(); loadContexts(); loadMusic(); snippet('py'); })();
 </script>
 </body>
 </html>

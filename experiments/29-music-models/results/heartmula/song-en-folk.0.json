@@ -1,0 +1,9 @@
+{
+ "model": "heartmula/oss-3B-happy-new-year",
+ "seed": 1000,
+ "seconds": 75.52,
+ "wall": 184.77,
+ "vram_peak_gb": 9.95,
+ "sample_rate": 48000,
+ "tags": "indie folk,male vocal,fingerpicked acoustic guitar,light percussion,warm and intimate"
+}

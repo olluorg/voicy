@@ -31,6 +31,8 @@ pub fn round(x: f64, digits: i32) -> f64 {
 #[derive(Clone)]
 pub enum JobResult {
     Speech { data: Arc<Vec<u8>>, content_type: String, format: String, voice: String, seconds: f64 },
+    /// `plan` — что выбрала модель: bpm, тональность, язык, текст, если писала его сама
+    Music { data: Arc<Vec<u8>>, content_type: String, format: String, seconds: f64, model: String, plan: Value },
     Transcript(Value),
 }
 
