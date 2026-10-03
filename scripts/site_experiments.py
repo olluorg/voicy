@@ -118,6 +118,10 @@ def main():
         body = markdown.markdown(md, extensions=["tables", "fenced_code", "sane_lists"])
         body = body.replace("<table>", '<div class="table"><table>').replace("</table>", "</table></div>")
         body = relink(body, (ROOT / readme).parent, on_site)
+        # звук статьи, упомянутый в README, на сайте лежит в корне — даём послушать
+        body = re.sub(r"<code>article/assets/audio/([^<*]+\.opus)</code>",
+                      r'<a href="../../assets/audio/\1"><code>\1</code></a> '
+                      r'<audio controls preload="none" src="../../assets/audio/\1"></audio>', body)
         nav = (f'<a href="../">← все эксперименты</a><a href="../../">статья</a>'
                f'<a href="{REPO}/tree/master/experiments/{name}">исходники на GitHub</a>')
         (dst / "index.html").write_text(page(title, nav, body), encoding="utf-8")
