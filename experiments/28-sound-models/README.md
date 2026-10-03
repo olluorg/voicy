@@ -129,7 +129,7 @@ python3 scripts/sound_scene.py "<описание>"`.
 
 ## Где что лежит
 
-- `page/index.html` — страница сравнения (на сайте —
+- [`page/index.html`](page/index.html) — страница сравнения (на сайте —
   https://olluorg.github.io/voicy/sounds/): пять сцен целиком и каждый звук
   у всех моделей рядом, с тем, что услышал оценщик; звук — `page/audio/*.opus`
   (57 кбит/с, 6.7 МБ), собирается `page/build.py`;

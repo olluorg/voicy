@@ -6,7 +6,8 @@ on:
     paths:
       - "article/**"
       - "docs/**"
-      - "experiments/28-sound-models/page/**"
+      - "experiments/**"
+      - "scripts/site_experiments.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -33,6 +34,9 @@ jobs:
           # сравнение генераторов звуков (experiments/28) — отдельной страницей
           mkdir -p _site/sounds
           cp -r experiments/28-sound-models/page/index.html experiments/28-sound-models/page/audio _site/sounds/
+          # все эксперименты: README → страница, их файлы рядом, общий список
+          pip install --quiet markdown
+          python3 scripts/site_experiments.py _site
           echo "страниц: $(find _site -name '*.html' | wc -l), аудио: $(find _site -name '*.opus' | wc -l)"
 
       - name: Проверить, что ссылки на аудио живые
