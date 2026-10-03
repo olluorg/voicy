@@ -56,6 +56,7 @@ voicy serve --port 8080        # или voicy up — фоном, с прогре
 | `TTS_ENGINE` | родной Qwen3-TTS, если он поставлен | движок синтеза, см. «Движки» |
 | `STT_ENGINE` | `faster-whisper` | движок распознавания; `whisper.cpp` — второй родной |
 | `TURN_ENGINE` / `VAD_ENGINE` | `smart-turn` / `silero` | конец реплики и детектор голоса |
+| `SOUND_ENGINE` | — | движок звуков, см. «Звуки»; без него звуков нет |
 | `VOICY_DEVICE` | по драйверам: `cuda` с NVIDIA, `vulkan` с другой видеокартой, иначе `cpu` | набор библиотек: `cuda`, `vulkan`, `rocm`, `sycl`, `cpu`; `voicy setup` ставит его, сервер на нём работает |
 | `TTS_GGUF_TALKER` | `q5_k` | квантование основной модели синтеза: `q8_0`, `f16` |
 | `VOICY_TTS_GGUF_REPO` | модель с ударениями | откуда `setup` берёт Qwen3-TTS; исходные веса — `sknyazev/qwen3-tts-12hz-1.7b-base-gguf` |
@@ -109,6 +110,7 @@ voicy serve --port 8080        # или voicy up — фоном, с прогре
 | распознавание | `faster-whisper`, `whisper.cpp` | `faster-whisper` | `STT_ENGINE`, веса — `STT_MODEL` |
 | конец реплики | `smart-turn` | `smart-turn` | `TURN_ENGINE` |
 | детектор голоса | `silero` | `silero` | `VAD_ENGINE` |
+| звуки | — | только учебный `noise`; модель выбирается (ADR 0027) | `SOUND_ENGINE` |
 
 Движкам на Python нужен `.venv` в репозитории (или `VOICY_PYTHON`)
 с `server/requirements.txt` и torch:
@@ -120,7 +122,7 @@ uv pip install --python .venv -r server/requirements.txt
 ```
 
 У каждого вида есть и учебный движок на Python — `tone`, `script`, `pause`,
-`energy`: без модели, для проверок (см. «Проверки»).
+`energy`, `noise`: без модели, для проверок (см. «Проверки»).
 
 `espeech` — ESpeech RL-V2 на F5-TTS, прежний движок voicy: только русский,
 образец голоса до 12 с. При той же разборчивости быстрее PyTorch-варианта Qwen
@@ -439,11 +441,49 @@ curl -s localhost:8080/v1/jobs/speech -H 'Content-Type: application/json' \
 | `POST /v1/voices` | добавить голос: `file`, `name`, `text`, `note`, `replace` |
 | `WS /v1/audio/transcriptions/stream` | живая речь для голосового агента: начало, текст, конец реплики |
 | `POST /v1/text/prepare` | применить словарь произношений и убрать запятые внутри коротких фраз |
+| `POST /v1/sound-generation`, `POST /v1/jobs/sound` | звуки по описанию, см. «Звуки» |
 | `GET /health` | движки и их веса, что они умеют, устройство, список голосов |
 
 У синтеза есть два расширения сверх контракта OpenAI: `prepare` применяет словарь
 произношений, `legato` убирает запятые внутри коротких фраз. Оба по умолчанию
 выключены — вызывающий ожидает получить свой текст, а не переписанный.
+
+## Звуки
+
+Не речь, а то, что вокруг неё: скрип двери, ручей, ветер. Маршрут повторяет
+форму `/v1/sound-generation` из ElevenLabs, так что их клиенту достаточно
+сменить базовый адрес:
+
+```bash
+curl -s localhost:8080/v1/sound-generation -H 'Content-Type: application/json' \
+  -d '{"text": "wind in the pines", "duration_seconds": 60, "loop": true}' -o wind.mp3
+./voicy sound "creaking wooden door" door.opus --duration 3
+./voicy sound "rain on a tin roof" rain.opus --duration 600 --loop
+```
+
+| Поле | Что делает |
+|---|---|
+| `text` | описание. Модель понимает языки из `/health` → `sound.languages`; описание на другом языке — 400 |
+| `duration_seconds` | 0.5–3600, по умолчанию 5 |
+| `loop` | результат повторяется без шва: из целого числа повторов одной петли |
+| `output_format` (в адресе) | как у ElevenLabs: `mp3_44100_128`, `pcm_16000`, `opus_48000_96`; частота соблюдается, битрейт свой |
+| `response_format` | или как у синтеза: `opus`, `wav`, `mp3`, `flac`, `aac`, `pcm`; по умолчанию `mp3` |
+| `seed` | тот же звук на тот же запрос |
+| `webhook_url` | только для `POST /v1/jobs/sound` |
+
+`prompt_influence` движками пока не поддерживается и получает 400, а не тихо
+пропускается.
+
+Модель делает за вызов кусок не длиннее `sound.max_seconds`. Всё длиннее
+сервер собирает из этого куска сам (`voicy-core`, `ambience`): последние
+полсекунды вплетаются в начало с равной мощностью, и кусок повторяется
+без щелчка и без провала громкости. Без `loop` края готового звука плавно
+затухают, с `loop` — нет: иначе петля не замкнётся. Звуки идут в 44.1 кГц:
+opus пересчитывает их в 48 кГц и кодирует на 96 кбит/с, mp3 — на 128 кбит/с
+(речь остаётся на своих 24 и 64).
+
+Движок звуков необязателен и пока бывает только на Python. Если все остальные
+движки родные, сервер поднимает процесс Python ради одних звуков.
 
 ## Голоса
 

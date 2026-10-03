@@ -53,9 +53,14 @@ pub struct Host {
 }
 
 impl Host {
-    /// Start the child. `python` runs `-m engines.host` inside `server_dir`.
-    pub async fn spawn(python: &Path, server_dir: &Path) -> anyhow::Result<Arc<Host>> {
-        let mut child = Command::new(python)
+    /// Start the child. `python` runs `-m engines.host` inside `server_dir`;
+    /// `kinds`, if given, are the only engines it builds ("sound").
+    pub async fn spawn(python: &Path, server_dir: &Path, kinds: Option<&str>) -> anyhow::Result<Arc<Host>> {
+        let mut cmd = Command::new(python);
+        if let Some(k) = kinds {
+            cmd.env("VOICY_HOST_KINDS", k);
+        }
+        let mut child = cmd
             .args(["-m", "engines.host"])
             .current_dir(server_dir)
             .env("PYTHONUNBUFFERED", "1")

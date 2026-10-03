@@ -1,0 +1,149 @@
+{
+ "title": "Winter evening in a wooden hut",
+ "duration": 65,
+ "beds": [
+  {
+   "id": "winter_outside",
+   "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+   "target": "fierce winter wind and blizzard outside",
+   "perspective": "behind_wall",
+   "level": "loud",
+   "kind": "wind",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "engine, motor, rain, hail",
+   "allow": [
+    "animal"
+   ],
+   "open": [
+    {
+     "from_event": "door_open",
+     "to_event": "door_close"
+    }
+   ]
+  },
+  {
+   "id": "hut_air",
+   "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+   "target": "still cold air in a wooden room",
+   "perspective": "room",
+   "level": "quiet",
+   "kind": "room",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "music, speech",
+   "allow": [
+    "silence"
+   ]
+  },
+  {
+   "id": "fire_burning",
+   "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+   "target": "wood fire crackling in a stove",
+   "perspective": "near",
+   "level": "medium",
+   "kind": "fire",
+   "start_after": "fire_catching",
+   "start_offset": -3,
+   "negative": "music, engine",
+   "allow": [
+    "animal"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "door_open",
+   "prompt": "Heavy wooden door with dry wood rubbing on wood at the frame and threshold, low uneven creaks and groans as it swings slowly inward.",
+   "target": "heavy wooden door creaking open",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 5,
+   "expect": [
+    "Door",
+    "Creak",
+    "Squeak"
+   ],
+   "after": null,
+   "gap": 2,
+   "negative": "music, plastic, metal squeak, hinge squeal, iron"
+  },
+  {
+   "id": "door_close",
+   "prompt": "Heavy wooden door slams shut firmly, dry low creaks of wood rubbing against the frame and uneven gaps closing, final thud of the latch.",
+   "target": "heavy wooden door creaking shut",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 4,
+   "expect": [
+    "Door",
+    "Creak",
+    "Thump, thud"
+   ],
+   "after": "door_open",
+   "gap": 1,
+   "negative": "music, plastic, metal squeak, hinge squeal, iron clank"
+  },
+  {
+   "id": "floor_walk",
+   "prompt": "Slow, heavy boots dragging across rough, uneven wooden floorboards, distinct dry creaks of wood-on-wood at the threshold and between planks, low thuds of weight shifting, no metal or plastic squeaks.",
+   "target": "heavy boots walking on wooden floorboards",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 6,
+   "expect": [
+    "Walk, footsteps",
+    "Creak"
+   ],
+   "after": "door_close",
+   "gap": 1.5,
+   "negative": "carpet, rubber, plastic, metal, wood block, heavy thud, zipper, scrape, clip-clop, horse hooves, chopping, heartbeat, fireworks, eruption, thump, tap, knock, door slam, squeak, rustle"
+  },
+  {
+   "id": "table_thud",
+   "prompt": "A heavy metal tankard or stone pot being set down firmly on a wooden table.",
+   "target": "heavy object thudding on a table",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 3,
+   "expect": [
+    "Thump, thud",
+    "Thunk",
+    "Knock"
+   ],
+   "after": "floor_walk",
+   "gap": 1,
+   "negative": "glass, plastic"
+  },
+  {
+   "id": "cough",
+   "prompt": "A deep, wet, rasping cough produced by a person standing near a clay stove, thick mucus expelled from the throat, low frequency vibration of the chest cavity, no words spoken.",
+   "target": "deep wet rasping cough",
+   "perspective": "near",
+   "level": "quiet",
+   "seconds": 3,
+   "expect": [
+    "Cough",
+    "Throat clearing"
+   ],
+   "after": "table_thud",
+   "gap": 0.5,
+   "negative": "speech, music, burp, eructation, snort, vehicle, whoosh, swoosh, swish, sigh, gasp, skidding, bow-wow, zipper, tire squeal"
+  },
+  {
+   "id": "fire_catching",
+   "prompt": "Dry tinder and small split wood logs igniting, sharp popping sparks, rapid expansion of flame, dry wood charring and hissing, intense crackling as embers grow.",
+   "target": "dry wood fire catching and growing",
+   "perspective": "near",
+   "level": "medium",
+   "seconds": 12,
+   "expect": [
+    "Fire",
+    "Crackle"
+   ],
+   "after": "cough",
+   "gap": 0,
+   "negative": "electricity, gas, tearing, crushing, rustling, music, scissors, clicking, snapping, ticking, tearing fabric, rustling paper, crunching food"
+  }
+ ]
+}

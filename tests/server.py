@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUST_BIN = Path(os.environ.get("VOICY_RUST_BIN") or ROOT / "rust" / "target" / "release" /
                 ("voicy.exe" if sys.platform == "win32" else "voicy"))
 FAKE = {"TTS_ENGINE": "tone", "STT_ENGINE": "script",
-        "TURN_ENGINE": "pause", "VAD_ENGINE": "energy"}
+        "TURN_ENGINE": "pause", "VAD_ENGINE": "energy", "SOUND_ENGINE": "noise"}
 
 
 def _free_port() -> int:

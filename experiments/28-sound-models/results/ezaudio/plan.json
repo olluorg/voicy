@@ -1,0 +1,149 @@
+{
+ "title": "Winter evening in a wooden hut",
+ "duration": 65,
+ "beds": [
+  {
+   "id": "winter_outside",
+   "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+   "target": "fierce winter wind and blizzard outside",
+   "perspective": "behind_wall",
+   "level": "loud",
+   "kind": "wind",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "engine, motor, rain, hail",
+   "allow": [
+    "animal"
+   ],
+   "open": [
+    {
+     "from_event": "door_open",
+     "to_event": "door_close"
+    }
+   ]
+  },
+  {
+   "id": "hut_air",
+   "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+   "target": "still cold air in a wooden room",
+   "perspective": "room",
+   "level": "quiet",
+   "kind": "room",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "music, speech",
+   "allow": [
+    "silence"
+   ]
+  },
+  {
+   "id": "fire_burning",
+   "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+   "target": "wood fire crackling in a stove",
+   "perspective": "near",
+   "level": "medium",
+   "kind": "fire",
+   "start_after": "fire_catching",
+   "start_offset": -3,
+   "negative": "music, engine",
+   "allow": [
+    "animal"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "door_open",
+   "prompt": "Heavy wooden door with dry wood rubbing on wood at the frame and threshold, low uneven creaks and groans as it opens slowly.",
+   "target": "heavy wooden door creaking open",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 5,
+   "expect": [
+    "Door",
+    "Creak",
+    "Squeak"
+   ],
+   "after": null,
+   "gap": 2,
+   "negative": "music, plastic, metal squeak, hinge squeal, engine, motor"
+  },
+  {
+   "id": "door_close",
+   "prompt": "Dry, low, uneven creak of a heavy wooden door frame rubbing against the threshold and jamb as it swings shut firmly, sealing out the wind.",
+   "target": "heavy wooden door creaking shut",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 4,
+   "expect": [
+    "Door",
+    "Creak",
+    "Thump, thud"
+   ],
+   "after": "door_open",
+   "gap": 1,
+   "negative": "music, plastic, metal squeak, hinge squeal, scraping, slamming, explosion, beatboxing"
+  },
+  {
+   "id": "floor_walk",
+   "prompt": "Heavy leather-soled boots dragging firmly across rough, splintered wooden floorboards, low dry friction of leather rubbing on wood grain, heavy rhythmic impact of heel striking plank, slow deliberate steps.",
+   "target": "heavy boots walking on wooden floorboards",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 6,
+   "expect": [
+    "Walk, footsteps",
+    "Creak"
+   ],
+   "after": "door_close",
+   "gap": 1.5,
+   "negative": "carpet, rubber, music, tap, knock, thwack, scrape, door, wood, speech, animal, clip-clop, horse, horse hooves, gallop, trot, hoofbeat, stomping, marching, marching boots, heavy metal, clang, slam, thud, crunch, gravel, crunching leaves, snapping twigs, cracking ice, fire crackle, burning, rustling fabric, whisper, murmur, crowd noise, wind, whoosh, hiss, pop, burst, squeak, squeal, slide, skid, slide, slide"
+  },
+  {
+   "id": "table_thud",
+   "prompt": "A heavy stone pot slammed down hard onto a rough wooden table, creating a deep, dry thud as the stone hits the wood grain.",
+   "target": "heavy stone pot thudding on wood",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 3,
+   "expect": [
+    "Thump, thud",
+    "Thunk",
+    "Knock"
+   ],
+   "after": "floor_walk",
+   "gap": 1,
+   "negative": "glass, plastic, metal, chink, clink, scrape, crack, door, slam, music, speech"
+  },
+  {
+   "id": "cough",
+   "prompt": "A human throat producing a deep, wet, rasping cough with thick mucus texture, low frequency vibration, dry and dusty air, no music or speech.",
+   "target": "deep wet rasping human cough",
+   "perspective": "near",
+   "level": "quiet",
+   "seconds": 3,
+   "expect": [
+    "Cough",
+    "Throat clearing"
+   ],
+   "after": "table_thud",
+   "gap": 0.5,
+   "negative": "speech, music, oink, animal, car, engine, vehicle, distorted noise, pop, burst, scrape, howling"
+  },
+  {
+   "id": "fire_catching",
+   "prompt": "Dry birch tinder and small split logs igniting with a match, sharp crackle of burning cellulose, low hiss of rising heat, embers popping.",
+   "target": "dry wood fire catching and growing",
+   "perspective": "near",
+   "level": "medium",
+   "seconds": 12,
+   "expect": [
+    "Fire",
+    "Crackle"
+   ],
+   "after": "cough",
+   "gap": 0,
+   "negative": "electricity, gas, firecracker, fireworks, arrow, chop, glass, plastic, metal clang"
+  }
+ ]
+}

@@ -20,6 +20,7 @@ mod host;
 mod instance;
 mod jobs;
 mod live;
+mod sound;
 mod speak;
 mod textprep;
 mod transcripts;
@@ -112,6 +113,29 @@ enum Command {
         /// без знаков ударения (по умолчанию их ставит RUAccent, если модель их понимает)
         #[arg(long)]
         no_stress: bool,
+        /// не ждать: напечатать id задания и выйти
+        #[arg(long)]
+        detach: bool,
+        /// POST сюда, когда готово (подразумевает --detach)
+        #[arg(long, value_name = "URL")]
+        webhook: Option<String>,
+    },
+    /// Описание → звук: скрип, вода, ветер
+    Sound {
+        /// описание по-английски, либо @файл, либо - для stdin
+        text: String,
+        /// куда писать; расширение задаёт формат
+        out: Option<PathBuf>,
+        #[arg(long, default_value = "opus", value_parser = ["opus", "wav", "mp3", "flac", "aac", "pcm"])]
+        format: String,
+        /// секунд, 0.5–3600; длиннее, чем модель делает за раз, — петлёй
+        #[arg(long, default_value_t = 5.0)]
+        duration: f64,
+        /// звук, который повторяется без шва
+        #[arg(long = "loop")]
+        looped: bool,
+        #[arg(long)]
+        seed: Option<i64>,
         /// не ждать: напечатать id задания и выйти
         #[arg(long)]
         detach: bool,
@@ -318,6 +342,8 @@ fn router(app: Arc<App>) -> Router {
         .route("/v1/text/prepare", post(prepare_text))
         .route("/v1/jobs/speech", post(job_speech))
         .route("/v1/jobs/transcribe", post(job_transcribe))
+        .route("/v1/sound-generation", post(sound::generate))
+        .route("/v1/jobs/sound", post(sound::job))
         .route("/v1/jobs", get(list_jobs))
         .route("/v1/jobs/{id}", get(get_job_route).delete(cancel_job))
         .route("/v1/jobs/{id}/events", get(job_events))
@@ -697,6 +723,8 @@ async fn main() -> anyhow::Result<()> {
         Command::Update { yes, check } => update::run(yes, check).await,
         Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
             cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
+        Command::Sound { text, out, format, duration, looped, seed, detach, webhook } =>
+            cli::sound(&url, &text, out, format, duration, looped, seed, detach, webhook).await,
         Command::Hear { file, language, format, prompt, temperature, words, context, hotwords, detach, webhook } =>
             cli::hear(&url, file, language, format, prompt, temperature, words, context, hotwords, detach, webhook).await,
         Command::Job { id, out, wait, format } => cli::job(&url, id, out, wait, format).await,

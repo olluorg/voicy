@@ -1,0 +1,1 @@
+попытка 1: ["winter_outside: never write 'howl'/'howling': the generator turns it into an engine; write 'roar', 'whoosh', 'gusts'", 'bed winter_outside is behind_wall but has no open interval {"from_event": "door_open", "to_event": "door_close"} while door_open is open']

@@ -1,7 +1,8 @@
 """What the server asks of a model, and nothing about how the model works.
 
 Four kinds of engine sit behind the server: a synthesiser, a recogniser, a turn
-detector and a voice activity detector. The server talks to them only through
+detector and a voice activity detector — and a fifth, optional one, a generator
+of sounds that are not speech. The server talks to them only through
 the interfaces below. Everything a particular model needs — its codec rate,
 its language names, the order it wants a prompt and hotwords in, CUDA graphs —
 stays inside that model's engine, so replacing a model means writing one engine
@@ -81,6 +82,36 @@ class TTSEngine(Protocol):
         `on_progress` must be called regularly — at least once a second of work:
         it is also where cancellation happens, by raising out of the callback.
         """
+
+
+# ----------------------------------------------------------------------- звуки
+
+class SoundEngine(Protocol):
+    """Sounds from a description: a creaking door, a stream, wind in the pines.
+
+    The engine makes one piece no longer than `max_seconds`; looping it to any
+    length and laying it under speech is the server's work (voicy-core's
+    ambience), so an engine needs to do neither.
+    """
+    name: str
+    model: str
+    device: str
+    sample_rate: int
+    max_seconds: float              # длиннее за один вызов модель не делает
+    languages: tuple[str, ...]      # на каких языках модель понимает описание, ISO 639-1
+
+    @property
+    def loaded(self) -> bool: ...
+
+    def load(self) -> None: ...
+
+    def status(self) -> dict: ...
+
+    def generate(self, prompt: str, seconds: float, seed: int | None = None,
+                 on_progress: Callable[[Progress], None] | None = None) -> Synthesis:
+        """A sound of `seconds` (≤ max_seconds) for an English or — if the
+        engine says so in `languages` — other description. Cancellation and
+        progress as in TTSEngine.speak."""
 
 
 # --------------------------------------------------------------- распознавание

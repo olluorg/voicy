@@ -157,6 +157,10 @@ pub fn summary(job: &Job, queue: &Queue) -> Value {
                                        "content_type": content_type});
                 out["links"]["audio"] = json!(format!("{base}/audio"));
             }
+            Some(JobResult::Sound { format, content_type, seconds, .. }) => {
+                out["result"] = json!({"seconds": seconds, "format": format, "content_type": content_type});
+                out["links"]["audio"] = json!(format!("{base}/audio"));
+            }
             Some(JobResult::Transcript(r)) => {
                 out["result"] = json!({"text": r["text"], "language": r["language"], "duration": r["duration"]});
                 out["links"]["result"] = json!(format!("{base}/result"));
@@ -177,7 +181,7 @@ pub fn summary(job: &Job, queue: &Queue) -> Value {
     out
 }
 
-fn create(app: &App, kind: &str, headers: &HeaderMap, webhook_url: Option<&str>) -> ApiResult<Arc<Job>> {
+pub(crate) fn create(app: &App, kind: &str, headers: &HeaderMap, webhook_url: Option<&str>) -> ApiResult<Arc<Job>> {
     if let Some(url) = webhook_url.filter(|u| !u.is_empty()) {
         webhooks::validate(url).map_err(ApiError::bad)?;
     }
@@ -188,7 +192,7 @@ fn create(app: &App, kind: &str, headers: &HeaderMap, webhook_url: Option<&str>)
     Ok(job)
 }
 
-fn submit(app: &App, job: Arc<Job>, work: crate::jobs::Work) -> ApiResult<Arc<Job>> {
+pub(crate) fn submit(app: &App, job: Arc<Job>, work: crate::jobs::Work) -> ApiResult<Arc<Job>> {
     if let Err(e) = app.queue.submit(job.clone(), work) {
         app.registry.discard(&job.id);
         return Err(ApiError::new(429, e).with_header("retry-after", "30"));
@@ -197,7 +201,7 @@ fn submit(app: &App, job: Arc<Job>, work: crate::jobs::Work) -> ApiResult<Arc<Jo
 }
 
 /// For the synchronous routes: wait, then fail the way a plain call would.
-async fn wait(job: &Arc<Job>) -> ApiResult<()> {
+pub(crate) async fn wait(job: &Arc<Job>) -> ApiResult<()> {
     job.wait().await;
     let s = job.s.lock().unwrap();
     match s.state.as_str() {
@@ -615,13 +619,13 @@ pub async fn prepare_text(State(app): S, Json(p): Json<Value>) -> impl IntoRespo
 }
 
 pub async fn health(State(app): S) -> impl IntoResponse {
-    let (tts, stt, turn) = tokio::join!(app.engines.status("tts"), app.engines.status("stt"),
-                                         app.engines.status("turn"));
+    let (tts, stt, turn, sound) = tokio::join!(app.engines.status("tts"), app.engines.status("stt"),
+                                                app.engines.status("turn"), app.engines.status("sound"));
     let mut stt = stt;
     stt["features"] = json!(app.engines.stt_features());
     let voices: Vec<String> = app.voices.list().into_iter().map(|v| v.name).collect();
     axum::Json(json!({
-        "status": "ok", "tts": tts, "stt": stt, "turn": turn,
+        "status": "ok", "tts": tts, "stt": stt, "turn": turn, "sound": sound,
         "vad": {"engine": app.engines.info["vad"]["engine"]},
         "cuda": app.engines.info["cuda"], "auth": !app.keys.is_empty(),
         "device": app.engines.info["device"], "voices": voices,
@@ -719,19 +723,24 @@ pub async fn job_events(State(app): S, Path(id): Path<String>) -> ApiResult<Resp
 pub async fn job_audio(State(app): S, Path(id): Path<String>) -> ApiResult<Response> {
     let job = finished(&app, &id)?;
     let s = job.s.lock().unwrap();
-    let Some(JobResult::Speech { data, content_type, voice, seconds, .. }) = &s.result else {
-        return Err(ApiError::bad("not a speech job — see /result"));
+    let (data, content_type, voice, seconds) = match &s.result {
+        Some(JobResult::Speech { data, content_type, voice, seconds, .. }) => (data, content_type, Some(voice), seconds),
+        Some(JobResult::Sound { data, content_type, seconds, .. }) => (data, content_type, None, seconds),
+        _ => return Err(ApiError::bad("not a speech or sound job — see /result")),
     };
-    Ok((
+    let mut r = (
         [
             (header::CONTENT_TYPE, content_type.clone()),
             (header::HeaderName::from_static("x-job-id"), job.id.clone()),
-            (header::HeaderName::from_static("x-voice"), voice.clone()),
             (header::HeaderName::from_static("x-audio-seconds"), seconds.to_string()),
         ],
         Body::from(data.as_ref().clone()),
     )
-        .into_response())
+        .into_response();
+    if let Some(v) = voice.and_then(|v| v.parse().ok()) {
+        r.headers_mut().insert(header::HeaderName::from_static("x-voice"), v);
+    }
+    Ok(r)
 }
 
 #[derive(Deserialize)]
@@ -745,6 +754,9 @@ pub async fn job_result(State(app): S, Path(id): Path<String>, Query(q): Query<R
     match result {
         Some(JobResult::Speech { format, content_type, voice, seconds, .. }) => Ok(axum::Json(json!({
             "content_type": content_type, "format": format, "voice": voice, "seconds": seconds}))
+        .into_response()),
+        Some(JobResult::Sound { format, content_type, seconds, .. }) => Ok(axum::Json(json!({
+            "content_type": content_type, "format": format, "seconds": seconds}))
         .into_response()),
         Some(JobResult::Transcript(tr)) => match q.format.as_deref() {
             None => Ok(axum::Json(tr).into_response()),

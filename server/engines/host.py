@@ -31,6 +31,8 @@ Operations mirror the contract in base.py:
     tts.language {code}           → {"language"}
     tts.speak {text, ref_audio, ref_text, language, seed}
                                   progress events → {"sample_rate", "info"} + audio
+    sound.generate {prompt, seconds, seed}
+                                  progress events → {"sample_rate", "info"} + audio
     stt.transcribe {path | +bin 16 kHz, language, prompt, hotwords, temperature,
                     word_timestamps, task, live, draft}
                                   segment events → transcript
@@ -69,7 +71,10 @@ class Host:
         self._write = threading.Lock()
         self._cancel: set[int] = set()
         self._pool = ThreadPoolExecutor(max_workers=32, thread_name_prefix="op")
-        self.e = {kind: engines.create(kind) for kind in ("tts", "stt", "turn", "vad")}
+        # сервер, у которого всё остальное в процессе, зовёт хост ради одного вида
+        kinds = os.environ.get("VOICY_HOST_KINDS", "tts,stt,turn,vad,sound").split(",")
+        self.e = {kind: engines.create(kind) if kind in kinds else None
+                  for kind in ("tts", "stt", "turn", "vad", "sound")}
         self._vad: dict[int, object] = {}
         self._vad_ids = itertools.count(1)
 
@@ -131,18 +136,26 @@ class Host:
     # ------------------------------------------------------------ операции
 
     def op_info(self, rid, args, payload):
-        tts, stt, turn, vad = (self.e[k] for k in ("tts", "stt", "turn", "vad"))
-        return {
-            "tts": {**tts.status(), "sample_rate": tts.sample_rate,
-                    "needs_reference_text": tts.needs_reference_text,
-                    "reference_seconds": list(tts.reference_seconds),
-                    "reference_best": list(tts.reference_best)},
-            "stt": {**stt.status(), "features": sorted(stt.features)},
-            "turn": {**turn.status(), "sample_rate": turn.sample_rate},
-            "vad": {"engine": vad.name, "sample_rate": vad.sample_rate},
-            "device": _describe(),
-            "cuda": _has_cuda(),
-        }
+        tts, stt, turn, vad, sound = (self.e[k] for k in ("tts", "stt", "turn", "vad", "sound"))
+        out = {}
+        if tts is not None:
+            out["tts"] = {**tts.status(), "sample_rate": tts.sample_rate,
+                          "needs_reference_text": tts.needs_reference_text,
+                          "reference_seconds": list(tts.reference_seconds),
+                          "reference_best": list(tts.reference_best)}
+        if stt is not None:
+            out["stt"] = {**stt.status(), "features": sorted(stt.features)}
+        if turn is not None:
+            out["turn"] = {**turn.status(), "sample_rate": turn.sample_rate}
+        if vad is not None:
+            out["vad"] = {"engine": vad.name, "sample_rate": vad.sample_rate}
+        if sound is not None:
+            out["sound"] = {**sound.status(), "sample_rate": sound.sample_rate,
+                            "max_seconds": sound.max_seconds, "languages": list(sound.languages)}
+        if tts is not None or stt is not None:
+            out["device"] = _describe()
+            out["cuda"] = _has_cuda()
+        return out
 
     def op_status(self, rid, args, payload):
         return self.e[args["kind"]].status()
@@ -163,6 +176,18 @@ class Host:
         out = self.e["tts"].speak(args["text"], args["ref_audio"], args.get("ref_text", ""),
                                   language=args.get("language"), seed=args.get("seed"),
                                   on_progress=on_progress)
+        self._check(rid)
+        audio = np.ascontiguousarray(out.audio, dtype="<f4")
+        return {"sample_rate": out.sample_rate, "info": out.info}, audio.tobytes()
+
+    def op_sound_generate(self, rid, args, payload):
+        def on_progress(p):
+            self._check(rid)
+            self.send({"id": rid, "event": "progress",
+                       "data": {k: v for k, v in dataclasses.asdict(p).items() if v is not None}})
+
+        out = self.e["sound"].generate(args["prompt"], float(args["seconds"]), seed=args.get("seed"),
+                                       on_progress=on_progress)
         self._check(rid)
         audio = np.ascontiguousarray(out.audio, dtype="<f4")
         return {"sample_rate": out.sample_rate, "info": out.info}, audio.tobytes()

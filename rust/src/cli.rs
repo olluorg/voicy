@@ -212,6 +212,51 @@ pub async fn say(url: &str, text: &str, out: Option<PathBuf>, voice: Option<Stri
     Ok(())
 }
 
+// ------------------------------------------------------------------- sound
+
+#[allow(clippy::too_many_arguments)]
+pub async fn sound(url: &str, text: &str, out: Option<PathBuf>, format: String, duration: f64, looped: bool,
+                   seed: Option<i64>, detach: bool, webhook: Option<String>) -> anyhow::Result<()> {
+    let text = read_text(text)?.trim().to_string();
+    anyhow::ensure!(!text.is_empty(), "пустое описание звука");
+    let out = out.unwrap_or_else(|| {
+        PathBuf::from(format!("voicy-sound-{}.{format}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs()).unwrap_or(0)))
+    });
+    if out.as_os_str() == "-" {
+        bail!("аудио в stdout не пишется — бинарь засорит вывод. Укажите файл: voicy sound \"...\" out.{format}");
+    }
+    let fmt = out.extension().map(|e| e.to_string_lossy().to_lowercase()).filter(|e| FORMATS.contains(&e.as_str()))
+        .unwrap_or(format);
+
+    let api = Api::new(url)?;
+    let health = api.require().await?;
+    let Some(engine) = health["sound"]["engine"].as_str().map(String::from) else {
+        bail!("у сервера нет движка звуков: поднимите его с SOUND_ENGINE");
+    };
+    let mut payload = json!({"text": text, "duration_seconds": duration, "loop": looped, "response_format": fmt});
+    if let Some(s) = seed {
+        payload["seed"] = json!(s);
+    }
+    if detach || webhook.is_some() {
+        if let Some(w) = webhook {
+            payload["webhook_url"] = json!(w);
+        }
+        let job: Value = api.post_json("/v1/jobs/sound", payload).await?.json().await?;
+        return detached(&job, &out.display().to_string());
+    }
+    let started = Instant::now();
+    let r = api.post_json("/v1/sound-generation", payload).await?;
+    let head = |k: &str| r.headers().get(k).and_then(|v| v.to_str().ok()).unwrap_or("?").to_string();
+    let (secs, spent) = (head("x-audio-seconds"), head("x-generation-seconds"));
+    let audio = r.bytes().await?;
+    write_out(&out, &audio)?;
+    let spent = if spent == "?" { format!("{:.1}", started.elapsed().as_secs_f64()) } else { spent };
+    log(format!("{engine}: {secs} с звука за {spent} с, {:.0} КиБ", audio.len() as f64 / 1024.0));
+    println!("{}", out.display());
+    Ok(())
+}
+
 // -------------------------------------------------------------------- hear
 
 #[allow(clippy::too_many_arguments)]
@@ -289,7 +334,7 @@ pub async fn job(url: &str, id: String, out: Option<PathBuf>, wait: bool, format
         std::process::exit(if ["queued", "running"].contains(&state) { 3 } else { 1 });
     }
 
-    if job["kind"] == json!("speech") {
+    if job["kind"] == json!("speech") || job["kind"] == json!("sound") {
         let Some(out) = out else {
             println!("{}", serde_json::to_string_pretty(&job)?);
             log(format!("звук готов — укажите файл: voicy job {id} out.{}",
@@ -298,7 +343,7 @@ pub async fn job(url: &str, id: String, out: Option<PathBuf>, wait: bool, format
         };
         let audio = api.get(&format!("/v1/jobs/{id}/audio")).await?.bytes().await?;
         write_out(&out, &audio)?;
-        log(format!("{}: {} с звука", job["result"]["voice"].as_str().unwrap_or("?"), job["result"]["seconds"]));
+        log(format!("{}: {} с звука", job["result"]["voice"].as_str().unwrap_or("звук"), job["result"]["seconds"]));
         println!("{}", out.display());
         return Ok(());
     }

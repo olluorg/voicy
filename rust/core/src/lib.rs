@@ -24,7 +24,8 @@
 //! - [`segment::Segmenter`] — text in any pieces (an LLM's tokens) cut where
 //!   a synthesiser can start early.
 //! - [`audio`] — decoding any common container, encoding to wav, pcm, opus,
-//!   mp3 and flac, resampling; [`tempo`] — speed without pitch.
+//!   mp3 and flac, resampling; [`tempo`] — speed without pitch;
+//!   [`ambience`] — a sound looped without a seam, a bed under speech.
 //!
 //! What is not here is what the Python engines do in the server: this crate
 //! has only the in-process ones. Their runtimes are prebuilt shared libraries
@@ -44,6 +45,7 @@
 //! engines are `Send + Sync`; each serialises its own calls, so one shared
 //! `Arc<Tts>` is the way to use it from several threads.
 
+pub mod ambience;
 pub mod audio;
 // Привязки к движкам и кодеки — внутреннее: снаружи их видит только сервер
 // voicy (фича `internal`), и меняться они вправе без оглядки на semver.

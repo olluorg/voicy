@@ -1,0 +1,149 @@
+{
+ "title": "Winter evening in a wooden hut",
+ "duration": 65,
+ "beds": [
+  {
+   "id": "winter_outside",
+   "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+   "target": "fierce winter wind and blizzard outside",
+   "perspective": "behind_wall",
+   "level": "loud",
+   "kind": "wind",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "engine, motor, rain, hail",
+   "allow": [
+    "animal"
+   ],
+   "open": [
+    {
+     "from_event": "door_open",
+     "to_event": "door_close"
+    }
+   ]
+  },
+  {
+   "id": "hut_air",
+   "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+   "target": "still cold air in a wooden room",
+   "perspective": "room",
+   "level": "quiet",
+   "kind": "room",
+   "start_after": null,
+   "start_offset": 0,
+   "negative": "music, speech",
+   "allow": [
+    "silence"
+   ]
+  },
+  {
+   "id": "fire_burning",
+   "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+   "target": "wood fire crackling in a stove",
+   "perspective": "near",
+   "level": "medium",
+   "kind": "fire",
+   "start_after": "fire_catching",
+   "start_offset": -3,
+   "negative": "music, engine",
+   "allow": [
+    "animal"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "door_open",
+   "prompt": "A heavy, dry wooden door frame rubbing against its threshold and side jambs, low uneven creaks as wood grinds on wood, slow opening motion.",
+   "target": "heavy wooden door creaking open",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 5,
+   "expect": [
+    "Door",
+    "Creak",
+    "Squeak"
+   ],
+   "after": null,
+   "gap": 2,
+   "negative": "music, plastic, metal, hinge squeal, squeak, engine, motor"
+  },
+  {
+   "id": "door_close",
+   "prompt": "Heavy dry wooden door slams shut firmly, wood rubbing against wood at the frame and threshold, low uneven creaks and thuds.",
+   "target": "heavy wooden door creaking shut",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 4,
+   "expect": [
+    "Door",
+    "Creak",
+    "Thump, thud"
+   ],
+   "after": "door_open",
+   "gap": 1,
+   "negative": "music, plastic, metal squeak, hinge squeal, iron"
+  },
+  {
+   "id": "floor_walk",
+   "prompt": "Heavy boots stepping firmly on worn wooden floorboards, distinct dry creaks as heels press into the grain and toes lift, low friction sound of wood rubbing on wood.",
+   "target": "footsteps on wooden floorboards",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 6,
+   "expect": [
+    "Walk, footsteps",
+    "Creak"
+   ],
+   "after": "door_close",
+   "gap": 1.5,
+   "negative": "carpet, rubber, plastic, metal, squeak, slam, thud, skateboard, tap"
+  },
+  {
+   "id": "table_thud",
+   "prompt": "A heavy stone pot placed firmly on a rough wooden table, deep low-frequency impact with a dull thud and slight vibration of the wood surface.",
+   "target": "heavy stone pot thudding on wood",
+   "perspective": "room",
+   "level": "medium",
+   "seconds": 3,
+   "expect": [
+    "Thump, thud",
+    "Thunk",
+    "Knock"
+   ],
+   "after": "floor_walk",
+   "gap": 1,
+   "negative": "glass, plastic, metal clink, door slam, wood slap, chop, whack"
+  },
+  {
+   "id": "cough",
+   "prompt": "A deep, rasping cough from a person standing near the stove.",
+   "target": "deep rasping cough",
+   "perspective": "near",
+   "level": "quiet",
+   "seconds": 3,
+   "expect": [
+    "Cough",
+    "Throat clearing"
+   ],
+   "after": "table_thud",
+   "gap": 0.5,
+   "negative": "speech, music"
+  },
+  {
+   "id": "fire_catching",
+   "prompt": "Dry birch tinder and split oak kindling igniting, sharp hissing of burning wood, rapid small pops and crackles as flames catch.",
+   "target": "dry wood tinder catching fire and crackling",
+   "perspective": "near",
+   "level": "medium",
+   "seconds": 12,
+   "expect": [
+    "Fire",
+    "Crackle"
+   ],
+   "after": "cough",
+   "gap": 0,
+   "negative": "electricity, gas, cap gun, camera shutter, gunshot, crushing, metal squeak"
+  }
+ ]
+}

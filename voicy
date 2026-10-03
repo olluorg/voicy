@@ -244,6 +244,45 @@ def cmd_say(a) -> int:
     return 0
 
 
+# -------------------------------------------------------------------- sound
+
+def cmd_sound(a) -> int:
+    text = read_text(a.text).strip()
+    if not text:
+        die("пустое описание звука")
+    out = Path(a.out) if a.out else Path(f"voicy-sound-{int(time.time())}.{a.format}")
+    if str(out) == "-":
+        die("аудио в stdout не пишется — бинарь засорит вывод. Укажите файл: "
+            f"{sys.argv[0]} sound \"...\" out.{a.format}")
+    fmt = a.format
+    if a.out and out.suffix.lstrip(".").lower() in AUDIO_FORMATS:
+        fmt = out.suffix.lstrip(".").lower()
+
+    h = require_server(a.url)
+    if not h.get("sound"):
+        die("у сервера нет движка звуков: поднимите его с SOUND_ENGINE")
+
+    payload = {"text": text, "duration_seconds": a.duration, "loop": a.loop,
+               "response_format": fmt}
+    if a.seed is not None:
+        payload["seed"] = a.seed
+    if a.detach or a.webhook:
+        if a.webhook:
+            payload["webhook_url"] = a.webhook
+        body, _ = post_json(a.url, "/v1/jobs/sound", payload, 60)
+        return detached(json.loads(body), f"{out}")
+
+    started = time.perf_counter()
+    audio, headers = post_json(a.url, "/v1/sound-generation", payload, a.timeout)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(audio)
+    secs = headers.get("x-audio-seconds", "?")
+    gen = headers.get("x-generation-seconds", f"{time.perf_counter() - started:.1f}")
+    log(f"{h['sound'].get('engine', '?')}: {secs} с звука за {gen} с, {len(audio) / 1024:.0f} КиБ")
+    print(out)
+    return 0
+
+
 # --------------------------------------------------------------------- hear
 
 def cmd_hear(a) -> int:
@@ -322,7 +361,7 @@ def cmd_job(a) -> int:
             print(json.dumps(job, ensure_ascii=False, indent=2))
         return 3 if job["state"] in ("queued", "running") else 1
 
-    if job["kind"] == "speech":
+    if job["kind"] in ("speech", "sound"):
         if not a.out:
             print(json.dumps(job, ensure_ascii=False, indent=2))
             log(f"звук готов — укажите файл: {sys.argv[0]} job {a.id} out.{job['result']['format']}")
@@ -331,7 +370,7 @@ def cmd_job(a) -> int:
         out = Path(a.out)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes(audio)
-        log(f"{job['result']['voice']}: {job['result']['seconds']} с звука")
+        log(f"{job['result'].get('voice', 'звук')}: {job['result']['seconds']} с звука")
         print(out)
         return 0
 
@@ -627,6 +666,19 @@ def main(argv: list[str]) -> int:
     s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
     s.add_argument("--timeout", type=float, default=1800)
     s.set_defaults(fn=cmd_say)
+
+    s = sub.add_parser("sound", help="описание → звук: скрип, вода, ветер")
+    s.add_argument("text", help="описание по-английски, либо @файл, либо - для stdin")
+    s.add_argument("out", nargs="?", help="куда писать; расширение задаёт формат")
+    s.add_argument("--duration", type=float, default=5.0,
+                   help="секунд, 0.5–3600; длиннее, чем модель делает за раз, — петлёй")
+    s.add_argument("--loop", action="store_true", help="звук, который повторяется без шва")
+    s.add_argument("--format", default="opus", choices=AUDIO_FORMATS)
+    s.add_argument("--seed", type=int)
+    s.add_argument("--detach", action="store_true", help="не ждать: напечатать id задания и выйти")
+    s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
+    s.add_argument("--timeout", type=float, default=1800)
+    s.set_defaults(fn=cmd_sound)
 
     s = sub.add_parser("hear", help="аудиофайл → текст")
     s.add_argument("file")

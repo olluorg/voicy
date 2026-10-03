@@ -298,8 +298,10 @@ impl Engines {
         let stt = NativeStt::find();
         let (vad, turn) = native_listen();
         let all_native = tts.is_some() && stt.is_some() && vad.is_some() && turn.is_some();
+        // звуки есть только у движка на Python и только по просьбе (SOUND_ENGINE)
+        let sound = std::env::var("SOUND_ENGINE").is_ok_and(|v| !v.is_empty());
         let mut info = json!({});
-        let host = if all_native {
+        let host = if all_native && !sound {
             eprintln!("voicy: all engines in-process, Python is not needed");
             info["device"] = json!(tts_device());
             info["cuda"] = json!(info["device"] == "cuda");
@@ -311,10 +313,16 @@ impl Engines {
             if native::lib_dir().is_err() {
                 eprintln!("voicy: движков в процессе нет — библиотеки не скачаны (voicy setup)");
             }
-            eprintln!("voicy: engines via {}", python.display());
-            let host = Host::spawn(python, dir).await?;
+            eprintln!("voicy: engines via {}{}", python.display(), if all_native { " (sounds only)" } else { "" });
+            let host = Host::spawn(python, dir, all_native.then_some("sound")).await?;
             let (i, _) = host.run("info", json!({}), &[]).await.map_err(|e| anyhow::anyhow!(e.message))?;
-            info = i;
+            if all_native {
+                info["device"] = json!(tts_device());
+                info["cuda"] = json!(info["device"] == "cuda");
+                info["sound"] = i["sound"].clone();
+            } else {
+                info = i;
+            }
             Some(host)
         };
         if let Some(n) = &tts {
@@ -368,6 +376,11 @@ impl Engines {
             .unwrap_or_default()
     }
 
+    /// What the sound engine said about itself; None when there is none.
+    pub fn sound(&self) -> Option<&Value> {
+        Some(&self.info["sound"]).filter(|v| v.is_object())
+    }
+
     pub fn turn_rate(&self) -> u32 {
         self.info["turn"]["sample_rate"].as_u64().unwrap_or(16000) as u32
     }
@@ -394,6 +407,7 @@ impl Engines {
             "tts" if self.tts.is_some() => return self.tts.as_ref().unwrap().status(),
             "stt" if self.stt.is_some() => return self.stt.as_ref().unwrap().status(),
             "turn" if self.turn.is_some() => return self.info["turn"].clone(),
+            "sound" if self.sound().is_none() => return Value::Null,
             _ => {}
         }
         let Ok(host) = self.host() else { return self.info[kind].clone() };
@@ -441,11 +455,25 @@ impl Engines {
     }
 
     /// Synthesis. `on_progress` sees every progress event and returns false to stop.
-    pub async fn speak(&self, args: Value, mut on_progress: impl FnMut(&Value) -> bool) -> Result<Speech, Stop> {
+    pub async fn speak(&self, args: Value, on_progress: impl FnMut(&Value) -> bool) -> Result<Speech, Stop> {
         if let Some(n) = &self.tts {
             return Self::speak_native(n, args, on_progress).await;
         }
-        let mut call = self.host().map_err(Stop::Failed)?.call("tts.speak", args, &[]).await;
+        self.host_audio("tts.speak", args, on_progress).await
+    }
+
+    /// Sounds from a description, by the engine in the Python host.
+    /// `on_progress` as in `speak`.
+    pub async fn sound_generate(&self, args: Value, on_progress: impl FnMut(&Value) -> bool) -> Result<Speech, Stop> {
+        if self.sound().is_none() {
+            return Err(Stop::Failed(err("unsupported", "no sound engine on this server (SOUND_ENGINE)")));
+        }
+        self.host_audio("sound.generate", args, on_progress).await
+    }
+
+    /// A host operation that reports progress and ends in audio.
+    async fn host_audio(&self, op: &str, args: Value, mut on_progress: impl FnMut(&Value) -> bool) -> Result<Speech, Stop> {
+        let mut call = self.host().map_err(Stop::Failed)?.call(op, args, &[]).await;
         let mut stopping = false;
         loop {
             match call.next().await {

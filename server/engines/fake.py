@@ -6,7 +6,7 @@ or ARM64. They are deterministic, so a check can say exactly what should come
 back. And they are a third implementation of the contract (ADR 0021): anything
 the server does only because a real model happens to do it shows up here.
 
-    TTS_ENGINE=tone STT_ENGINE=script TURN_ENGINE=pause VAD_ENGINE=energy
+    TTS_ENGINE=tone STT_ENGINE=script TURN_ENGINE=pause VAD_ENGINE=energy SOUND_ENGINE=noise
 
   tone   — synthesis: a 220 Hz tone, 60 ms per character, generated in 0.1 s
            pieces at TONE_SPEED × real time, reporting progress after each.
@@ -16,9 +16,14 @@ the server does only because a real model happens to do it shows up here.
            taken in turn from a fixed list; silence ends a segment.
   pause  — end of turn: complete if the last 0.2 s are silent.
   energy — voice activity: loudness of each 32 ms frame.
+  noise  — sounds: white noise at 44.1 kHz, the same for the same prompt and
+           seed, at most NOISE_MAX_SECONDS (10) a call, made in 1 s pieces at
+           NOISE_SPEED × real time; reports like a diffusion model — share of
+           work and the exact length. Understands English descriptions only.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import time
 from pathlib import Path
@@ -96,6 +101,36 @@ class ToneTTS(_Loaded):
                 on_progress(Progress(done=produced / total, total=total) if self.knows_length
                             else Progress(produced=produced))
         return Synthesis(audio, self.sample_rate, {"pieces": -(-n // step)})
+
+
+# ----------------------------------------------------------------------- звуки
+
+class NoiseSound(_Loaded):
+    name = "noise"
+    sample_rate = 44100
+    languages = ("en",)
+    PIECE = 1.0                     # с
+
+    def __init__(self, model: str = "white-noise"):
+        super().__init__()
+        self.model = model
+        self.max_seconds = float(os.environ.get("NOISE_MAX_SECONDS", "10"))
+        self.speed = float(os.environ.get("NOISE_SPEED", "50"))
+
+    def generate(self, prompt: str, seconds: float, seed: int | None = None,
+                 on_progress: Callable[[Progress], None] | None = None) -> Synthesis:
+        self.load()
+        seconds = min(seconds, self.max_seconds)
+        key = hashlib.sha256(f"{prompt}\0{seed}".encode()).digest()
+        rng = np.random.default_rng(int.from_bytes(key[:8], "little"))
+        n = int(round(seconds * self.sample_rate))
+        audio = (0.2 * rng.standard_normal(n)).clip(-1, 1).astype(np.float32)
+        pieces = max(1, int(np.ceil(seconds / self.PIECE)))
+        for k in range(1, pieces + 1):
+            time.sleep(self.PIECE / self.speed)
+            if on_progress is not None:
+                on_progress(Progress(done=k / pieces, total=seconds))
+        return Synthesis(audio, self.sample_rate, {"pieces": pieces})
 
 
 # --------------------------------------------------------------- распознавание

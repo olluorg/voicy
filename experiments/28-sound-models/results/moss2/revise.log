@@ -1,0 +1,11 @@
+исправлен door_open: Heavy wooden door with dry wood rubbing on wood at the frame and threshold, low uneven creaks and groans as it swings slowly inward.
+исправлен door_close: Heavy wooden door slams shut firmly, dry low creaks of wood rubbing against the frame and uneven gaps closing, final thud of the latch.
+floor_walk, попытка 1: ['floor_walk: a wooden creak comes from wood rubbing on wood at the frame or between boards; remove the iron/metal hinges from the prompt and describe the wood (dry, low, uneven gaps), add "metal squeak, hinge squeal" to negative']
+floor_walk, попытка 2: ['floor_walk: a wooden creak comes from wood rubbing on wood at the frame or between boards; remove the iron/metal hinges from the prompt and describe the wood (dry, low, uneven gaps), add "metal squeak, hinge squeal" to negative']
+floor_walk, попытка 3: ['floor_walk: a wooden creak comes from wood rubbing on wood at the frame or between boards; remove the iron/metal hinges from the prompt and describe the wood (dry, low, uneven gaps), add "metal squeak, hinge squeal" to negative']
+исправлен cough: A deep, wet, rasping cough produced by a person standing near a clay stove, thick mucus expelled from the throat, low frequency vibration of the chest cavity, no words spoken.
+исправлен fire_catching: Dry tinder and small split wood logs igniting, sharp popping sparks, rapid expansion of flame, dry wood charring and hissing, intense crackling as embers grow.
+исправлен floor_walk: Slow, heavy boots dragging across rough, uneven wooden floorboards, distinct dry creaks of wood-on-wood at the threshold and between planks, low thuds of weight shifting, no metal or plastic squeaks.
+cough, попытка 1: ['send one revision with id cough']
+cough, попытка 2: ['send one revision with id cough']
+cough, попытка 3: ['send one revision with id cough']

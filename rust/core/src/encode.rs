@@ -13,6 +13,11 @@ use anyhow::{Context, bail};
 
 const OPUS_BITRATE: i32 = 24_000; // mp3 задаётся перечислением LAME: Bitrate::Kbps64
 
+/// Выше 24 кГц приходит не речь, а звуки: в них шум воды и ветра, на котором
+/// речевой битрейт слышно рассыпается. Речь всегда в 24 кГц и этого не видит.
+const WIDE: u32 = 24_000;
+const OPUS_BITRATE_WIDE: i32 = 96_000;
+
 /// Что кодируется здесь; остальное — забота ffmpeg.
 pub fn own(fmt: &str) -> bool {
     matches!(fmt, "opus" | "mp3" | "flac")
@@ -36,11 +41,15 @@ fn to_i16(x: &[f32]) -> Vec<i16> {
 /// Ogg Opus: заголовок OpusHead, теги, дальше пакеты по 20 мс.
 ///
 /// Частоты, которые понимает кодировщик, — 8, 12, 16, 24 и 48 кГц; синтез
-/// отдаёт 24 кГц. Позиции в контейнере считаются в отсчётах 48 кГц независимо
+/// отдаёт 24 кГц, а прочие (44.1 кГц у моделей звуков) пересчитываются
+/// в 48. Позиции в контейнере считаются в отсчётах 48 кГц независимо
 /// от входной частоты — так устроен формат.
 fn opus(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
     const FRAME_MS: usize = 20;
-    anyhow::ensure!([8000, 12000, 16000, 24000, 48000].contains(&sr), "opus не берёт {sr} Гц");
+    if ![8000, 12000, 16000, 24000, 48000].contains(&sr) {
+        return opus(&crate::audio::Resampler::whole(sr, 48000, x), 48000);
+    }
+    let bitrate = if sr > WIDE { OPUS_BITRATE_WIDE } else { OPUS_BITRATE };
     let frame = sr as usize * FRAME_MS / 1000;
 
     let mut err: c_int = 0;
@@ -50,7 +59,7 @@ fn opus(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
     }
     let _guard = scopeguard(|| unsafe { audiopus_sys::opus_encoder_destroy(enc) });
     unsafe {
-        audiopus_sys::opus_encoder_ctl(enc, audiopus_sys::OPUS_SET_BITRATE_REQUEST, OPUS_BITRATE);
+        audiopus_sys::opus_encoder_ctl(enc, audiopus_sys::OPUS_SET_BITRATE_REQUEST, bitrate);
     }
     // задержка кодировщика: столько отсчётов в начале проигрыватель пропускает
     let mut lookahead: c_int = 0;
@@ -119,7 +128,7 @@ fn mp3(x: &[f32], sr: u32) -> anyhow::Result<Vec<u8>> {
     let mut b = Builder::new().context("mp3: кодировщик не создан")?;
     b.set_num_channels(1).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     b.set_sample_rate(sr).map_err(|e| anyhow::anyhow!("mp3: {sr} Гц — {e}"))?;
-    b.set_brate(Bitrate::Kbps64).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
+    b.set_brate(if sr > WIDE { Bitrate::Kbps128 } else { Bitrate::Kbps64 }).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     b.set_quality(Quality::Good).map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
     let mut enc = b.build().map_err(|e| anyhow::anyhow!("mp3: {e}"))?;
 
@@ -165,6 +174,16 @@ mod tests {
         assert_eq!(&data[..4], b"OggS");
         assert!(data.windows(8).any(|w| w == b"OpusHead"));
         assert!(data.len() > 500, "слишком коротко: {}", data.len());
+    }
+
+    /// Звуки моделей — 44.1 кГц: opus их пересчитывает и кодирует шире речи.
+    #[test]
+    fn opus_takes_sounds_at_44k() {
+        let speech = opus(&tone(1.0, 24000), 24000).expect("opus 24k");
+        let sound = opus(&tone(1.0, 44100), 44100).expect("opus 44.1k");
+        assert_eq!(&sound[..4], b"OggS");
+        assert!(sound.len() > speech.len() * 2, "звук не шире речи: {} против {}", sound.len(), speech.len());
+        assert!(mp3(&tone(0.5, 44100), 44100).expect("mp3 44.1k").len() > 500);
     }
 
     #[test]

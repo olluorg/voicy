@@ -1,0 +1,494 @@
+{
+ "winter_outside": {
+  "all_bad": false,
+  "chosen": "winter_outside__dsp21",
+  "takes": [
+   {
+    "name": "winter_outside__dsp21",
+    "why": [],
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06"
+   },
+   {
+    "name": "winter_outside__dsp22",
+    "why": [],
+    "heard": "Eruption 0.13, White noise 0.07, Field recording 0.07"
+   },
+   {
+    "name": "winter_outside__f14446s11",
+    "why": [
+     "AST: engine 0.23",
+     "AST: mic_wind 0.41"
+    ],
+    "heard": "Wind noise (microphone) 0.41, Wind 0.37, Vehicle 0.23"
+   },
+   {
+    "name": "winter_outside__f14446s12",
+    "why": [
+     "AST: engine 0.39",
+     "AST: mic_wind 0.44"
+    ],
+    "heard": "Wind noise (microphone) 0.44, Vehicle 0.39, Wind 0.31"
+   },
+   {
+    "name": "winter_outside__f14446s13",
+    "why": [],
+    "heard": "Thunder 0.54, Thunderstorm 0.46, Rain 0.13"
+   },
+   {
+    "name": "winter_outside__f14446s14",
+    "why": [
+     "AST: engine 0.30",
+     "AST: mic_wind 0.34"
+    ],
+    "heard": "Wind noise (microphone) 0.34, Boat, Water vehicle 0.33, Vehicle 0.30"
+   }
+  ]
+ },
+ "hut_air": {
+  "all_bad": false,
+  "chosen": "hut_air__39b9acs14",
+  "takes": [
+   {
+    "name": "hut_air__39b9acs11",
+    "why": [
+     "CLAP: «rain falling» 0.98"
+    ],
+    "heard": "Boiling 0.29, Liquid 0.11, Inside, small room 0.04"
+   },
+   {
+    "name": "hut_air__39b9acs12",
+    "why": [
+     "CLAP: «rain falling» 0.86"
+    ],
+    "heard": "Hiss 0.20, Steam 0.17, Vacuum cleaner 0.08"
+   },
+   {
+    "name": "hut_air__39b9acs13",
+    "why": [
+     "CLAP: «rustling of dry hay» 0.52"
+    ],
+    "heard": "Typewriter 0.20, Typing 0.19, Computer keyboard 0.13"
+   },
+   {
+    "name": "hut_air__39b9acs14",
+    "why": [],
+    "heard": "Patter 0.27, Printer 0.06, Inside, small room 0.05"
+   }
+  ]
+ },
+ "fire_burning": {
+  "all_bad": false,
+  "chosen": "fire_burning__d0ee6as12",
+  "takes": [
+   {
+    "name": "fire_burning__d0ee6as11",
+    "why": [
+     "AST: rain 0.16"
+    ],
+    "heard": "Fire 0.19, Crackle 0.17, Rain 0.16"
+   },
+   {
+    "name": "fire_burning__d0ee6as12",
+    "why": [],
+    "heard": "Crumpling, crinkling 0.44, Inside, small room 0.20, Crushing 0.14"
+   },
+   {
+    "name": "fire_burning__d0ee6as13",
+    "why": [],
+    "heard": "Crushing 0.32, Crumpling, crinkling 0.20, Crack 0.15"
+   },
+   {
+    "name": "fire_burning__d0ee6as14",
+    "why": [],
+    "heard": "Chop 0.56, Crushing 0.10, Crackle 0.05"
+   }
+  ]
+ },
+ "door_open": {
+  "all_bad": false,
+  "chosen": "door_open__ca0bf1s18",
+  "takes": [
+   {
+    "name": "door_open__ca0bf1s11",
+    "why": [
+     "AST: слышно Scrape 0.13, а Door только 0.03",
+     "CLAP: «a car engine revving» 0.80"
+    ],
+    "heard": "Scrape 0.13, Music 0.10, Wood 0.09"
+   },
+   {
+    "name": "door_open__ca0bf1s12",
+    "why": [
+     "AST: слышно Wood 0.26, а Door только 0.06"
+    ],
+    "heard": "Wood 0.26, Dishes, pots, and pans 0.10, Door 0.06"
+   },
+   {
+    "name": "door_open__ca0bf1s13",
+    "why": [
+     "AST: music 0.54",
+     "AST: слышно Music 0.54, а Door только 0.02"
+    ],
+    "heard": "Music 0.54, Drum 0.45, Musical instrument 0.36"
+   },
+   {
+    "name": "door_open__ca0bf1s14",
+    "why": [
+     "AST: слышно Music 0.29, а Door только 0.01"
+    ],
+    "heard": "Music 0.29, Speech 0.20, Coin (dropping) 0.10"
+   },
+   {
+    "name": "door_open__ca0bf1s15",
+    "why": [],
+    "heard": "Door 0.17, Music 0.09, Slam 0.04"
+   },
+   {
+    "name": "door_open__ca0bf1s16",
+    "why": [
+     "AST: music 0.49",
+     "AST: слышно Music 0.49, а Door только 0.04",
+     "CLAP: «a car engine revving» 0.98"
+    ],
+    "heard": "Music 0.49, Heart sounds, heartbeat 0.24, Throbbing 0.21"
+   },
+   {
+    "name": "door_open__ca0bf1s17",
+    "why": [
+     "AST: music 0.47",
+     "AST: слышно Music 0.47, а Door только 0.01",
+     "CLAP: «rustling of dry hay» 0.76"
+    ],
+    "heard": "Music 0.47, Musical instrument 0.15, Percussion 0.06"
+   },
+   {
+    "name": "door_open__ca0bf1s18",
+    "why": [],
+    "heard": "Door 0.36, Slam 0.21, Sliding door 0.17"
+   }
+  ]
+ },
+ "door_close": {
+  "all_bad": false,
+  "chosen": "door_close__861802s13",
+  "takes": [
+   {
+    "name": "door_close__861802s11",
+    "why": [
+     "AST: music 0.32",
+     "AST: слышно Music 0.32, а Creak только 0.01",
+     "CLAP: «a car engine revving» 0.79"
+    ],
+    "heard": "Music 0.32, Sound effect 0.10, Coin (dropping) 0.05"
+   },
+   {
+    "name": "door_close__861802s12",
+    "why": [
+     "AST: слышно Heart sounds, heartbeat 0.19, а Door только 0.02"
+    ],
+    "heard": "Heart sounds, heartbeat 0.19, Heart murmur 0.14, Throbbing 0.08"
+   },
+   {
+    "name": "door_close__861802s13",
+    "why": [],
+    "heard": "Door 0.10, Breaking 0.07, Music 0.07"
+   },
+   {
+    "name": "door_close__861802s14",
+    "why": [
+     "AST: music 0.35",
+     "AST: слышно Music 0.35, а Door только 0.14",
+     "CLAP: «music playing» 0.98"
+    ],
+    "heard": "Music 0.35, Door 0.14, Sliding door 0.04"
+   },
+   {
+    "name": "door_close__861802s15",
+    "why": [
+     "AST: music 0.39",
+     "AST: слышно Music 0.39, а Door только 0.01",
+     "CLAP: «hail hitting a roof» 0.81"
+    ],
+    "heard": "Music 0.39, Sound effect 0.06, Television 0.05"
+   },
+   {
+    "name": "door_close__861802s16",
+    "why": [
+     "AST: слышно Music 0.21, а Door только 0.09",
+     "CLAP: «hail hitting a roof» 0.79"
+    ],
+    "heard": "Music 0.21, Door 0.09, Sliding door 0.06"
+   },
+   {
+    "name": "door_close__861802s17",
+    "why": [
+     "AST: слышно Sliding door 0.04, а Door только 0.02"
+    ],
+    "heard": "Sliding door 0.04, Music 0.04, Breaking 0.03"
+   },
+   {
+    "name": "door_close__861802s18",
+    "why": [
+     "AST: music 0.34",
+     "CLAP: «hail hitting a roof» 0.62"
+    ],
+    "heard": "Music 0.34, Door 0.22, Slam 0.10"
+   }
+  ]
+ },
+ "floor_walk": {
+  "all_bad": true,
+  "chosen": "floor_walk__504d73s12",
+  "takes": [
+   {
+    "name": "floor_walk__504d73s11",
+    "why": [
+     "AST: music 0.44",
+     "AST: слышно Music 0.44, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Music 0.44, Typewriter 0.26, Drum 0.04"
+   },
+   {
+    "name": "floor_walk__504d73s12",
+    "why": [
+     "AST: слышно Knock 0.11, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Knock 0.11, Chop 0.07, Whack, thwack 0.06"
+   },
+   {
+    "name": "floor_walk__504d73s13",
+    "why": [
+     "AST: speech 0.33",
+     "AST: слышно Thunk 0.42, а Walk, footsteps только 0.01"
+    ],
+    "heard": "Thunk 0.42, Door 0.42, Speech 0.33"
+   },
+   {
+    "name": "floor_walk__504d73s14",
+    "why": [
+     "AST: music 0.64",
+     "AST: слышно Music 0.64, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Music 0.64, Wood block 0.05, Percussion 0.05"
+   },
+   {
+    "name": "floor_walk__504d73s15",
+    "why": [
+     "AST: слышно Heart sounds, heartbeat 0.14, а Walk, footsteps только 0.01"
+    ],
+    "heard": "Heart sounds, heartbeat 0.14, Music 0.09, Heart murmur 0.08"
+   },
+   {
+    "name": "floor_walk__504d73s16",
+    "why": [
+     "AST: слышно Music 0.12, а Walk, footsteps только 0.01"
+    ],
+    "heard": "Music 0.12, Speech 0.12, Clip-clop 0.04"
+   },
+   {
+    "name": "floor_walk__504d73s17",
+    "why": [
+     "AST: слышно Typewriter 0.18, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Typewriter 0.18, Computer keyboard 0.09, Typing 0.05"
+   },
+   {
+    "name": "floor_walk__504d73s18",
+    "why": [
+     "AST: слышно Music 0.29, а Walk, footsteps только 0.00"
+    ],
+    "heard": "Music 0.29, Wood block 0.19, Percussion 0.17"
+   }
+  ]
+ },
+ "table_thud": {
+  "all_bad": false,
+  "chosen": "table_thud__415873s15",
+  "takes": [
+   {
+    "name": "table_thud__415873s11",
+    "why": [
+     "AST: слышно Speech 0.08, а Thunk только 0.01"
+    ],
+    "heard": "Speech 0.08, Music 0.08, Breaking 0.07"
+   },
+   {
+    "name": "table_thud__415873s12",
+    "why": [],
+    "heard": "Knock 0.40, Heart sounds, heartbeat 0.14, Throbbing 0.06"
+   },
+   {
+    "name": "table_thud__415873s13",
+    "why": [
+     "AST: слышно Music 0.18, а Thunk только 0.03"
+    ],
+    "heard": "Music 0.18, Sound effect 0.08, Glass 0.06"
+   },
+   {
+    "name": "table_thud__415873s14",
+    "why": [
+     "AST: слышно Bang 0.22, а Thunk только 0.07"
+    ],
+    "heard": "Bang 0.22, Burst, pop 0.09, Slam 0.08"
+   },
+   {
+    "name": "table_thud__415873s15",
+    "why": [],
+    "heard": "Door 0.14, Knock 0.12, Tap 0.06"
+   },
+   {
+    "name": "table_thud__415873s16",
+    "why": [
+     "AST: слышно Speech 0.24, а Thunk только 0.03"
+    ],
+    "heard": "Speech 0.24, Music 0.13, Bang 0.13"
+   },
+   {
+    "name": "table_thud__415873s17",
+    "why": [
+     "AST: слышно Scrape 0.10, а Thunk только 0.02"
+    ],
+    "heard": "Sound effect 0.15, Scrape 0.10, Door 0.05"
+   },
+   {
+    "name": "table_thud__415873s18",
+    "why": [
+     "AST: слышно Music 0.15, а Knock только 0.02"
+    ],
+    "heard": "Music 0.15, Hammer 0.08, Wood block 0.06"
+   }
+  ]
+ },
+ "cough": {
+  "all_bad": true,
+  "chosen": "cough__464948s15",
+  "takes": [
+   {
+    "name": "cough__464948s11",
+    "why": [
+     "AST: music 0.68",
+     "AST: слышно Music 0.68, а Throat clearing только 0.00",
+     "CLAP: «a car engine revving» 0.98"
+    ],
+    "heard": "Music 0.68, Sound effect 0.10, Oink 0.10"
+   },
+   {
+    "name": "cough__464948s12",
+    "why": [
+     "AST: music 0.67",
+     "AST: слышно Music 0.67, а Throat clearing только 0.00"
+    ],
+    "heard": "Music 0.67, Animal 0.08, Scrape 0.06"
+   },
+   {
+    "name": "cough__464948s13",
+    "why": [
+     "AST: music 0.65",
+     "AST: слышно Scrape 0.68, а Throat clearing только 0.00",
+     "CLAP: «a car engine revving» 0.79"
+    ],
+    "heard": "Scrape 0.68, Music 0.65, Sound effect 0.28"
+   },
+   {
+    "name": "cough__464948s14",
+    "why": [
+     "AST: слышно Music 0.30, а Throat clearing только 0.00",
+     "CLAP: «a car engine revving» 1.00"
+    ],
+    "heard": "Music 0.30, Gurgling 0.07, Stomach rumble 0.05"
+   },
+   {
+    "name": "cough__464948s15",
+    "why": [
+     "AST: слышно Scrape 0.46, а Throat clearing только 0.00"
+    ],
+    "heard": "Scrape 0.46, Speech 0.28, Music 0.23"
+   },
+   {
+    "name": "cough__464948s16",
+    "why": [
+     "AST: music 0.59",
+     "AST: слышно Music 0.59, а Throat clearing только 0.00"
+    ],
+    "heard": "Music 0.59, Scrape 0.13, Sound effect 0.09"
+   },
+   {
+    "name": "cough__464948s17",
+    "why": [
+     "AST: music 0.65",
+     "AST: слышно Music 0.65, а Throat clearing только 0.01"
+    ],
+    "heard": "Music 0.65, Burping, eructation 0.28, Sound effect 0.08"
+   },
+   {
+    "name": "cough__464948s18",
+    "why": [
+     "AST: music 0.51",
+     "AST: слышно Music 0.51, а Throat clearing только 0.00",
+     "CLAP: «a car engine revving» 0.93"
+    ],
+    "heard": "Music 0.51, Speech 0.09, Sound effect 0.07"
+   }
+  ]
+ },
+ "fire_catching": {
+  "all_bad": false,
+  "chosen": "fire_catching__9f2679s14",
+  "takes": [
+   {
+    "name": "fire_catching__9f2679s11",
+    "why": [
+     "AST: слышно Crumpling, crinkling 0.23, а Crackle только 0.04"
+    ],
+    "heard": "Crumpling, crinkling 0.23, Inside, small room 0.22, Tearing 0.12"
+   },
+   {
+    "name": "fire_catching__9f2679s12",
+    "why": [
+     "AST: слышно Scrape 0.07, а Fire только 0.04"
+    ],
+    "heard": "Scrape 0.07, Fire 0.04, Crackle 0.04"
+   },
+   {
+    "name": "fire_catching__9f2679s13",
+    "why": [
+     "AST: слышно Crushing 0.19, а Crackle только 0.08"
+    ],
+    "heard": "Crushing 0.19, Crumpling, crinkling 0.17, Crackle 0.08"
+   },
+   {
+    "name": "fire_catching__9f2679s14",
+    "why": [],
+    "heard": "Crackle 0.13, Fire 0.10, Bicycle 0.10"
+   },
+   {
+    "name": "fire_catching__9f2679s15",
+    "why": [
+     "AST: слышно Arrow 0.19, а Fire только 0.07"
+    ],
+    "heard": "Arrow 0.19, Skateboard 0.08, Fire 0.07"
+   },
+   {
+    "name": "fire_catching__9f2679s16",
+    "why": [
+     "AST: слышно Crumpling, crinkling 0.50, а Crackle только 0.04"
+    ],
+    "heard": "Crumpling, crinkling 0.50, Inside, small room 0.28, Tearing 0.25"
+   },
+   {
+    "name": "fire_catching__9f2679s17",
+    "why": [
+     "AST: слышно Tearing 0.21, а Crackle только 0.03"
+    ],
+    "heard": "Tearing 0.21, Inside, small room 0.16, Crumpling, crinkling 0.14"
+   },
+   {
+    "name": "fire_catching__9f2679s18",
+    "why": [
+     "AST: слышно Crushing 0.17, а Crackle только 0.04"
+    ],
+    "heard": "Crushing 0.17, Tearing 0.13, Scrape 0.09"
+   }
+  ]
+ }
+}

@@ -19,16 +19,22 @@ REGISTRY = {
              "pause": "engines.fake:PauseTurn"},
     "vad": {"silero": "engines.vad_silero:SileroVAD",
             "energy": "engines.fake:EnergyVAD"},
+    "sound": {"noise": "engines.fake:NoiseSound"},
 }
-# tone, script, pause, energy — учебные движки для проверок (engines/fake.py)
+# tone, script, pause, energy, noise — учебные движки для проверок (engines/fake.py)
 DEFAULT = {"tts": "qwen3-tts", "stt": "faster-whisper", "turn": "smart-turn", "vad": "silero"}
+# звуки необязательны: без SOUND_ENGINE их нет, и сервер отвечает, что не умеет
+OPTIONAL = ("sound",)
 MODEL_ENV = {"tts": "TTS_MODEL", "stt": "STT_MODEL"}
 
 
 def create(kind: str):
-    """`TTS_ENGINE`, `STT_ENGINE`, `TURN_ENGINE`, `VAD_ENGINE` choose the engine;
-    `TTS_MODEL` and `STT_MODEL` its weights, when it has a choice of them."""
-    name = os.environ.get(f"{kind.upper()}_ENGINE") or DEFAULT[kind]
+    """`TTS_ENGINE`, `STT_ENGINE`, `TURN_ENGINE`, `VAD_ENGINE`, `SOUND_ENGINE`
+    choose the engine; `TTS_MODEL` and `STT_MODEL` its weights, when it has a
+    choice of them. An optional kind that is not asked for is None."""
+    name = os.environ.get(f"{kind.upper()}_ENGINE") or DEFAULT.get(kind)
+    if name is None:
+        return None
     known = REGISTRY[kind]
     if name not in known:
         raise SystemExit(f"{kind.upper()}_ENGINE={name}: unknown engine; "
