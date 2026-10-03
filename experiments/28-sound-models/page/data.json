@@ -1,0 +1,719 @@
+{
+ "moss2": {
+  "takes": 58,
+  "bad": 40,
+  "failed": [
+   "floor_walk",
+   "cough"
+  ],
+  "scene_seconds": 106.7,
+  "elements": [
+   {
+    "id": "winter_outside",
+    "role": "фон",
+    "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+    "target": "fierce winter wind and blizzard outside",
+    "expect": [],
+    "ok": true,
+    "heard": "Field recording 0.37, Eruption 0.17, Rumble 0.11",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "hut_air",
+    "role": "фон",
+    "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+    "target": "still cold air in a wooden room",
+    "expect": [],
+    "ok": true,
+    "heard": "Rumble 0.49, Silence 0.12, White noise 0.07",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "fire_burning",
+    "role": "фон",
+    "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+    "target": "wood fire crackling in a stove",
+    "expect": [],
+    "ok": true,
+    "heard": "Computer keyboard 0.15, Finger snapping 0.09, Typing 0.04",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "door_open",
+    "role": "событие",
+    "prompt": "Heavy wooden door with dry wood rubbing on wood at the frame and threshold, low uneven creaks and groans as it swings slowly inward.",
+    "target": "heavy wooden door creaking open",
+    "expect": [
+     "Door",
+     "Creak",
+     "Squeak"
+    ],
+    "ok": true,
+    "heard": "Door 0.19, Creak 0.14, Sliding door 0.09",
+    "why": [],
+    "synth": false,
+    "seconds": 5.0
+   },
+   {
+    "id": "door_close",
+    "role": "событие",
+    "prompt": "Heavy wooden door slams shut firmly, dry low creaks of wood rubbing against the frame and uneven gaps closing, final thud of the latch.",
+    "target": "heavy wooden door creaking shut",
+    "expect": [
+     "Door",
+     "Creak",
+     "Thump, thud"
+    ],
+    "ok": true,
+    "heard": "Knock 0.63, Door 0.41, Slam 0.21",
+    "why": [],
+    "synth": false,
+    "seconds": 4.0
+   },
+   {
+    "id": "floor_walk",
+    "role": "событие",
+    "prompt": "Slow, heavy boots dragging across rough, uneven wooden floorboards, distinct dry creaks of wood-on-wood at the threshold and between planks, low thuds of weight shifting, no metal or plastic squeaks.",
+    "target": "heavy boots walking on wooden floorboards",
+    "expect": [
+     "Walk, footsteps",
+     "Creak"
+    ],
+    "ok": false,
+    "heard": "Sound effect 0.53, Zipper (clothing) 0.11, Scrape 0.09",
+    "why": [
+     "AST: слышно Zipper (clothing) 0.11, а Walk, footsteps только 0.00"
+    ],
+    "synth": false,
+    "seconds": 6.0
+   },
+   {
+    "id": "table_thud",
+    "role": "событие",
+    "prompt": "A heavy metal tankard or stone pot being set down firmly on a wooden table.",
+    "target": "heavy object thudding on a table",
+    "expect": [
+     "Thump, thud",
+     "Thunk",
+     "Knock"
+    ],
+    "ok": true,
+    "heard": "Knock 0.42, Sound effect 0.08, Thunk 0.05",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "cough",
+    "role": "событие",
+    "prompt": "A deep, wet, rasping cough produced by a person standing near a clay stove, thick mucus expelled from the throat, low frequency vibration of the chest cavity, no words spoken.",
+    "target": "deep wet rasping cough",
+    "expect": [
+     "Cough",
+     "Throat clearing"
+    ],
+    "ok": false,
+    "heard": "Sound effect 0.25, Grunt 0.08, Sigh 0.08",
+    "why": [
+     "AST: слышно Grunt 0.08, а Throat clearing только 0.00"
+    ],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "fire_catching",
+    "role": "событие",
+    "prompt": "Dry tinder and small split wood logs igniting, sharp popping sparks, rapid expansion of flame, dry wood charring and hissing, intense crackling as embers grow.",
+    "target": "dry wood fire catching and growing",
+    "expect": [
+     "Fire",
+     "Crackle"
+    ],
+    "ok": true,
+    "heard": "Sizzle 0.32, Fire 0.21, Frying (food) 0.13",
+    "why": [],
+    "synth": false,
+    "seconds": 12.0
+   }
+  ]
+ },
+ "sa3m": {
+  "takes": 54,
+  "bad": 33,
+  "failed": [
+   "door_open",
+   "floor_walk",
+   "fire_catching"
+  ],
+  "scene_seconds": 102.1,
+  "elements": [
+   {
+    "id": "winter_outside",
+    "role": "фон",
+    "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+    "target": "fierce winter wind and blizzard outside",
+    "expect": [],
+    "ok": true,
+    "heard": "Field recording 0.34, Vehicle 0.19, Rumble 0.14",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "hut_air",
+    "role": "фон",
+    "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+    "target": "still cold air in a wooden room",
+    "expect": [],
+    "ok": true,
+    "heard": "Computer keyboard 0.10, Vehicle 0.07, Typing 0.07",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "fire_burning",
+    "role": "фон",
+    "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+    "target": "wood fire crackling in a stove",
+    "expect": [],
+    "ok": true,
+    "heard": "Finger snapping 0.44, Vehicle 0.09, Wind 0.06",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "door_open",
+    "role": "событие",
+    "prompt": "Heavy dry wooden door creaking open slowly, wood rubbing on wood at the frame and threshold, low uneven gaps, cold air rushing in.",
+    "target": "heavy wooden door creaking open",
+    "expect": [
+     "Door",
+     "Creak",
+     "Squeak"
+    ],
+    "ok": false,
+    "heard": "Rattle 0.06, Clatter 0.06, Sewing machine 0.03",
+    "why": [
+     "AST: слышно Rattle 0.06, а Creak только 0.02"
+    ],
+    "synth": false,
+    "seconds": 5.0
+   },
+   {
+    "id": "door_close",
+    "role": "событие",
+    "prompt": "Dry wooden door slats rubbing against the frame and threshold, low uneven creaks as the wood settles shut firmly.",
+    "target": "heavy wooden door creaking shut",
+    "expect": [
+     "Door",
+     "Creak",
+     "Thump, thud"
+    ],
+    "ok": true,
+    "heard": "Creak 0.25, Sound effect 0.16, Scrape 0.09",
+    "why": [],
+    "synth": false,
+    "seconds": 4.0
+   },
+   {
+    "id": "floor_walk",
+    "role": "событие",
+    "prompt": "Heavy boots stepping firmly on worn wooden floorboards, distinct dry creaks as wood rubs against wood at the joints and threshold.",
+    "target": "footsteps on wooden floorboards",
+    "expect": [
+     "Walk, footsteps",
+     "Creak"
+    ],
+    "ok": false,
+    "heard": "Crackle 0.10, Crushing 0.06, Thunk 0.06",
+    "why": [
+     "AST: слышно Crackle 0.10, а Walk, footsteps только 0.02"
+    ],
+    "synth": false,
+    "seconds": 6.0
+   },
+   {
+    "id": "table_thud",
+    "role": "событие",
+    "prompt": "A heavy metal tankard or stone pot being set down firmly on a wooden table.",
+    "target": "heavy object thudding on a table",
+    "expect": [
+     "Thump, thud",
+     "Thunk",
+     "Knock"
+    ],
+    "ok": true,
+    "heard": "Knock 0.32, Door 0.07, Wood 0.04",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "cough",
+    "role": "событие",
+    "prompt": "A deep, rasping cough from a person standing near the stove.",
+    "target": "deep rasping cough",
+    "expect": [
+     "Cough",
+     "Throat clearing"
+    ],
+    "ok": true,
+    "heard": "Throat clearing 0.61, Cough 0.22, Speech 0.01",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "fire_catching",
+    "role": "событие",
+    "prompt": "Dry birch tinder and small split logs igniting with a match, sharp crackle of wood splitting, rapid popping of embers, rising heat hiss.",
+    "target": "fire starting and growing",
+    "expect": [
+     "Fire",
+     "Crackle"
+    ],
+    "ok": false,
+    "heard": "Crack 0.30, Crumpling, crinkling 0.20, Inside, small room 0.17",
+    "why": [
+     "AST: слышно Crack 0.30, а Crackle только 0.01",
+     "CLAP: «rustling of dry hay» 0.92"
+    ],
+    "synth": false,
+    "seconds": 12.0
+   }
+  ]
+ },
+ "sa3s": {
+  "takes": 58,
+  "bad": 30,
+  "failed": [
+   "floor_walk",
+   "fire_catching"
+  ],
+  "scene_seconds": 101.3,
+  "elements": [
+   {
+    "id": "winter_outside",
+    "role": "фон",
+    "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+    "target": "fierce winter wind and blizzard outside",
+    "expect": [],
+    "ok": true,
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06",
+    "why": [],
+    "synth": true,
+    "seconds": 20.0
+   },
+   {
+    "id": "hut_air",
+    "role": "фон",
+    "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+    "target": "still cold air in a wooden room",
+    "expect": [],
+    "ok": true,
+    "heard": "Coin (dropping) 0.12, Creak 0.06, Thunk 0.05",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "fire_burning",
+    "role": "фон",
+    "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+    "target": "wood fire crackling in a stove",
+    "expect": [],
+    "ok": true,
+    "heard": "Fire 0.10, Hands 0.03, Tap 0.03",
+    "why": [],
+    "synth": false,
+    "seconds": 20.0
+   },
+   {
+    "id": "door_open",
+    "role": "событие",
+    "prompt": "A heavy, dry wooden door frame rubbing against its threshold and side jambs, low uneven creaks as wood grinds on wood, slow opening motion.",
+    "target": "heavy wooden door creaking open",
+    "expect": [
+     "Door",
+     "Creak",
+     "Squeak"
+    ],
+    "ok": true,
+    "heard": "Knock 0.54, Thunk 0.42, Door 0.35",
+    "why": [],
+    "synth": false,
+    "seconds": 5.0
+   },
+   {
+    "id": "door_close",
+    "role": "событие",
+    "prompt": "Heavy dry wooden door slams shut firmly, wood rubbing against wood at the frame and threshold, low uneven creaks and thuds.",
+    "target": "heavy wooden door creaking shut",
+    "expect": [
+     "Door",
+     "Creak",
+     "Thump, thud"
+    ],
+    "ok": true,
+    "heard": "Door 0.66, Knock 0.32, Slam 0.17",
+    "why": [],
+    "synth": false,
+    "seconds": 4.0
+   },
+   {
+    "id": "floor_walk",
+    "role": "событие",
+    "prompt": "Heavy boots stepping firmly on worn wooden floorboards, distinct dry creaks as heels press into the grain and toes lift, low friction sound of wood rubbing on wood.",
+    "target": "footsteps on wooden floorboards",
+    "expect": [
+     "Walk, footsteps",
+     "Creak"
+    ],
+    "ok": false,
+    "heard": "Knock 0.40, Shuffling cards 0.10, Chopping (food) 0.07",
+    "why": [
+     "AST: слышно Knock 0.40, а Walk, footsteps только 0.01"
+    ],
+    "synth": false,
+    "seconds": 6.0
+   },
+   {
+    "id": "table_thud",
+    "role": "событие",
+    "prompt": "A heavy stone pot placed firmly on a rough wooden table, deep low-frequency impact with a dull thud and slight vibration of the wood surface.",
+    "target": "heavy stone pot thudding on wood",
+    "expect": [
+     "Thump, thud",
+     "Thunk",
+     "Knock"
+    ],
+    "ok": true,
+    "heard": "Knock 0.45, Door 0.03, Tap 0.03",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "cough",
+    "role": "событие",
+    "prompt": "A deep, rasping cough from a person standing near the stove.",
+    "target": "deep rasping cough",
+    "expect": [
+     "Cough",
+     "Throat clearing"
+    ],
+    "ok": true,
+    "heard": "Throat clearing 0.55, Cough 0.06, Sound effect 0.05",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "fire_catching",
+    "role": "событие",
+    "prompt": "Dry birch tinder and split oak kindling igniting, sharp hissing of burning wood, rapid small pops and crackles as flames catch.",
+    "target": "dry wood tinder catching fire and crackling",
+    "expect": [
+     "Fire",
+     "Crackle"
+    ],
+    "ok": false,
+    "heard": "Cap gun 0.35, Camera 0.13, Gunshot, gunfire 0.12",
+    "why": [
+     "AST: слышно Cap gun 0.35, а Crackle только 0.01"
+    ],
+    "synth": false,
+    "seconds": 12.0
+   }
+  ]
+ },
+ "unite": {
+  "takes": 46,
+  "bad": 15,
+  "failed": [],
+  "scene_seconds": 101.3,
+  "elements": [
+   {
+    "id": "winter_outside",
+    "role": "фон",
+    "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+    "target": "fierce winter wind and blizzard outside",
+    "expect": [],
+    "ok": true,
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06",
+    "why": [],
+    "synth": true,
+    "seconds": 20.0
+   },
+   {
+    "id": "hut_air",
+    "role": "фон",
+    "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+    "target": "still cold air in a wooden room",
+    "expect": [],
+    "ok": true,
+    "heard": "Stomach rumble 0.39, Snake 0.09, Animal 0.04",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   },
+   {
+    "id": "fire_burning",
+    "role": "фон",
+    "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+    "target": "wood fire crackling in a stove",
+    "expect": [],
+    "ok": true,
+    "heard": "Finger snapping 0.16, Scissors 0.11, Hands 0.06",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   },
+   {
+    "id": "door_open",
+    "role": "событие",
+    "prompt": "A heavy wooden door with dry, uneven gaps rubbing against the frame, producing a low, rough creak as it swings open slowly.",
+    "target": "heavy wooden door creaking open",
+    "expect": [
+     "Door",
+     "Creak",
+     "Squeak"
+    ],
+    "ok": true,
+    "heard": "Door 0.27, Knock 0.24, Sliding door 0.10",
+    "why": [],
+    "synth": false,
+    "seconds": 5.0
+   },
+   {
+    "id": "door_close",
+    "role": "событие",
+    "prompt": "Heavy wooden door slams shut firmly, dry wood rubbing against the frame and threshold with low, uneven creaks and thuds.",
+    "target": "heavy wooden door creaking shut",
+    "expect": [
+     "Door",
+     "Creak",
+     "Thump, thud"
+    ],
+    "ok": true,
+    "heard": "Door 0.42, Knock 0.23, Speech 0.15",
+    "why": [],
+    "synth": false,
+    "seconds": 4.0
+   },
+   {
+    "id": "floor_walk",
+    "role": "событие",
+    "prompt": "Footsteps walking across old wooden floorboards, distinct creaks under weight.",
+    "target": "footsteps on wooden floorboards",
+    "expect": [
+     "Walk, footsteps",
+     "Creak"
+    ],
+    "ok": true,
+    "heard": "Walk, footsteps 0.14, Stomach rumble 0.08, Crackle 0.08",
+    "why": [],
+    "synth": false,
+    "seconds": 6.0
+   },
+   {
+    "id": "table_thud",
+    "role": "событие",
+    "prompt": "A heavy metal tankard or stone pot being set down firmly on a wooden table.",
+    "target": "heavy object thudding on a table",
+    "expect": [
+     "Thump, thud",
+     "Thunk",
+     "Knock"
+    ],
+    "ok": true,
+    "heard": "Knock 0.46, Thunk 0.21, Door 0.11",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "cough",
+    "role": "событие",
+    "prompt": "A deep, rasping cough from a person standing near the stove.",
+    "target": "deep rasping cough",
+    "expect": [
+     "Cough",
+     "Throat clearing"
+    ],
+    "ok": true,
+    "heard": "Throat clearing 0.50, Cough 0.07, Speech 0.02",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "fire_catching",
+    "role": "событие",
+    "prompt": "Tinder and dry wood catching fire, small pops and rising heat sounds.",
+    "target": "fire starting and growing",
+    "expect": [
+     "Fire",
+     "Crackle"
+    ],
+    "ok": true,
+    "heard": "Fire 0.21, Arrow 0.06, Silence 0.04",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   }
+  ]
+ },
+ "ezaudio": {
+  "takes": 62,
+  "bad": 49,
+  "failed": [
+   "floor_walk",
+   "cough"
+  ],
+  "scene_seconds": 105.9,
+  "elements": [
+   {
+    "id": "winter_outside",
+    "role": "фон",
+    "prompt": "Fierce winter wind roaring outside, broadband roar of a blizzard, gusts of snow and ice.",
+    "target": "fierce winter wind and blizzard outside",
+    "expect": [],
+    "ok": true,
+    "heard": "Eruption 0.12, White noise 0.07, Waves, surf 0.06",
+    "why": [],
+    "synth": true,
+    "seconds": 20.0
+   },
+   {
+    "id": "hut_air",
+    "role": "фон",
+    "prompt": "Cold, still air inside a drafty wooden room, faint creaks of the structure settling.",
+    "target": "still cold air in a wooden room",
+    "expect": [],
+    "ok": true,
+    "heard": "Patter 0.27, Printer 0.06, Inside, small room 0.05",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   },
+   {
+    "id": "fire_burning",
+    "role": "фон",
+    "prompt": "Steady crackling and popping of a wood fire burning in a clay stove.",
+    "target": "wood fire crackling in a stove",
+    "expect": [],
+    "ok": true,
+    "heard": "Crumpling, crinkling 0.44, Inside, small room 0.20, Crushing 0.14",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   },
+   {
+    "id": "door_open",
+    "role": "событие",
+    "prompt": "Heavy wooden door with dry wood rubbing on wood at the frame and threshold, low uneven creaks and groans as it opens slowly.",
+    "target": "heavy wooden door creaking open",
+    "expect": [
+     "Door",
+     "Creak",
+     "Squeak"
+    ],
+    "ok": true,
+    "heard": "Door 0.36, Slam 0.21, Sliding door 0.17",
+    "why": [],
+    "synth": false,
+    "seconds": 5.0
+   },
+   {
+    "id": "door_close",
+    "role": "событие",
+    "prompt": "Dry, low, uneven creak of a heavy wooden door frame rubbing against the threshold and jamb as it swings shut firmly, sealing out the wind.",
+    "target": "heavy wooden door creaking shut",
+    "expect": [
+     "Door",
+     "Creak",
+     "Thump, thud"
+    ],
+    "ok": true,
+    "heard": "Door 0.10, Breaking 0.07, Music 0.07",
+    "why": [],
+    "synth": false,
+    "seconds": 4.0
+   },
+   {
+    "id": "floor_walk",
+    "role": "событие",
+    "prompt": "Heavy leather-soled boots dragging firmly across rough, splintered wooden floorboards, low dry friction of leather rubbing on wood grain, heavy rhythmic impact of heel striking plank, slow deliberate steps.",
+    "target": "heavy boots walking on wooden floorboards",
+    "expect": [
+     "Walk, footsteps",
+     "Creak"
+    ],
+    "ok": false,
+    "heard": "Knock 0.11, Chop 0.07, Whack, thwack 0.06",
+    "why": [
+     "AST: слышно Knock 0.11, а Walk, footsteps только 0.00"
+    ],
+    "synth": false,
+    "seconds": 6.0
+   },
+   {
+    "id": "table_thud",
+    "role": "событие",
+    "prompt": "A heavy stone pot slammed down hard onto a rough wooden table, creating a deep, dry thud as the stone hits the wood grain.",
+    "target": "heavy stone pot thudding on wood",
+    "expect": [
+     "Thump, thud",
+     "Thunk",
+     "Knock"
+    ],
+    "ok": true,
+    "heard": "Door 0.14, Knock 0.12, Tap 0.06",
+    "why": [],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "cough",
+    "role": "событие",
+    "prompt": "A human throat producing a deep, wet, rasping cough with thick mucus texture, low frequency vibration, dry and dusty air, no music or speech.",
+    "target": "deep wet rasping human cough",
+    "expect": [
+     "Cough",
+     "Throat clearing"
+    ],
+    "ok": false,
+    "heard": "Scrape 0.46, Speech 0.28, Music 0.23",
+    "why": [
+     "AST: слышно Scrape 0.46, а Throat clearing только 0.00"
+    ],
+    "synth": false,
+    "seconds": 3.0
+   },
+   {
+    "id": "fire_catching",
+    "role": "событие",
+    "prompt": "Dry birch tinder and small split logs igniting with a match, sharp crackle of burning cellulose, low hiss of rising heat, embers popping.",
+    "target": "dry wood fire catching and growing",
+    "expect": [
+     "Fire",
+     "Crackle"
+    ],
+    "ok": true,
+    "heard": "Crackle 0.13, Fire 0.10, Bicycle 0.10",
+    "why": [],
+    "synth": false,
+    "seconds": 10.0
+   }
+  ]
+ }
+}
