@@ -39,6 +39,9 @@ BATCH = int(os.environ.get("FT_BATCH", 2))
 ACCUM = int(os.environ.get("FT_ACCUM", 8))
 EPOCHS = float(os.environ.get("FT_EPOCHS", 1))
 SUB_W = 0.3
+# вес потерь на кадрах сдвинутых слов (поле focus в примере): слог — несколько кадров
+# из сотни, и в среднем по фразе его сигнал почти не виден
+FOCUS_W = float(os.environ.get("FT_FOCUS_W", 1))
 
 
 def load():
@@ -116,7 +119,10 @@ class Builder:
         # позиция, выход которой предсказывает первый кадр, — последняя позиция ICL
         first = x.shape[0] - m - 1
         labels = torch.cat([codes[:, 0], torch.tensor([self.tc.codec_eos_token_id], device=dev)])
-        return {"x": x, "first": first, "labels": labels, "codes": codes,
+        weight = torch.ones(m + 1, device=dev)
+        for f0, f1 in ex.get("focus", ()):
+            weight[f0:f1] = FOCUS_W
+        return {"x": x, "first": first, "labels": labels, "codes": codes, "weight": weight,
                 "text_left": max(0, trailing.shape[1] - m)}
 
 
@@ -133,20 +139,24 @@ def batch_loss(model_talker, items, sub_shift=0):
     h = out.hidden_states[0][-1]
     logits = out.logits
 
-    c0_logits, c0_labels, sub_h, sub_codes = [], [], [], []
+    c0_logits, c0_labels, sub_h, sub_codes, wts = [], [], [], [], []
     for b, it in enumerate(items):
         m = it["codes"].shape[0]
         pos = torch.arange(it["first"], it["first"] + m + 1, device=dev)
-        c0_logits.append(logits[b, pos]); c0_labels.append(it["labels"])
+        c0_logits.append(logits[b, pos]); c0_labels.append(it["labels"]); wts.append(it["weight"])
         # скрытое состояние, которое предсказало нулевой кодбук кадра, — как в generate()
         sub_h.append(h[b, pos[:m] + sub_shift]); sub_codes.append(it["codes"])
-    c0 = F.cross_entropy(torch.cat(c0_logits).float(), torch.cat(c0_labels))
+    w = torch.cat(wts)
+    c0 = (F.cross_entropy(torch.cat(c0_logits).float(), torch.cat(c0_labels), reduction="none") * w).sum() / w.sum()
     # логиты forward_finetune уже выровнены (позиция i → кодбук i), а его собственный
     # loss_function сдвигает метки ещё раз; на нетронутой модели это давало 11.9 —
     # хуже случайного угадывания. Потери считаются здесь, без второго сдвига.
     codes = torch.cat(sub_codes)
     sub_logits, _ = model_talker.forward_sub_talker_finetune(codes, torch.cat(sub_h))
-    sub = F.cross_entropy(sub_logits.float().reshape(-1, sub_logits.shape[-1]), codes[:, 1:].reshape(-1))
+    ws = torch.cat([x[:-1] for x in wts])  # без eos: кодбуки только у кадров
+    sub = F.cross_entropy(sub_logits.float().reshape(-1, sub_logits.shape[-1]), codes[:, 1:].reshape(-1),
+                          reduction="none").view(codes.shape[0], -1).mean(1)
+    sub = (sub * ws).sum() / ws.sum()
     return c0, sub
 
 
@@ -212,7 +222,8 @@ def train():
     steps = math.ceil(len(train_set) * EPOCHS / (BATCH * ACCUM))
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1.0, (s + 1) / 20) * 0.5 * (1 + math.cos(math.pi * min(s, steps) / steps)))
-    print(f"{len(train_set)} примеров из {DATA}, {steps} шагов, lr {LR}, rank {RANK}, → {OUT}", flush=True)
+    print(f"{len(train_set)} примеров из {DATA}, {steps} шагов, lr {LR}, rank {RANK}, "
+          f"вес сдвинутых слов {FOCUS_W}, → {OUT}", flush=True)
 
     def evaluate():
         talker.eval()

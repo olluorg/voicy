@@ -31,6 +31,10 @@ WORK = sb.WORK
 TAG = os.path.basename(OUT)  # у каждого варианта адаптера свои файлы оценки
 EVAL = os.path.join(WORK, "eval", TAG)
 SEEDS = (1, 2)
+# сиды управляемости: один сид на ~73 словах — погрешность ≈8 пунктов, варианты
+# адаптера сравниваются на дополнительных сидах; они пишутся в отдельный файл
+CONTROL_SEEDS = tuple(int(x) for x in os.environ.get("CONTROL_SEEDS", "1").split(","))
+CONTROL_SUFFIX = "" if CONTROL_SEEDS == (1,) else "_s" + "".join(map(str, CONTROL_SEEDS))
 MARGIN, FA, SENS = 0.3, 0.10, 0.71
 VOICE = "rust/core/assets/voices/turgenev.wav"
 VOICE_TEXT = json.load(open("rust/core/assets/voices/voices.json", encoding="utf-8"))["turgenev"]["text"]
@@ -248,18 +252,21 @@ def control():
             toks = list(plain_words)
             toks[word_idx[i]] = marked_w
             say = "".join(toks)
-            for name, on in (("base", False), ("lora", True)):
-                adapter(on)
-                torch.manual_seed(1)
-                wv, sr = tts.generate_voice_clone(text=say, language="Russian", ref_audio=VOICE, ref_text=VOICE_TEXT)
-                x = np.asarray(wv[0], dtype=np.float32)
-                sf.write(os.path.join(EVAL, "control", f"{n:02}_{k}_{name}.wav"), x, sr)
-                d = sb.detect(x, sr, expected, tpl).get(i)
-                got = None if not d else min(d, key=d.get)
-                rows.append({"text": say, "word": w, "target": k, "normal": expected[i][1],
-                             "nv": nv, "model": name, "detected": got})
+            for sd in CONTROL_SEEDS:
+                for name, on in (("base", False), ("lora", True)):
+                    adapter(on)
+                    torch.manual_seed(sd)
+                    wv, sr = tts.generate_voice_clone(text=say, language="Russian", ref_audio=VOICE, ref_text=VOICE_TEXT)
+                    x = np.asarray(wv[0], dtype=np.float32)
+                    sf.write(os.path.join(EVAL, "control", f"{n:02}_{k}_{name}"
+                                          + ("" if sd == 1 else f"_s{sd}") + ".wav"), x, sr)
+                    d = sb.detect(x, sr, expected, tpl).get(i)
+                    got = None if not d else min(d, key=d.get)
+                    rows.append({"text": say, "word": w, "target": k, "normal": expected[i][1],
+                                 "nv": nv, "model": name, "detected": got, "seed": sd})
         print(f"[{n:2}/{len(sb.EVERYDAY)}] {w}", flush=True)
-        json.dump(rows, open(os.path.join(WORK, f"control_{TAG}.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        json.dump(rows, open(os.path.join(WORK, f"control_{TAG}{CONTROL_SUFFIX}.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=1)
     adapter(True)
     control_report(rows)
 
@@ -437,7 +444,56 @@ def control_report(rows):
         print(f"{name:6} {np.mean(right):16.0%} из {len(right):<3} {np.mean(wrong):12.0%} из {len(wrong):<3} {chance:8.0%}")
 
 
+def control_compare(tags, ref="lora_v3"):
+    """Obedience on non-normative syllables over every seed measured, adapters side by side.
+
+    Seed 1 lives in control_<tag>.json, seeds 2–3 in control_<tag>_s23.json. The
+    untouched model is pooled across files (the same takes repeat in each). The
+    difference to `ref` is bootstrapped over sentences: the takes of one word are
+    not independent.
+    """
+    def load(tag):
+        rows = []
+        for suf in ("", "_s23"):
+            f = os.path.join(WORK, f"control_{tag}{suf}.json")
+            if os.path.exists(f):
+                rows += [{**r, "seed": r.get("seed", 1)} for r in json.load(open(f, encoding="utf-8"))]
+        return [r for r in rows if r["detected"] is not None and r["target"] != r["normal"]]
+
+    data, base = {}, {}
+    for tag in tags:
+        rs = load(tag)
+        data[tag] = [r for r in rs if r["model"] == "lora"]
+        for r in rs:
+            if r["model"] == "base":
+                base[(r["text"], r["seed"])] = r
+    data["base"] = list(base.values())
+    by_word = {t: {} for t in data}
+    for t, rs in data.items():
+        for r in rs:
+            by_word[t].setdefault(r["word"], []).append(int(r["detected"]) == r["target"])
+    words = sorted(set.intersection(*(set(v) for v in by_word.values())))
+    rng = np.random.default_rng(0)
+    boot = [rng.choice(len(words), len(words)) for _ in range(2000)]
+
+    def rate(t, idx):
+        v = [x for i in idx for x in by_word[t][words[i]]]
+        return np.mean(v)
+
+    print(f"\nзнак на ненормативном слоге, все сиды ({len(words)} слов):")
+    for t in ["base"] + list(tags):
+        seeds = sorted({r["seed"] for r in data[t]})
+        line = f"  {t:9} {np.mean([int(r['detected']) == r['target'] for r in data[t]]):5.0%} из {len(data[t]):<4} сиды {seeds}"
+        if t != ref and ref in data:
+            d = [rate(t, b) - rate(ref, b) for b in boot]
+            line += f"   − {ref}: {np.mean(d):+.0%}, 95% ДИ [{np.percentile(d, 2.5):+.0%}, {np.percentile(d, 97.5):+.0%}]"
+        print(line)
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "control-compare":
+        control_compare(sys.argv[2:] or ["lora_v2", "lora_v3", "lora_v4", "lora_v5"])
+        sys.exit()
     if len(sys.argv) > 1 and sys.argv[1] == "control":
         control()
     elif len(sys.argv) > 1 and sys.argv[1] == "ceiling":
