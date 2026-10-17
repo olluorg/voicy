@@ -257,6 +257,7 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
             if job.cancelled() {
                 return Err(WorkError::Cancelled);
             }
+            speak::require_speech(&out.audio, out.sample_rate, &o.voice.name)?;
             let audio = audio::stretch(out.audio, out.sample_rate, o.speed).await?;
             let seconds = round(audio.len() as f64 / out.sample_rate as f64, 2);
             job.emit(json!({"stage": "encoding", "produced": seconds, "expected": seconds, "expected_exact": true}));
