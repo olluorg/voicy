@@ -1,0 +1,159 @@
+<title>Дворянское гнездо вслепую</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=PT+Serif:ital@0;1&display=swap">
+<style>
+/* Лист прослушивания: одна колонка, абзац книги серифом, ответы — полосы выбора под ним */
+:root {
+  --bg: #f6f7f8; --surface: #ffffff; --fg: #1c2328; --muted: #5d6a73; --line: #d9dfe3;
+  --accent: #1f5d7a; --accent-soft: #e2eef4; --done: #2f7a4d;
+  --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+  --book: "PT Serif", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171a; --surface: #1a2125; --fg: #e3e8eb; --muted: #94a3ac; --line: #2c363c;
+  --accent: #7cbcd8; --accent-soft: #1d3340; --done: #6cc28f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12171a; --surface: #1a2125; --fg: #e3e8eb; --muted: #94a3ac; --line: #2c363c;
+  --accent: #7cbcd8; --accent-soft: #1d3340; --done: #6cc28f; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+.wrap { max-width: 46rem; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+header { display: grid; gap: 10px; }
+.list { display: grid; gap: 20px; min-width: 0; }
+h1 { font: 600 1.6rem/1.2 var(--body); margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.how { margin: 0; padding-left: 1.2em; color: var(--muted); display: grid; gap: 4px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: center;
+  flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.progress { flex: 1 1 10rem; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--done); transition: width .3s; }
+.status { font-size: .85rem; color: var(--muted); }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.item.complete { border-color: var(--done); }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pid { font-size: .8rem; color: var(--muted); letter-spacing: .04em; }
+blockquote { margin: 0; font: 1.02rem/1.6 var(--book); max-width: 65ch; }
+.players { display: grid; gap: 8px; }
+.player { display: grid; grid-template-columns: 6.5rem 1fr; gap: 10px; align-items: center; min-width: 0; }
+.player b { font-weight: 500; font-size: .9rem; }
+.player.orig b { color: var(--accent); }
+audio { width: 100%; height: 36px; min-width: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+legend { font-size: .9rem; padding: 0; margin-bottom: 6px; }
+.choice { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice label { text-align: center; padding: 8px 4px; cursor: pointer; font-size: .9rem; border-left: 1px solid var(--line); }
+.choice label:first-of-type { border-left: 0; }
+.choice input:checked + label { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.choice input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+.note { font-size: .85rem; color: var(--muted); margin: 0; }
+@media (max-width: 420px) { .player { grid-template-columns: 1fr; gap: 2px; } }
+@media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Дворянское гнездо вслепую</h1>
+    <p class="lede">Абзацы из глав, которые модель не слышала. Сначала оригинал: чтец LibriVox tovarisch.
+      Потом два синтеза тем же голосом по тому же образцу в 10 секунд, X и Y. Один из них — текущая модель voicy,
+      другой дообучен на часе записей этого чтеца. Какой где, скрыто и меняется от абзаца к абзацу.</p>
+    <ol class="how">
+      <li>Послушайте оригинал целиком: как чтец ведёт мысль через предложения, где опускает и поднимает голос.</li>
+      <li>Послушайте X и Y. Отметьте, какой ведёт абзац ближе к оригиналу и чей голос больше похож на чтеца.</li>
+      <li>Если разницы не слышно, так и отметьте. Это тоже ответ.</li>
+    </ol>
+  </header>
+  <div class="bar"><div class="progress"><i id="fill"></i></div><span class="status" id="status">Отвечено 0 из 0</span></div>
+  <main id="list" class="list"></main>
+  <p class="note" id="save-note">Ответы сохраняются сразу.</p>
+</div>
+
+<script>
+const ITEMS = /*ITEMS*/[];
+const QUESTIONS = [
+  { key: "flow", text: "Кто ведёт абзац ближе к оригиналу: мелодия через предложения, паузы, концовки?" },
+  { key: "voice", text: "Чей голос больше похож на чтеца?" },
+];
+const OPTIONS = [["x", "X"], ["same", "Не различаю"], ["y", "Y"]];
+const answers = {};
+let db = null;
+const writes = {};
+
+function render() {
+  const list = document.getElementById("list");
+  ITEMS.forEach((it, i) => {
+    const sec = document.createElement("section");
+    sec.className = "item"; sec.id = "p" + it.id;
+    const head = document.createElement("div"); head.className = "head";
+    const num = document.createElement("span"); num.className = "num"; num.textContent = `Абзац ${i + 1} из ${ITEMS.length}`;
+    const pid = document.createElement("span"); pid.className = "pid"; pid.textContent = "глава " + it.id.split("_")[0];
+    head.append(num, pid);
+    const q = document.createElement("blockquote"); q.textContent = it.text;
+    const players = document.createElement("div"); players.className = "players";
+    [["orig", "Оригинал"], ["x", "X"], ["y", "Y"]].forEach(([k, label]) => {
+      const row = document.createElement("div"); row.className = "player" + (k === "orig" ? " orig" : "");
+      const b = document.createElement("b"); b.textContent = label;
+      const a = document.createElement("audio"); a.controls = true; a.preload = "none"; a.src = it[k];
+      a.addEventListener("play", () => document.querySelectorAll("audio").forEach(o => o !== a && o.pause()));
+      row.append(b, a); players.append(row);
+    });
+    sec.append(head, q, players);
+    QUESTIONS.forEach(qn => {
+      const fs = document.createElement("fieldset");
+      const lg = document.createElement("legend"); lg.textContent = qn.text;
+      const ch = document.createElement("div"); ch.className = "choice";
+      OPTIONS.forEach(([val, label]) => {
+        const id = `${qn.key}-${it.id}-${val}`;
+        const inp = document.createElement("input"); inp.type = "radio"; inp.name = `${qn.key}-${it.id}`; inp.id = id; inp.value = val;
+        inp.addEventListener("change", () => choose(it.id, qn.key, val));
+        const lb = document.createElement("label"); lb.htmlFor = id; lb.textContent = label;
+        ch.append(inp, lb);
+      });
+      fs.append(lg, ch); sec.append(fs);
+    });
+    list.append(sec);
+  });
+  progress();
+}
+
+function apply(id, a) {
+  answers[id] = a;
+  for (const qn of QUESTIONS) {
+    if (a[qn.key]) { const el = document.getElementById(`${qn.key}-${id}-${a[qn.key]}`); if (el) el.checked = true; }
+  }
+}
+
+function progress() {
+  const done = ITEMS.filter(it => QUESTIONS.every(q => answers[it.id]?.[q.key])).length;
+  ITEMS.forEach(it => document.getElementById("p" + it.id)?.classList.toggle("complete", QUESTIONS.every(q => answers[it.id]?.[q.key])));
+  document.getElementById("fill").style.width = (ITEMS.length ? 100 * done / ITEMS.length : 0) + "%";
+  document.getElementById("status").textContent = `Отвечено ${done} из ${ITEMS.length}`;
+}
+
+function choose(id, key, val) {
+  answers[id] = { ...(answers[id] || {}), [key]: val };
+  progress();
+  if (!db) return;
+  const data = { ...answers[id] };
+  // одна запись за раз на документ: следующая ждёт предыдущую
+  writes[id] = (writes[id] || Promise.resolve()).then(() => db.doc("votes/" + id).set(data)).then(
+    () => { document.getElementById("save-note").textContent = "Ответы сохраняются сразу. Последний сохранён."; },
+    () => { document.getElementById("save-note").textContent = "Не удалось сохранить ответ: откройте страницу, войдя в claude.ai, и отметьте его ещё раз."; });
+}
+
+render();
+(window.claude?.use?.("db") ?? Promise.resolve(null)).then(async d => {
+  if (!d) { document.getElementById("save-note").textContent = "Хранилище недоступно: ответы видны только здесь и пропадут после закрытия."; return; }
+  db = d;
+  try {
+    const snap = await db.collection("votes").get();
+    snap.docs.forEach(doc => { if (doc.exists) apply(doc.id, doc.data() || {}); });
+    progress();
+  } catch (e) { /* пусто или нет доступа на чтение — начинаем с чистого листа */ }
+});
+</script>
