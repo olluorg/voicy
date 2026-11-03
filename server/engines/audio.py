@@ -22,7 +22,7 @@ def decode(raw: bytes, sr: int) -> np.ndarray:
     try:
         resampler = av.audio.resampler.AudioResampler(format="s16", layout="mono", rate=sr)
         chunks = []
-        with av.open(io.BytesIO(raw), mode="r", metadata_errors="ignore") as container:
+        with av.open(io.BytesIO(raw), mode="r") as container:
             for frame in container.decode(audio=0):
                 chunks += [f.to_ndarray().reshape(-1) for f in resampler.resample(frame)]
             chunks += [f.to_ndarray().reshape(-1) for f in resampler.resample(None)]
