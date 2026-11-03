@@ -412,7 +412,26 @@ fn delta_stream(app: Arc<App>, job: Arc<Job>) -> Response {
             return None;
         }
         loop {
-            if g.1.done() {
+            // Сначала состояние, потом канал: `finish` ставит его после всех `emit`,
+            // так что при готовом задании все куски текста уже лежат в канале.
+            // Итог отправляется, только когда канал дочитан, иначе конец текста теряется.
+            let next = if g.1.done() {
+                match rx.try_recv() {
+                    Ok(e) => Some(e),
+                    Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
+                    Err(_) => None,
+                }
+            } else {
+                match rx.recv().await {
+                    Ok(e) => Some(e),
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(_) => {
+                        tokio::time::sleep(Duration::from_millis(20)).await;
+                        continue;
+                    }
+                }
+            };
+            let Some(e) = next else {
                 let s = g.1.s.lock().unwrap();
                 let payload = match (&s.state[..], &s.result) {
                     ("done", Some(JobResult::Transcript(r))) => json!({"type": "transcript.text.done",
@@ -421,19 +440,14 @@ fn delta_stream(app: Arc<App>, job: Arc<Job>) -> Response {
                 };
                 drop(s);
                 return Some((Ok::<_, Infallible>(Event::default().data(payload.to_string())), (rx, g, first, true)));
-            }
-            match rx.recv().await {
-                Ok(e) if e["stage"] == "recognition" && e["text"].as_str().is_some_and(|t| !t.is_empty()) => {
-                    let t = e["text"].as_str().unwrap();
-                    let delta = if first { t.to_string() } else { format!(" {t}") };
-                    first = false;
-                    let payload = json!({"type": "transcript.text.delta", "delta": delta,
-                                         "end": e["position"], "duration": e["total"]});
-                    return Some((Ok(Event::default().data(payload.to_string())), (rx, g, first, false)));
-                }
-                Ok(_) => continue,
-                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
-                Err(_) => tokio::time::sleep(Duration::from_millis(20)).await,
+            };
+            if e["stage"] == "recognition" && e["text"].as_str().is_some_and(|t| !t.is_empty()) {
+                let t = e["text"].as_str().unwrap();
+                let delta = if first { t.to_string() } else { format!(" {t}") };
+                first = false;
+                let payload = json!({"type": "transcript.text.delta", "delta": delta,
+                                     "end": e["position"], "duration": e["total"]});
+                return Some((Ok(Event::default().data(payload.to_string())), (rx, g, first, false)));
             }
         }
     });
