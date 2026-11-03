@@ -24,8 +24,15 @@ permissions:
   attestations: write
 
 jobs:
+  # На теге сначала полные проверки (ADR 0028); ручной запуск — только сборка
+  tests:
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/tests.yml
+
   build:
     name: ${{ matrix.asset }}
+    needs: tests
+    if: ${{ !cancelled() && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -53,7 +60,10 @@ jobs:
       # Бинарник должен запускаться там, где ни библиотек, ни моделей ещё нет
       - name: запускается без кэша
         shell: bash
-        run: ./${{ matrix.asset }} --version && ./${{ matrix.asset }} status || true
+        # status без сервера всегда завершается с ошибкой: он только для журнала
+        run: |
+          ./${{ matrix.asset }} --version
+          ./${{ matrix.asset }} status || true
 
       - name: подтверждение сборки
         uses: actions/attest-build-provenance@v4

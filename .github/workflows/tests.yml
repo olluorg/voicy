@@ -16,8 +16,22 @@ on:
   pull_request:
     branches: [master, main]
   workflow_dispatch:
+  # Выпуск и образ зовут эти же проверки на коммите тега (ADR 0028)
+  workflow_call:
 
 jobs:
+  # Только на теге: новая уязвимость не должна красить чужие PR, а выпуск — должна остановить
+  audit:
+    name: cargo audit
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: известные уязвимости
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit --file rust/Cargo.lock
+
   api:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -27,12 +41,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { name: linux-x64,     os: ubuntu-24.04,       experimental: false }
-          - { name: windows-x64,   os: windows-2025,       experimental: false }
-          - { name: linux-arm64,   os: ubuntu-24.04-arm,   experimental: true }
-          - { name: windows-arm64, os: windows-11-arm,     experimental: true }
-          - { name: macos-arm64,   os: macos-15,           experimental: true }
+        # На теге — только обязательные системы: отменённая задача красит весь
+        # запуск и при continue-on-error, а машин с macOS GitHub иногда не находит
+        include: ${{ fromJSON(startsWith(github.ref, 'refs/tags/') && '[{"name":"linux-x64","os":"ubuntu-24.04","experimental":false},{"name":"windows-x64","os":"windows-2025","experimental":false}]' || '[{"name":"linux-x64","os":"ubuntu-24.04","experimental":false},{"name":"windows-x64","os":"windows-2025","experimental":false},{"name":"linux-arm64","os":"ubuntu-24.04-arm","experimental":true},{"name":"windows-arm64","os":"windows-11-arm","experimental":true},{"name":"macos-arm64","os":"macos-15","experimental":true}]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
