@@ -6,7 +6,7 @@ qwen-tts
 faster-whisper
 numpy
 soundfile
-av
+av>=19
 # детектор конца реплики: ONNX на CPU, признаки Whisper из transformers
 onnxruntime
 transformers
