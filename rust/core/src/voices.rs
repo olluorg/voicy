@@ -10,21 +10,68 @@ use serde_json::{Map, Value, json};
 
 pub const SAMPLE_RATE: u32 = 24000;
 
-/// The two voices that ship, inside the binary: clips and their index.
-pub const DEFAULT_VOICES: [(&str, &[u8]); 3] = [
+/// The voices that ship, inside the binary. Все — записи LibriVox
+/// (общественное достояние); чтец и книга — в `note` индекса.
+pub const SHIPPED_VOICES: [(&str, &[u8]); 7] = [
     ("turgenev.wav", include_bytes!("../assets/voices/turgenev.wav")),
     ("dostoevsky.wav", include_bytes!("../assets/voices/dostoevsky.wav")),
-    ("voices.json", include_bytes!("../assets/voices/voices.json")),
+    ("akhmatova.wav", include_bytes!("../assets/voices/akhmatova.wav")),
+    ("aleichem.wav", include_bytes!("../assets/voices/aleichem.wav")),
+    ("rogachevsky.wav", include_bytes!("../assets/voices/rogachevsky.wav")),
+    ("vekhi.wav", include_bytes!("../assets/voices/vekhi.wav")),
+    ("ohotnik.wav", include_bytes!("../assets/voices/ohotnik.wav")),
 ];
+pub const SHIPPED_INDEX: &[u8] = include_bytes!("../assets/voices/voices.json");
 
-/// Put the voices that ship into `dir`, unless it already has an index.
+/// Голоса, которые раздавали до появления `_shipped` в индексе.
+const SHIPPED_BEFORE_TRACKING: [&str; 2] = ["turgenev", "dostoevsky"];
+
+/// Put the voices that ship into `dir`. Новые голоса выпуска добавляются и в
+/// уже заведённый каталог: прежде он заполнялся один раз, и обновившийся
+/// пользователь новых голосов не видел. Свои голоса пользователя не трогаются,
+/// а поставляемый голос, который уже предлагался (`_shipped`) и был удалён,
+/// не возвращается.
 pub fn seed(dir: &Path) -> std::io::Result<()> {
-    if dir.join("voices.json").exists() {
-        return Ok(());
-    }
     std::fs::create_dir_all(dir)?;
-    for (name, data) in DEFAULT_VOICES {
-        std::fs::write(dir.join(name), data)?;
+    let shipped: Map<String, Value> = serde_json::from_slice(SHIPPED_INDEX).expect("voices.json в бинарнике");
+    let path = dir.join("voices.json");
+    let fresh = !path.exists();
+    let mut idx = if fresh {
+        Map::new()
+    } else {
+        match std::fs::read(&path).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()) {
+            Some(Value::Object(m)) => m,
+            _ => return Ok(()), // индекс испорчен — не перезаписываем чужие голоса
+        }
+    };
+    let mut offered: Vec<String> = match idx.get("_shipped").and_then(Value::as_array) {
+        Some(a) => a.iter().filter_map(|v| v.as_str().map(String::from)).collect(),
+        None if fresh => Vec::new(),
+        None => SHIPPED_BEFORE_TRACKING.iter().map(|s| s.to_string()).collect(),
+    };
+    let before = (idx.len(), offered.len());
+    for (file, data) in SHIPPED_VOICES {
+        let name = file.trim_end_matches(".wav");
+        if offered.iter().any(|n| n == name) {
+            continue;
+        }
+        let wav = dir.join(file);
+        if !wav.exists() && !idx.contains_key(name) {
+            std::fs::write(&wav, data)?;
+            if let Some(meta) = shipped.get(name) {
+                idx.insert(name.to_string(), meta.clone());
+            }
+        }
+        offered.push(name.to_string());
+    }
+    if fresh {
+        if let Some(d) = shipped.get("_default") {
+            idx.insert("_default".into(), d.clone());
+        }
+    }
+    if fresh || (idx.len(), offered.len()) != before || !idx.contains_key("_shipped") {
+        idx.insert("_shipped".into(), json!(offered));
+        std::fs::write(&path, dump(&Value::Object(idx)))?;
     }
     Ok(())
 }
@@ -148,4 +195,55 @@ pub fn dump(v: &Value) -> Vec<u8> {
     let mut ser = serde_json::Serializer::with_formatter(&mut out, fmt);
     serde::Serialize::serialize(v, &mut ser).expect("json");
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dir(tag: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("voicy-seed-{tag}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        d
+    }
+
+    fn index(d: &Path) -> Map<String, Value> {
+        serde_json::from_slice::<Value>(&std::fs::read(d.join("voices.json")).unwrap()).unwrap().as_object().unwrap().clone()
+    }
+
+    #[test]
+    fn fresh_dir_gets_every_shipped_voice() {
+        let d = dir("fresh");
+        seed(&d).unwrap();
+        let v = Voices { dir: d.clone() };
+        assert_eq!(v.list().len(), SHIPPED_VOICES.len());
+        assert_eq!(v.default().unwrap().name, "turgenev");
+        assert!(v.get("akhmatova").is_some_and(|x| !x.text.is_empty()));
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn old_dir_gets_new_voices_and_keeps_its_own() {
+        let d = dir("old");
+        std::fs::create_dir_all(&d).unwrap();
+        // Каталог, разложенный прежней версией: два голоса и свой голос пользователя;
+        // dostoevsky пользователь удалил.
+        std::fs::write(d.join("turgenev.wav"), b"old").unwrap();
+        std::fs::write(d.join("mine.wav"), b"mine").unwrap();
+        std::fs::write(d.join("voices.json"),
+                       br#"{"_default": "mine", "turgenev": {"text": "t"}, "mine": {"text": "m"}}"#).unwrap();
+        seed(&d).unwrap();
+        let idx = index(&d);
+        assert_eq!(idx["_default"], "mine", "выбор пользователя не трогаем");
+        assert_eq!(std::fs::read(d.join("turgenev.wav")).unwrap(), b"old");
+        assert!(!d.join("dostoevsky.wav").exists(), "удалённый поставляемый голос не возвращается");
+        assert!(d.join("akhmatova.wav").exists() && idx.contains_key("akhmatova"));
+        assert_eq!(idx["_shipped"].as_array().unwrap().len(), SHIPPED_VOICES.len());
+
+        // Пользователь удалил и новый голос — на следующем запуске он не вернётся.
+        std::fs::remove_file(d.join("akhmatova.wav")).unwrap();
+        seed(&d).unwrap();
+        assert!(!d.join("akhmatova.wav").exists());
+        std::fs::remove_dir_all(d).ok();
+    }
 }

@@ -68,6 +68,17 @@ pub fn speak_args(text: &str, o: &Options) -> Value {
            "language": o.language, "seed": o.seed})
 }
 
+/// Меньше 50 мс звука — модель так и не начала речь: с отдельными образцами
+/// голоса она сразу выдаёт конец. Отдавать это как успех нельзя — клиент
+/// запишет WAV из одного заголовка и не узнает, что синтеза не было.
+pub fn require_speech(samples: &[f32], sample_rate: u32, voice: &str) -> ApiResult<()> {
+    if (samples.len() as f64) < sample_rate as f64 * 0.05 {
+        return Err(ApiError::internal(format!(
+            "voice '{voice}' produced no speech — retry, or re-add the voice from another passage")));
+    }
+    Ok(())
+}
+
 /// One chunk. `alive()` is asked at every progress event; false stops the work.
 pub async fn synthesize(app: &App, text: &str, o: &Options, alive: impl Fn() -> bool)
                         -> Result<(Vec<f32>, u32, f64), ApiError> {
@@ -77,6 +88,7 @@ pub async fn synthesize(app: &App, text: &str, o: &Options, alive: impl Fn() -> 
         Stop::Cancelled => ApiError::new(409, "cancelled"),
         Stop::Failed(e) => e.into(),
     })?;
+    require_speech(&out.audio, out.sample_rate, &o.voice.name)?;
     let audio = audio::stretch(out.audio, out.sample_rate, o.speed).await?;
     Ok((audio, out.sample_rate, started.elapsed().as_secs_f64()))
 }
@@ -350,4 +362,19 @@ pub async fn socket(app: Arc<App>, q: StreamQuery, ws: WebSocket) {
     reader.abort();
     drop(out_tx);
     let _ = writer.await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::require_speech;
+
+    #[test]
+    fn no_speech_is_an_error_not_an_empty_file() {
+        let err = require_speech(&[], 24000, "lv-olga10k").unwrap_err();
+        assert_eq!(err.status.as_u16(), 500);
+        assert!(err.message.contains("lv-olga10k"), "{}", err.message);
+        // 40 мс — меньше порога, 60 мс — уже звук.
+        assert!(require_speech(&vec![0.0; 960], 24000, "v").is_err());
+        assert!(require_speech(&vec![0.0; 1440], 24000, "v").is_ok());
+    }
 }
