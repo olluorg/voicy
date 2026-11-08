@@ -65,6 +65,9 @@ pub struct SpeechRequest {
     #[serde(default = "yes")]
     pub stress: bool,
     pub seed: Option<i64>,
+    /// распознать готовый звук и дочитать хвост, если модель закончила раньше текста
+    #[serde(default)]
+    pub verify: bool,
     pub stream_format: Option<String>,
     pub webhook_url: Option<String>,
 }
@@ -224,7 +227,8 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
     let stress = req.stress && language == "ru" && app.engines.stress_marks();
     let text = textprep::for_speech(&req.input, req.prepare, req.legato, stress).await;
     let expected = estimate_seconds(&text);
-    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, stress: false, seed: req.seed };
+    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, stress: false, seed: req.seed,
+                      verify: req.verify };
     let format = req.response_format.clone();
     let app2 = app.clone();
     let work: crate::jobs::Work = Box::new(move |job: Arc<Job>| {
@@ -258,7 +262,13 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
                 return Err(WorkError::Cancelled);
             }
             speak::require_speech(&out.audio, out.sample_rate, &o.voice.name)?;
-            let audio = audio::stretch(out.audio, out.sample_rate, o.speed).await?;
+            let raw = if o.verify {
+                job.emit(json!({"stage": "verification"}));
+                speak::read_tail(&app2, &text, &o, out.audio, out.sample_rate, || !job.cancelled()).await?
+            } else {
+                out.audio
+            };
+            let audio = audio::stretch(raw, out.sample_rate, o.speed).await?;
             let seconds = round(audio.len() as f64 / out.sample_rate as f64, 2);
             job.emit(json!({"stage": "encoding", "produced": seconds, "expected": seconds, "expected_exact": true}));
             let (data, ctype) = audio::encode(&audio, out.sample_rate, &format).await?;

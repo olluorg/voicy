@@ -50,6 +50,8 @@ pub struct Options {
     /// знаки ударения; решено заранее: запрошены, язык русский, модель их понимает
     pub stress: bool,
     pub seed: Option<i64>,
+    /// распознать готовый звук и дочитать хвост, если модель закончила раньше текста
+    pub verify: bool,
 }
 
 pub fn pick_voice(app: &App, name: Option<&str>) -> ApiResult<Voice> {
@@ -79,6 +81,136 @@ pub fn require_speech(samples: &[f32], sample_rate: u32, voice: &str) -> ApiResu
     Ok(())
 }
 
+// ------------------------------------------------------------ недочитанный хвост
+
+/// Слов в хвосте, с которых дочитываем, и тишина перед дочитанным, с.
+const TAIL_MISSING: usize = 3;
+const TAIL_PAUSE: f64 = 0.25;
+
+fn word_spans(text: &str) -> Vec<(usize, usize, String)> {
+    // слово с буквами, цифрами, ударением и дефисом внутри; форма для сверки — строчная, без знаков, ё → е
+    let mut out = vec![];
+    let mut start = None;
+    let inside = |c: char| c.is_alphanumeric() || c == '\u{301}';
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
+    for (k, &(i, c)) in chars.iter().enumerate() {
+        let hyphen = c == '-' && start.is_some() && chars.get(k + 1).is_some_and(|&(_, n)| n.is_alphanumeric());
+        match (inside(c) || hyphen, start) {
+            (true, None) => start = Some(i),
+            (false, Some(s)) => {
+                out.push((s, i, norm_word(&text[s..i])));
+                start = None;
+            }
+            _ => {}
+        }
+    }
+    if let Some(s) = start {
+        out.push((s, text.len(), norm_word(&text[s..])));
+    }
+    out
+}
+
+fn norm_word(w: &str) -> String {
+    w.chars().filter(|c| c.is_alphanumeric()).flat_map(|c| c.to_lowercase()).map(|c| if c == 'ё' { 'е' } else { c }).collect()
+}
+
+/// Pairs (i in a, j in b) of a longest common subsequence: which text word the
+/// recogniser heard where.
+fn lcs_pairs(a: &[String], b: &[String]) -> Vec<(usize, usize)> {
+    let (n, m) = (a.len(), b.len());
+    let mut d = vec![vec![0u16; m + 1]; n + 1];
+    for i in (0..n).rev() {
+        for j in (0..m).rev() {
+            d[i][j] = if a[i] == b[j] { d[i + 1][j + 1] + 1 } else { d[i + 1][j].max(d[i][j + 1]) };
+        }
+    }
+    let (mut i, mut j, mut out) = (0, 0, vec![]);
+    while i < n && j < m {
+        if a[i] == b[j] {
+            out.push((i, j));
+            i += 1;
+            j += 1;
+        } else if d[i + 1][j] >= d[i][j + 1] {
+            i += 1;
+        } else {
+            j += 1;
+        }
+    }
+    out
+}
+
+/// The model sometimes stops before the text does: a fine-tuned voice in
+/// experiments/29 left the last 5–42 words of a paragraph unread in a quarter of
+/// its takes, and the sound was not short enough for a length rule to tell. Here
+/// the finished sound is recognised; when its last TAIL_MISSING or more words
+/// were not heard, the rest is synthesised once more, from the start of the
+/// sentence the gap begins in (an intonation started mid-phrase is heard), the
+/// take is cut there and the two are joined after a short pause.
+/// `text` is the prepared text, as the synthesiser got it.
+pub async fn read_tail(app: &App, text: &str, o: &Options, audio: Vec<f32>, sr: u32,
+                       alive: impl Fn() -> bool) -> Result<Vec<f32>, ApiError> {
+    let words = word_spans(text);
+    if words.len() < TAIL_MISSING {
+        return Ok(audio);
+    }
+    // распознавание берёт 16 кГц; линейной интерполяции для сверки слов хватает
+    let n16 = (audio.len() as f64 * 16000.0 / sr as f64) as usize;
+    let mut bytes = Vec::with_capacity(n16 * 4);
+    for k in 0..n16 {
+        let t = k as f64 * sr as f64 / 16000.0;
+        let (i, f) = (t as usize, (t - t.floor()) as f32);
+        let s = audio[i.min(audio.len() - 1)] * (1.0 - f) + audio[(i + 1).min(audio.len() - 1)] * f;
+        bytes.extend_from_slice(&s.to_le_bytes());
+    }
+    let tr = app
+        .engines
+        .transcribe(json!({"language": o.language, "word_timestamps": true, "temperature": 0.0}), &bytes, |_| alive())
+        .await
+        .map_err(|s| match s {
+            Stop::Cancelled => ApiError::new(409, "cancelled"),
+            Stop::Failed(e) => e.into(),
+        })?;
+    let heard: Vec<(f64, String)> = tr["segments"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|s| s["words"].as_array().cloned().unwrap_or_default())
+        .map(|w| (w["start"].as_f64().unwrap_or(0.0), norm_word(w["word"].as_str().unwrap_or_default())))
+        .filter(|(_, w)| !w.is_empty())
+        .collect();
+    let ours: Vec<String> = words.iter().map(|w| w.2.clone()).collect();
+    let theirs: Vec<String> = heard.iter().map(|h| h.1.clone()).collect();
+    let pairs = lcs_pairs(&ours, &theirs);
+    let last = pairs.last().map_or(0, |&(i, _)| i + 1);
+    if words.len() - last < TAIL_MISSING {
+        return Ok(audio);
+    }
+    // начало предложения, в котором пропуск: после последнего .!?… перед первым непрочитанным словом
+    let boundary = text[..words[last].0]
+        .char_indices()
+        .filter(|&(_, c)| ".!?…".contains(c))
+        .map(|(i, c)| i + c.len_utf8())
+        .last()
+        .unwrap_or(0);
+    let k0 = words.iter().position(|w| w.0 >= boundary).unwrap_or(last).min(last);
+    let (k0, cut) = match pairs.iter().find(|&&(i, _)| i == k0) {
+        Some(&(_, j)) if k0 < last => (k0, Some(((heard[j].0 - 0.05).max(0.0) * sr as f64) as usize)),
+        _ => (last, None),
+    };
+    log::info!("дочитываю хвост: не услышано {} слов из {}, заново с {}-го", words.len() - last, words.len(), k0 + 1);
+    let rest = app.engines.speak(speak_args(&text[words[k0].0..], o), |_| alive()).await.map_err(|s| match s {
+        Stop::Cancelled => ApiError::new(409, "cancelled"),
+        Stop::Failed(e) => e.into(),
+    })?;
+    let mut out = audio;
+    if let Some(c) = cut {
+        out.truncate(c.min(out.len()));
+    }
+    out.extend(std::iter::repeat_n(0.0, (TAIL_PAUSE * sr as f64) as usize));
+    out.extend(rest.audio);
+    Ok(out)
+}
+
 /// One chunk. `alive()` is asked at every progress event; false stops the work.
 pub async fn synthesize(app: &App, text: &str, o: &Options, alive: impl Fn() -> bool)
                         -> Result<(Vec<f32>, u32, f64), ApiError> {
@@ -89,7 +221,8 @@ pub async fn synthesize(app: &App, text: &str, o: &Options, alive: impl Fn() -> 
         Stop::Failed(e) => e.into(),
     })?;
     require_speech(&out.audio, out.sample_rate, &o.voice.name)?;
-    let audio = audio::stretch(out.audio, out.sample_rate, o.speed).await?;
+    let raw = if o.verify { read_tail(app, &text, o, out.audio, out.sample_rate, &alive).await? } else { out.audio };
+    let audio = audio::stretch(raw, out.sample_rate, o.speed).await?;
     Ok((audio, out.sample_rate, started.elapsed().as_secs_f64()))
 }
 
@@ -114,6 +247,7 @@ pub async fn http_stream(app: Arc<App>, req: crate::api::SpeechRequest) -> ApiRe
         prepare: req.prepare,
         legato: req.legato,
         seed: req.seed,
+        verify: req.verify,
     };
     let chunks = Segmenter::default().split(&req.input);
     let (tx, rx) = mpsc::channel::<Result<Vec<u8>, std::io::Error>>(4);
@@ -259,6 +393,7 @@ pub async fn socket(app: Arc<App>, q: StreamQuery, ws: WebSocket) {
             prepare: q.prepare,
             legato: q.legato,
             seed: q.seed,
+            verify: false, // живой разговор: первый звук важнее
         })
     }
     .await;
@@ -366,7 +501,17 @@ pub async fn socket(app: Arc<App>, q: StreamQuery, ws: WebSocket) {
 
 #[cfg(test)]
 mod tests {
-    use super::require_speech;
+    use super::{lcs_pairs, require_speech, word_spans};
+
+    #[test]
+    fn tail_words_match_what_was_heard() {
+        let w = word_spans("Её всё не́ было. Фёдор — кто-то, 3 раза.");
+        let forms: Vec<&str> = w.iter().map(|x| x.2.as_str()).collect();
+        assert_eq!(forms, ["ее", "все", "не", "было", "федор", "кто-то", "3", "раза"].map(|s| s.replace('-', "")));
+        let heard: Vec<String> = ["ее", "все", "небыло", "федор"].map(String::from).to_vec();
+        let ours: Vec<String> = forms.iter().map(|s| s.to_string()).collect();
+        assert_eq!(lcs_pairs(&ours, &heard), [(0, 0), (1, 1), (4, 3)]);
+    }
 
     #[test]
     fn no_speech_is_an_error_not_an_empty_file() {
