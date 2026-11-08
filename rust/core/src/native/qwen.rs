@@ -44,6 +44,7 @@ const DECODE_CHUNK: usize = 12;
 const LAYERS: usize = 8;
 const TALKER_CTX: u32 = 4096;
 const MAX_PIECE: usize = 1500; // символов за один проход: ~120 с звука, с запасом до TALKER_CTX
+const MIN_LENGTH: f64 = 0.6; // доля ожидаемой длины, раньше которой конец запрещён
 
 /// Whole sentences, at most `max` characters a piece (a longer sentence alone).
 fn split_long(text: &str, max: usize) -> Vec<String> {
@@ -445,13 +446,22 @@ impl Qwen {
         talker.decode_embd(api, &prompt, &pos)?;
         let mut hidden = talker.last_embedding(api, n_p);
         let mut cur = n_p as i32;
-        // выборка — как у генерации Qwen: temperature 0.9, top-k 50, штраф за повтор 1.05
-        let ts = Sampler::new(api, 0.9, 50, 1.0, 1.05, 128, self.talker.n_vocab, seed);
+        // выборка — как у генерации Qwen: temperature 0.9, top-k 50, штраф за повтор 1.05;
+        // TTS_TEMPERATURE меняет температуру говорящей части — для замеров (experiments/29)
+        let temp = std::env::var("TTS_TEMPERATURE").ok().and_then(|v| v.parse().ok()).unwrap_or(0.9);
+        let ts = Sampler::new(api, temp, 50, 1.0, 1.05, 128, self.talker.n_vocab, seed);
         let ps = Sampler::new(api, 0.9, 50, 1.0, 1.0, 64, self.predictor.n_vocab, seed);
+        // ранний конец — срыв, а не чтение: пока звука меньше MIN_LENGTH от того, что
+        // текст занял бы в темпе образца, конец запрещён (experiments/29: дообученная
+        // модель обрывала абзац на 44–72% длины, целые дубли — 85–110%)
+        let letters = |s: &str| s.chars().filter(|c| c.is_alphanumeric()).count().max(1) as f64;
+        let share = std::env::var("TTS_MIN_LENGTH").ok().and_then(|v| v.parse().ok()).unwrap_or(MIN_LENGTH);
+        let min_frames = (voice.codes.len() as f64 / letters(&voice.text) * letters(text) * share) as usize;
         let mut codes: Vec<[i64; Q]> = vec![];
         let result = (|| -> anyhow::Result<bool> {
             for step in 0..max_frames {
-                let c0 = ts.sample(api, talker, 0, 2048, &[EOS, PAD, BOS]) as usize;
+                let allow: &[usize] = if step < min_frames { &[PAD, BOS] } else { &[EOS, PAD, BOS] };
+                let c0 = ts.sample(api, talker, 0, 2048, allow) as usize;
                 ts.accept(api, c0 as i32);
                 if c0 == EOS {
                     break;

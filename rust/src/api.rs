@@ -65,6 +65,9 @@ pub struct SpeechRequest {
     #[serde(default = "yes")]
     pub stress: bool,
     pub seed: Option<i64>,
+    /// распознать готовый звук и дочитать хвост, если модель закончила раньше текста
+    #[serde(default)]
+    pub verify: bool,
     pub stream_format: Option<String>,
     pub webhook_url: Option<String>,
 }
@@ -224,7 +227,8 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
     let stress = req.stress && language == "ru" && app.engines.stress_marks();
     let text = textprep::for_speech(&req.input, req.prepare, req.legato, stress).await;
     let expected = estimate_seconds(&text);
-    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, stress: false, seed: req.seed };
+    let o = Options { voice, language, speed: req.speed, prepare: false, legato: false, stress: false, seed: req.seed,
+                      verify: req.verify };
     let format = req.response_format.clone();
     let app2 = app.clone();
     let work: crate::jobs::Work = Box::new(move |job: Arc<Job>| {
@@ -257,7 +261,14 @@ pub async fn submit_speech(app: &Arc<App>, req: &SpeechRequest, headers: &Header
             if job.cancelled() {
                 return Err(WorkError::Cancelled);
             }
-            let audio = audio::stretch(out.audio, out.sample_rate, o.speed).await?;
+            speak::require_speech(&out.audio, out.sample_rate, &o.voice.name)?;
+            let raw = if o.verify {
+                job.emit(json!({"stage": "verification"}));
+                speak::read_tail(&app2, &text, &o, out.audio, out.sample_rate, || !job.cancelled()).await?
+            } else {
+                out.audio
+            };
+            let audio = audio::stretch(raw, out.sample_rate, o.speed).await?;
             let seconds = round(audio.len() as f64 / out.sample_rate as f64, 2);
             job.emit(json!({"stage": "encoding", "produced": seconds, "expected": seconds, "expected_exact": true}));
             let (data, ctype) = audio::encode(&audio, out.sample_rate, &format).await?;
@@ -617,7 +628,10 @@ pub async fn prepare_text(State(app): S, Json(p): Json<Value>) -> impl IntoRespo
     let text = p["text"].as_str().unwrap_or_default();
     let flag = |k: &str, d: bool| p.get(k).map_or(d, |v| v.as_bool().unwrap_or(!v.is_null() && v != &json!(0)));
     let mut out = textprep::prepare(text, flag("dictionary", true), flag("legato", false));
-    // знаки — как их поставит синтез: только если модель их понимает
+    // ё и знаки — как их поставит синтез: знаки только если модель их понимает
+    let with_yo = textprep::yo(out["text"].as_str().unwrap_or(text));
+    out["changed"] = json!(with_yo != text);
+    out["text"] = json!(with_yo);
     let stress = flag("stress", true) && app.engines.stress_marks();
     if stress {
         let marked = textprep::stress(out["text"].as_str().unwrap_or(text)).await;

@@ -586,7 +586,7 @@ impl Accentuator {
         }
         let mut replace: HashMap<usize, char> = HashMap::new();
         let mut acute_after: Vec<usize> = vec![];
-        let nchars: Vec<char> = normal.chars().collect();
+        let nchars = lower_titles(normal.chars().collect());
         for sentence in split_sentences(&nchars) {
             let offset = sentence.start;
             let s: String = nchars[sentence.clone()].iter().collect();
@@ -673,6 +673,29 @@ fn group_words(words: &[String]) -> Vec<Vec<String>> {
 /// Sentences of the normalised text: after . ! ? and space. RUAccent cuts with
 /// razdel; the models only look inside one sentence, so where exactly the cut
 /// falls changes little, and the speech itself is not cut here at all.
+/// «Сло́во» → «сло́во» for RUAccent only: it stresses a capitalized word worse than
+/// the same word in lower case — «После́», «По́том», «Ва́рвара» at the start of a
+/// sentence. Against the reader of experiments/29 (6695 words): right on 92.1% of
+/// capitalized words as written, 94.6% lowercased; all words 97.5% → 97.8%.
+/// Words in capitals (abbreviations) stay as they are; the output takes its
+/// letters from the caller's text, so the case there does not change.
+fn lower_titles(mut chars: Vec<char>) -> Vec<char> {
+    let cyr = |c: char| ('а'..='я').contains(&c) || ('А'..='Я').contains(&c) || c == 'ё' || c == 'Ё';
+    let mut i = 0;
+    while i < chars.len() {
+        if !cyr(chars[i]) {
+            i += 1;
+            continue;
+        }
+        let end = (i..chars.len()).find(|&k| !cyr(chars[k])).unwrap_or(chars.len());
+        if end - i > 1 && chars[i].is_uppercase() && chars[i + 1..end].iter().all(|c| c.is_lowercase()) {
+            chars[i] = chars[i].to_lowercase().next().unwrap_or(chars[i]);
+        }
+        i = end;
+    }
+    chars
+}
+
 fn split_sentences(chars: &[char]) -> Vec<std::ops::Range<usize>> {
     let mut out = vec![];
     let mut start = 0;
@@ -721,6 +744,13 @@ mod tests {
         assert_eq!(fix_capital("Все", "всё"), "Всё");
         assert_eq!(fix_capital("ВСЕ", "всё"), "ВСЁ");
         assert_eq!(delete_spaces_before_punc("а , б ~ в - г"), "а, б - в-г");
+    }
+
+    #[test]
+    fn titles_lowered_capitals_kept() {
+        let low = |s: &str| lower_titles(s.chars().collect()).into_iter().collect::<String>();
+        assert_eq!(low("После обеда Варвара и ООН, Ёлка."), "после обеда варвара и ООН, ёлка.");
+        assert_eq!(low("Я и Мы"), "Я и мы");
     }
 
     #[test]
