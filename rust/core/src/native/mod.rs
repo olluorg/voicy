@@ -10,6 +10,7 @@
 pub mod accent;
 pub mod decode;
 pub mod fwhisper;
+pub mod gigaam;
 pub mod listen;
 pub mod llama;
 pub mod mel;

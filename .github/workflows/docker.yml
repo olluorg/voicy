@@ -2,7 +2,7 @@ name: образ
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, feat/stt-lite-gigaam]
     tags: ["v*"]
     # статья и замеры в образ не едут — пересобирать из-за них нечего
     paths-ignore:
@@ -112,4 +112,81 @@ jobs:
           echo "### Образ опубликован" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "docker run --gpus all -p 8080:8080 -v voicy-models:/cache ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  build-stt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Войти в реестр
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Метки и теги (STT-lite)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
+          flavor: |
+            prefix=stt-
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=voicy-stt
+            org.opencontainers.image.description=Лёгкий CPU-сервер распознавания русской речи (GigaAM-v3 INT8)
+            org.opencontainers.image.licenses=MIT
+
+      - name: Собрать STT-образ
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.stt
+          load: true
+          tags: voicy-stt:check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Проверить STT-образ
+        run: |
+          docker run --rm voicy-stt:check voicy --version
+          docker run --rm voicy-stt:check sh -c '
+            set -e
+            cd /opt/voicy/lib
+            ls libonnxruntime.so voicy-libs.txt >/dev/null
+            cat voicy-libs.txt
+            ldd /usr/local/bin/voicy | grep "not found" && exit 1 || true
+            echo STT-образ на месте'
+
+      - name: Опубликовать STT-образ
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.stt
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+
+      - name: Итог (STT)
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "### STT-образ опубликован" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "docker run -d --cpus=1 --memory=800m -p 8080:8080 -v voicy-stt-cache:/cache ${{ env.REGISTRY }}/${{ env.IMAGE }}:stt-latest" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY

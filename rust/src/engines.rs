@@ -89,6 +89,9 @@ use voicy_core::STRESS_MARKER;
 
 impl NativeTts {
     fn find() -> Option<NativeTts> {
+        if stt_only_mode() || std::env::var("TTS_ENGINE").is_ok_and(|v| v.eq_ignore_ascii_case("none")) {
+            return None;
+        }
         let explicit = wanted("TTS_ENGINE", &["qwen3-tts-gguf"])?;
         // q5_k: та же разборчивость и то же сходство голоса, что у f16 и torch, при 2.4 ГБ (experiments/20)
         let variant = voicy_core::TtsConfig::from_env().talker;
@@ -145,10 +148,15 @@ impl NativeTts {
 // ---------------------------------------------------------- распознавание
 
 const STT_FEATURES: [&str; 4] = ["hotwords", "prompt", "translate", "word_timestamps"];
+const GIGAAM_FEATURES: [&str; 0] = [];
+
+fn stt_only_mode() -> bool {
+    std::env::var("VOICY_MODE").is_ok_and(|v| v.eq_ignore_ascii_case("stt"))
+}
 
 /// Whisper large-v3-turbo in-process, loaded on first use: as faster-whisper
 /// runs it — CTranslate2 and a port of its Python (native/fwhisper.rs) — or,
-/// when asked for, on whisper.cpp.
+/// when asked for, on whisper.cpp, or GigaAM-v3 on ONNX Runtime.
 struct NativeStt {
     kind: SttKind,
     name: String,
@@ -161,11 +169,14 @@ enum SttKind {
     Ct2 { dir: PathBuf, vad: PathBuf },
     /// ggml model and whisper.cpp's own Silero.
     Cpp { model: PathBuf, vad: PathBuf },
+    /// GigaAM-v3 INT8 ONNX model, vocab, and Silero VAD for chunking.
+    GigaAm { model: PathBuf, vocab: PathBuf, vad: PathBuf },
 }
 
 enum SttModel {
     Ct2(native::fwhisper::FasterWhisper),
     Cpp(native::whisper::Whisper),
+    GigaAm(native::gigaam::GigaAm),
 }
 
 /// Whether synthesis runs on the GPU: unless FORCE_CPU=1, the backend is the
@@ -185,22 +196,46 @@ fn stt_device(kind: &SttKind) -> String {
     match kind {
         SttKind::Ct2 { .. } => if native::use_cuda(wanted) { "cuda".into() } else { "cpu".into() },
         SttKind::Cpp { .. } => native::device_name(native::use_gpu(wanted)),
+        SttKind::GigaAm { .. } => "cpu".into(),
     }
 }
 
 impl NativeStt {
     /// faster-whisper when its library and model are in the cache — the same
     /// recogniser as in Python (experiments/22); whisper.cpp only when asked
-    /// for: less accurate (experiments/21).
+    /// for: less accurate (experiments/21); gigaam for lightweight Russian CPU STT.
     fn find() -> Option<NativeStt> {
-        let name = std::env::var("STT_MODEL").unwrap_or_else(|_| "large-v3-turbo".into());
+        let mut name = std::env::var("STT_MODEL").unwrap_or_default();
         let dir = models().join("whisper");
         let lib = native::lib_dir().ok();
         let has = |stem: &str| lib.as_ref().is_some_and(|d| {
             [format!("lib{stem}.so"), format!("{stem}.dll"), format!("lib{stem}.dylib")].iter().any(|n| d.join(n).exists())
         });
-        let kind = match std::env::var("STT_ENGINE").unwrap_or_default().as_str() {
+        let engine_env = std::env::var("STT_ENGINE").unwrap_or_default();
+        let engine_sel = if engine_env.is_empty() && stt_only_mode() {
+            "gigaam"
+        } else {
+            engine_env.as_str()
+        };
+        let kind = match engine_sel {
+            "gigaam" => {
+                if name.is_empty() {
+                    name = "v3_e2e_ctc".into();
+                }
+                let gdir = models().join("gigaam");
+                let model = gdir.join(format!("{name}.int8.onnx"));
+                let vocab_name = if name == "v3_ctc" { "v3_vocab.txt" } else { "v3_e2e_ctc_vocab.txt" };
+                let vocab = gdir.join(vocab_name);
+                if !(model.is_file() && vocab.is_file() && has("onnxruntime")) {
+                    eprintln!("voicy: STT_ENGINE=gigaam, but no {} / {} or no libonnxruntime", model.display(), vocab.display());
+                    return None;
+                }
+                SttKind::GigaAm { model, vocab, vad: models().join("vad").join("silero_vad_v6.onnx") }
+            }
             "whisper.cpp" => {
+                if name.is_empty() {
+                    name = "large-v3-turbo".into();
+                }
                 let model = dir.join(format!("ggml-{name}.bin"));
                 if !(model.is_file() && has("whisper")) {
                     eprintln!("voicy: STT_ENGINE=whisper.cpp, but no {} or no libwhisper", model.display());
@@ -209,6 +244,9 @@ impl NativeStt {
                 SttKind::Cpp { model, vad: dir.join("ggml-silero-v6.2.0.bin") }
             }
             "" | "faster-whisper" => {
+                if name.is_empty() {
+                    name = "large-v3-turbo".into();
+                }
                 let ct2 = dir.join(format!("faster-whisper-{name}"));
                 // на Windows обёртка едет внутри бинарника и кладётся на место при загрузке
                 let shim = cfg!(all(windows, target_env = "msvc")) || has("ct2shim");
@@ -226,12 +264,16 @@ impl NativeStt {
         self.engine
             .get_or_try_init(|| async {
                 let kind = self.kind.clone();
+                let name = self.name.clone();
                 let cfg = voicy_core::SttConfig::from_env();
                 tokio::task::spawn_blocking(move || match kind {
                     SttKind::Ct2 { dir, vad } => {
                         native::fwhisper::FasterWhisper::load(&dir, Some(&vad), native::use_cuda(cfg.gpu), cfg.compute_type.as_deref()).map(SttModel::Ct2)
                     }
                     SttKind::Cpp { model, vad } => native::whisper::Whisper::load(&model, Some(vad), native::use_gpu(cfg.gpu)).map(SttModel::Cpp),
+                    SttKind::GigaAm { model, vocab, vad } => {
+                        native::gigaam::GigaAm::load(&model, &vocab, Some(&vad), &name).map(SttModel::GigaAm)
+                    }
                 })
                 .await
                 .map_err(|e| err("internal", e.to_string()))?
@@ -246,22 +288,25 @@ impl NativeStt {
         match self.kind {
             SttKind::Ct2 { .. } => "ctranslate2",
             SttKind::Cpp { .. } => "whisper.cpp",
+            SttKind::GigaAm { .. } => "onnxruntime",
         }
     }
 
     fn status(&self) -> Value {
-        let engine = match self.kind {
-            SttKind::Ct2 { .. } => "faster-whisper",
-            SttKind::Cpp { .. } => "whisper.cpp",
+        let (engine, features) = match self.kind {
+            SttKind::Ct2 { .. } => ("faster-whisper", STT_FEATURES.as_slice()),
+            SttKind::Cpp { .. } => ("whisper.cpp", STT_FEATURES.as_slice()),
+            SttKind::GigaAm { .. } => ("gigaam", GIGAAM_FEATURES.as_slice()),
         };
         let mut v = json!({"engine": engine, "model": self.name, "runtime": self.runtime(),
-                           "loaded": self.engine.initialized(), "features": STT_FEATURES});
+                           "loaded": self.engine.initialized(), "features": features});
         match self.engine.get().map(|e| &**e) {
             Some(SttModel::Ct2(w)) => {
                 v["device"] = json!(w.device);
                 v["compute_type"] = json!(w.compute_type);
             }
             Some(SttModel::Cpp(w)) => v["device"] = json!(w.device),
+            Some(SttModel::GigaAm(w)) => v["device"] = json!(w.device),
             None => v["device"] = json!(stt_device(&self.kind)),
         }
         v
@@ -282,7 +327,10 @@ fn native_listen() -> (Option<Arc<native::listen::Vad>>, Option<Arc<native::list
     let vad = (wanted("VAD_ENGINE", &["silero"]).is_some() && vad.is_file())
         .then(|| native::listen::Vad::load(&vad).map(Arc::new).map_err(|e| eprintln!("voicy: vad: {e:#}")).ok())
         .flatten();
-    let turn = (wanted("TURN_ENGINE", &["smart-turn"]).is_some() && turn.is_file())
+    let turn = (!stt_only_mode()
+        && !std::env::var("TURN_ENGINE").is_ok_and(|v| v.eq_ignore_ascii_case("none"))
+        && wanted("TURN_ENGINE", &["smart-turn"]).is_some()
+        && turn.is_file())
         .then(|| native::listen::Turn::load(&turn).map(Arc::new).map_err(|e| eprintln!("voicy: turn: {e:#}")).ok())
         .flatten();
     (vad, turn)
@@ -297,12 +345,22 @@ impl Engines {
         let tts = NativeTts::find();
         let stt = NativeStt::find();
         let (vad, turn) = native_listen();
-        let all_native = tts.is_some() && stt.is_some() && vad.is_some() && turn.is_some();
+        let all_native = if stt_only_mode() {
+            stt.is_some()
+        } else {
+            tts.is_some() && stt.is_some() && vad.is_some() && turn.is_some()
+        };
         let mut info = json!({});
         let host = if all_native {
-            eprintln!("voicy: all engines in-process, Python is not needed");
-            info["device"] = json!(tts_device());
-            info["cuda"] = json!(info["device"] == "cuda");
+            if stt_only_mode() {
+                eprintln!("voicy: STT-only mode in-process, Python is not needed");
+                info["device"] = json!("cpu");
+                info["cuda"] = json!(false);
+            } else {
+                eprintln!("voicy: all engines in-process, Python is not needed");
+                info["device"] = json!(tts_device());
+                info["cuda"] = json!(info["device"] == "cuda");
+            }
             None
         } else {
             let dir = server_dir.ok_or_else(|| anyhow::anyhow!(
@@ -572,6 +630,7 @@ impl Engines {
             match &*engine {
                 SttModel::Ct2(w) => w.transcribe(&samples, &req, &mut on),
                 SttModel::Cpp(w) => w.transcribe(&samples, &req, &mut on),
+                SttModel::GigaAm(w) => w.transcribe(&samples, &req, &mut on),
             }
         });
         while let Some(seg) = rx.recv().await {

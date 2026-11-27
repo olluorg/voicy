@@ -36,8 +36,22 @@ const QWEN_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-base-gguf";
 /// По умолчанию — та же модель, дообученная слушаться знака ударения (docs/adr/0023).
 const QWEN_STRESS_MODEL: &str = "sknyazev/qwen3-tts-12hz-1.7b-ru-stress-gguf";
 const TURN_MODEL: &str = "pipecat-ai/smart-turn-v3";
+const GIGAAM_MODEL: &str = "istupakov/gigaam-v3-onnx";
 /// Silero — из колеса faster-whisper: тот же файл, что слышит движок Python.
 const FASTER_WHISPER: &str = "1.2.1";
+
+pub fn stt_lite() -> bool {
+    std::env::var("VOICY_MODE").is_ok_and(|v| v.eq_ignore_ascii_case("stt"))
+        || std::env::var("VOICY_PROFILE").is_ok_and(|v| v.eq_ignore_ascii_case("stt-lite"))
+}
+
+fn gigaam_files() -> [&'static str; 2] {
+    if std::env::var("STT_MODEL").as_deref() == Ok("v3_ctc") {
+        ["v3_ctc.int8.onnx", "v3_vocab.txt"]
+    } else {
+        ["v3_e2e_ctc.int8.onnx", "v3_e2e_ctc_vocab.txt"]
+    }
+}
 
 /// What a platform needs, and where it comes from: one operating system and
 /// architecture, one backend (`native::Backend`). A platform is here once its
@@ -840,21 +854,32 @@ fn dyn_ext() -> &'static str {
 /// The archives the engine libraries come out of, all in the downloads directory.
 struct Libs {
     llama: Vec<PathBuf>,
-    whisper: PathBuf,
+    whisper: Option<PathBuf>,
     wheels: Vec<PathBuf>,
     ct2_src: Option<PathBuf>,
+    lite: bool,
 }
 
-async fn plan_libs(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyhow::Result<Libs> {
+async fn plan_libs_with(http: &reqwest::Client, plan: &mut Plan, tmp: &Path, lite: bool) -> anyhow::Result<Libs> {
     let p = platform()?;
+    if lite {
+        let ort_spec = if cfg!(windows) {
+            format!("onnxruntime-directml=={ORT_DML}")
+        } else {
+            format!("onnxruntime=={ORT}")
+        };
+        let wheels = vec![plan.archive(wheel_url(http, &ort_spec, p.wheel_tag).await?, tmp)];
+        return Ok(Libs { llama: vec![], whisper: None, wheels, ct2_src: None, lite: true });
+    }
     let llama = p
         .llama_assets
         .iter()
         .map(|a| plan.archive(format!("https://github.com/ggml-org/llama.cpp/releases/download/{LLAMA}/{}", expand(a)), tmp))
         .collect();
     // whisper.cpp — из сборки для процессора: CUDA ей даёт ggml llama.cpp (experiments/21)
-    let whisper =
-        plan.archive(format!("https://github.com/ggml-org/whisper.cpp/releases/download/{WHISPER_CPP}/{}", p.whisper_asset), tmp);
+    let whisper = Some(
+        plan.archive(format!("https://github.com/ggml-org/whisper.cpp/releases/download/{WHISPER_CPP}/{}", p.whisper_asset), tmp),
+    );
     let mut wheels = vec![];
     for spec in p.wheels {
         wheels.push(plan.archive(wheel_url(http, &expand(spec), p.wheel_tag).await?, tmp));
@@ -862,7 +887,7 @@ async fn plan_libs(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyho
     // заголовки CTranslate2 для обёртки; на Windows её собирает build.rs крейта, здесь не нужны
     let ct2_src = (!cfg!(all(windows, target_env = "msvc")))
         .then(|| plan.archive(format!("https://github.com/OpenNMT/CTranslate2/archive/refs/tags/v{CT2}.tar.gz"), tmp));
-    Ok(Libs { llama, whisper, wheels, ct2_src })
+    Ok(Libs { llama, whisper, wheels, ct2_src, lite: false })
 }
 
 async fn libs(archives: Libs, tmp: &Path) -> anyhow::Result<()> {
@@ -874,12 +899,14 @@ async fn libs(archives: Libs, tmp: &Path) -> anyhow::Result<()> {
         // квантование весов Qwen3-TTS делает эта же сборка (scripts/convert_qwen.py)
         extract(archive, lib.parent().unwrap_or(&lib), |n| n == "llama-quantize" || n == "llama-quantize.exe")?;
     }
-    let whisper = native::lib_file("whisper");
-    extract(&archives.whisper, &lib, |n| n.starts_with(&whisper))?;
+    if let Some(w_arc) = &archives.whisper {
+        let whisper = native::lib_file("whisper");
+        extract(w_arc, &lib, |n| n.starts_with(&whisper))?;
+    }
     for wheel in &archives.wheels {
         unzip(wheel, &lib, |n| n.contains(dyn_ext()) && p.wanted.iter().any(|w| n.starts_with(w)))?;
     }
-    if cfg!(windows) {
+    if cfg!(windows) && !archives.lite {
         openmp_bridge(&lib, tmp)?;
     }
     // В колесе лежит libonnxruntime.so.1.30.0, а ищется короткое имя
@@ -898,7 +925,7 @@ async fn libs(archives: Libs, tmp: &Path) -> anyhow::Result<()> {
     if let Some(src) = &archives.ct2_src {
         build_shim(&lib, src, tmp)?;
     }
-    fs::write(lib.join(LIB_MARKER), lib_set())?;
+    fs::write(lib.join(LIB_MARKER), lib_set_for(archives.lite))?;
     say(format!("библиотеки — {} ({} файлов)", lib.display(), fs::read_dir(&lib)?.count()));
     Ok(())
 }
@@ -909,6 +936,7 @@ struct Models {
     /// Колесо faster-whisper, из которого берётся Silero, и куда его положить.
     vad: Option<(PathBuf, PathBuf)>,
     stress: bool,
+    lite: bool,
 }
 
 const WHISPER_FILES: [&str; 5] = ["config.json", "model.bin", "preprocessor_config.json", "tokenizer.json", "vocabulary.json"];
@@ -957,29 +985,44 @@ pub fn tts_dir() -> PathBuf {
 /// without the network. A download cut off halfway leaves a cache that looks
 /// installed, and that is better said at start than at the first request.
 pub fn missing() -> Vec<PathBuf> {
+    missing_for(stt_lite())
+}
+
+fn missing_for(lite: bool) -> Vec<PathBuf> {
     let root = native::cache_dir().join("models");
-    let whisper = whisper_dir(&root);
-    let mut want: Vec<PathBuf> = WHISPER_FILES.iter().map(|f| whisper.join(f)).collect();
-    want.push(root.join("turn").join(TURN_FILE));
-    want.push(root.join("vad").join(SILERO));
-    let tts = tts_dir();
-    let stress = tts.file_name().is_some_and(|n| n == crate::TTS_STRESS_DIR);
-    want.extend(qwen_files(&talker_variant(), stress).iter().map(|f| tts.join(f)));
-    let accent = native::accent::dir();
-    want.extend(native::accent::FILES.iter().map(|f| accent.join(f)));
-    want.push(accent.join(native::accent::DICTIONARY_FST));
+    let mut want: Vec<PathBuf> = Vec::new();
+    if lite {
+        let gdir = root.join("gigaam");
+        want.extend(gigaam_files().iter().map(|f| gdir.join(f)));
+        want.push(root.join("vad").join(SILERO));
+    } else {
+        let whisper = whisper_dir(&root);
+        want.extend(WHISPER_FILES.iter().map(|f| whisper.join(f)));
+        want.push(root.join("turn").join(TURN_FILE));
+        want.push(root.join("vad").join(SILERO));
+        let tts = tts_dir();
+        let stress = tts.file_name().is_some_and(|n| n == crate::TTS_STRESS_DIR);
+        want.extend(qwen_files(&talker_variant(), stress).iter().map(|f| tts.join(f)));
+        let accent = native::accent::dir();
+        want.extend(native::accent::FILES.iter().map(|f| accent.join(f)));
+        want.push(accent.join(native::accent::DICTIONARY_FST));
+    }
     let mut out: Vec<PathBuf> = want.into_iter().filter(|p| !p.is_file()).collect();
-    out.extend(missing_libs());
+    out.extend(missing_libs_for(lite));
     out
 }
 
 /// Libraries: a file for every name the engines look for.
-fn missing_libs() -> Vec<PathBuf> {
+fn missing_libs_for(lite: bool) -> Vec<PathBuf> {
     let Ok(p) = platform() else { return vec![] };
     let lib = native::lib_dir_path();
     let names: Vec<String> = fs::read_dir(&lib)
         .map(|d| d.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().into_owned()).collect())
         .unwrap_or_default();
+    if lite {
+        let ort = native::lib_file("onnxruntime");
+        return if names.iter().any(|n| n.starts_with(&ort)) { vec![] } else { vec![lib.join(ort)] };
+    }
     let own = ["llama", "ggml", "whisper", "onnxruntime"].map(native::lib_file);
     let by_prefix = p
         .wanted
@@ -994,7 +1037,11 @@ fn missing_libs() -> Vec<PathBuf> {
 /// Which versions the library directory holds, written once they are all in.
 const LIB_MARKER: &str = "voicy-libs.txt";
 
-fn lib_set() -> String {
+fn lib_set_for(lite: bool) -> String {
+    if lite {
+        let ort = if cfg!(windows) { format!("{ORT_DML} DirectML") } else { ORT.into() };
+        return format!("ONNX Runtime {ort} (stt-lite)\n");
+    }
     match native::backend() {
         // строка та же, что до появления других бэкендов: поставленное не ставится заново
         native::Backend::Cuda => {
@@ -1010,18 +1057,19 @@ fn lib_set() -> String {
 /// Whether the libraries have to be put in again. Unpacking over installed ones
 /// is not harmless: on Windows a DLL loaded by a running server cannot be
 /// overwritten, and setup would fail on files it did not need to touch.
-fn libs_needed() -> bool {
+fn libs_needed_for(lite: bool) -> bool {
     let lib = native::lib_dir_path();
-    if !missing_libs().is_empty() {
+    if !missing_libs_for(lite).is_empty() {
         return true;
     }
+    let expected = lib_set_for(lite);
     let current = match fs::read_to_string(lib.join(LIB_MARKER)) {
-        Ok(set) => set == lib_set(),
+        Ok(set) => set == expected,
         // поставлены до появления метки; версии с тех пор не менялись — те же самые
-        Err(_) => fs::write(lib.join(LIB_MARKER), lib_set()).is_ok(),
+        Err(_) => fs::write(lib.join(LIB_MARKER), &expected).is_ok(),
     };
     // обёртку над CTranslate2 без компилятора собрать не удалось — с ним можно попробовать снова
-    let shim = !cfg!(all(windows, target_env = "msvc")) && !lib.join(native::lib_file("ct2shim")).exists() && cxx().is_some();
+    let shim = !lite && !cfg!(all(windows, target_env = "msvc")) && !lib.join(native::lib_file("ct2shim")).exists() && cxx().is_some();
     !current || shim
 }
 
@@ -1044,14 +1092,8 @@ pub fn describe(missing: &[PathBuf]) -> String {
     s + "\nДокачать: voicy setup (скачанное раньше не пропадёт)"
 }
 
-async fn plan_models(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> anyhow::Result<Models> {
+async fn plan_models_with(http: &reqwest::Client, plan: &mut Plan, tmp: &Path, lite: bool) -> anyhow::Result<Models> {
     let root = native::cache_dir().join("models");
-    let whisper = whisper_dir(&root);
-    for f in WHISPER_FILES {
-        plan.hf(WHISPER_MODEL, "main", f, &whisper);
-    }
-    plan.hf(TURN_MODEL, "main", TURN_FILE, &root.join("turn"));
-
     let vad_dir = root.join("vad");
     let vad = if vad_dir.join(SILERO).exists() {
         None
@@ -1061,6 +1103,20 @@ async fn plan_models(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> any
         });
         Some((plan.archive(url, tmp), vad_dir))
     };
+
+    if lite {
+        let gdir = root.join("gigaam");
+        for f in gigaam_files() {
+            plan.hf(GIGAAM_MODEL, "main", f, &gdir);
+        }
+        return Ok(Models { root, vad, stress: false, lite: true });
+    }
+
+    let whisper = whisper_dir(&root);
+    for f in WHISPER_FILES {
+        plan.hf(WHISPER_MODEL, "main", f, &whisper);
+    }
+    plan.hf(TURN_MODEL, "main", TURN_FILE, &root.join("turn"));
 
     // Qwen3-TTS: по умолчанию — модель, понимающая знаки ударения; исходные веса —
     // VOICY_TTS_GGUF_REPO=sknyazev/qwen3-tts-12hz-1.7b-base-gguf
@@ -1077,13 +1133,17 @@ async fn plan_models(http: &reqwest::Client, plan: &mut Plan, tmp: &Path) -> any
     for f in native::accent::FILES {
         plan.hf(native::accent::REPO, native::accent::REVISION, f, &accent);
     }
-    Ok(Models { root, vad, stress })
+    Ok(Models { root, vad, stress, lite: false })
 }
 
 async fn models(m: Models) -> anyhow::Result<()> {
     if let Some((wheel, dir)) = &m.vad {
         fs::create_dir_all(dir)?;
         unzip(wheel, dir, |n| n == SILERO)?;
+    }
+    if m.lite {
+        say(format!("модели (stt-lite) — {}", m.root.display()));
+        return Ok(());
     }
     // из словаря ударений — FST
     let accent = native::accent::dir();
@@ -1104,21 +1164,25 @@ async fn models(m: Models) -> anyhow::Result<()> {
 /// `yes` — согласие на скачивание дано заранее; без него план показывается и
 /// ждёт ответа.
 pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
+    run_with(what, yes, stt_lite()).await
+}
+
+pub async fn run_with(what: &str, yes: bool, lite: bool) -> anyhow::Result<()> {
     let tmp = native::cache_dir().join("downloads");
     fs::create_dir_all(&tmp)?;
     let http = client()?;
     say("смотрю, чего не хватает");
     let mut plan = Plan::default();
     // setup libs — поставить заново в любом случае; иначе — только если их нет или они не те
-    let libs_plan = if what == "libs" || (what == "all" && libs_needed()) {
-        Some(plan_libs(&http, &mut plan, &tmp).await?)
+    let libs_plan = if what == "libs" || (what == "all" && libs_needed_for(lite)) {
+        Some(plan_libs_with(&http, &mut plan, &tmp, lite).await?)
     } else {
         if what == "all" {
-            say(format!("библиотеки уже на месте: {} — {}", native::lib_dir_path().display(), lib_set().trim()));
+            say(format!("библиотеки уже на месте: {} — {}", native::lib_dir_path().display(), lib_set_for(lite).trim()));
         }
         None
     };
-    let models_plan = if what != "libs" { Some(plan_models(&http, &mut plan, &tmp).await?) } else { None };
+    let models_plan = if what != "libs" { Some(plan_models_with(&http, &mut plan, &tmp, lite).await?) } else { None };
     if plan.items.is_empty() {
         say("всё нужное уже скачано");
     } else {
@@ -1134,7 +1198,7 @@ pub async fn run(what: &str, yes: bool) -> anyhow::Result<()> {
     if let Some(m) = models_plan {
         models(m).await?;
     }
-    let left = missing();
+    let left = missing_for(lite);
     if what == "all" && !left.is_empty() {
         bail!("{}", describe(&left));
     }

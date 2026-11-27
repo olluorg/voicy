@@ -1,0 +1,59 @@
+# voicy-stt — сверхлёгкий STT-сервер (GigaAM-v3 INT8 + Silero VAD на CPU).
+#
+# Только распознавание речи, без Qwen3-TTS, без Python и без CUDA.
+# Рассчитан на VPS от 1 vCPU и 800 МБ свободной RAM (пик ~350–420 МБ).
+#
+# Сборка:
+#   docker build -f Dockerfile.stt -t voicy-stt .
+# Запуск:
+#   docker run --rm --cpus=1 --memory=800m -p 8080:8080 -v voicy-stt-cache:/cache voicy-stt
+
+# ------------------------------------------------------------------ сборка
+FROM rust:1-bookworm AS build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cmake pkg-config autoconf automake libtool g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY rust/ rust/
+COPY server/static/index.html server/static/index.html
+RUN cargo build --release --manifest-path rust/Cargo.toml \
+    && install -D rust/target/release/voicy /out/voicy
+
+# Только CPU ONNX Runtime (~15–20 МБ), без CUDA/llama.cpp/whisper.cpp/CTranslate2
+ENV VOICY_CACHE=/tmp/voicy-cache \
+    VOICY_LIB_DIR=/opt/voicy/lib \
+    VOICY_DEVICE=cpu \
+    VOICY_PROFILE=stt-lite
+RUN /out/voicy setup libs --stt-lite --yes && rm -rf /tmp/voicy-cache
+
+# ------------------------------------------------------------------ образ
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /out/voicy /usr/local/bin/voicy
+COPY --from=build /opt/voicy/lib /opt/voicy/lib
+
+# MALLOC_ARENA_MAX=2 и OMP_NUM_THREADS=1 удерживают RAM на VPS с <= 800 МБ
+ENV VOICY_CACHE=/cache \
+    VOICY_LIB_DIR=/opt/voicy/lib \
+    VOICY_CONTEXTS_DIR=/app/server/contexts \
+    VOICY_MODE=stt \
+    VOICY_PROFILE=stt-lite \
+    STT_ENGINE=gigaam \
+    STT_MODEL=v3_e2e_ctc \
+    FORCE_CPU=1 \
+    OMP_NUM_THREADS=1 \
+    MALLOC_ARENA_MAX=2
+
+VOLUME ["/cache", "/app/server/contexts"]
+
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10m --retries=3 \
+    CMD curl -fsS http://localhost:8080/health || exit 1
+
+CMD ["sh", "-c", "voicy setup models --stt-lite --yes && exec voicy serve --host 0.0.0.0 --port 8080"]

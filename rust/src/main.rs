@@ -215,6 +215,9 @@ enum Command {
         /// скачать не спрашивая: без этого setup показывает, что и куда ляжет, и ждёт согласия
         #[arg(long, short)]
         yes: bool,
+        /// только CPU ONNX Runtime, Silero VAD и GigaAM-v3 INT8 (~250 МБ)
+        #[arg(long)]
+        stt_lite: bool,
     },
     /// Обновить voicy до последнего выпуска с GitHub
     Update {
@@ -348,14 +351,14 @@ async fn serve(host: String, port: u16, home: Option<PathBuf>, python: Option<Pa
 }
 
 /// Setup changes files the server holds open: not while it runs.
-async fn setup_locked(what: &str, yes: bool) -> anyhow::Result<()> {
+async fn setup_locked(what: &str, yes: bool, stt_lite: bool) -> anyhow::Result<()> {
     let _lock = match instance::Instance::acquire("установка", None)? {
         Ok(lock) => lock,
         Err(h) => anyhow::bail!(
             "{h}. Установка меняет файлы, которые он держит открытыми, — остановите его \
              (voicy down или закройте его окно) и запустите voicy setup снова"),
     };
-    setup::run(what, yes).await
+    setup::run_with(what, yes, stt_lite || setup::stt_lite()).await
 }
 
 async fn serve_locked(host: String, port: u16, home: Option<PathBuf>, python: Option<PathBuf>) -> anyhow::Result<()> {
@@ -693,7 +696,7 @@ async fn main() -> anyhow::Result<()> {
     let url = cli.url.clone().unwrap_or_else(cli::default_url);
     match cli.command {
         Command::Serve { host, port, home, python } => serve(host, port, home, python).await,
-        Command::Setup { what, yes } => setup_locked(&what, yes).await,
+        Command::Setup { what, yes, stt_lite } => setup_locked(&what, yes, stt_lite).await,
         Command::Update { yes, check } => update::run(yes, check).await,
         Command::Say { text, out, voice, format, speed, language, seed, prepare, legato, no_stress, detach, webhook } =>
             cli::say(&url, &text, out, voice, format, speed, language, seed, prepare, legato, !no_stress, detach, webhook).await,
