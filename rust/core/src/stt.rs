@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::native::fwhisper::{self, FasterWhisper};
+use crate::native::gigaam::GigaAm;
 use crate::native::whisper::Request;
 
 pub const STT_SAMPLE_RATE: u32 = 16000;
@@ -125,8 +126,13 @@ pub fn subtitles<'a>(segments: impl Iterator<Item = (f64, f64, &'a str)>, vtt: b
     lines.join("\n")
 }
 
+enum SttBackend {
+    Whisper(FasterWhisper),
+    GigaAm(GigaAm),
+}
+
 pub struct Stt {
-    engine: FasterWhisper,
+    engine: SttBackend,
 }
 
 impl Stt {
@@ -134,19 +140,42 @@ impl Stt {
     /// GPU where CUDA sees none, it loads on the CPU — and so on any backend
     /// but CUDA: CTranslate2 has no other GPU.
     pub fn load(cfg: &SttConfig) -> anyhow::Result<Stt> {
+        if std::env::var("STT_ENGINE").as_deref() == Ok("gigaam") {
+            let name = std::env::var("STT_MODEL").ok().filter(|s| !s.is_empty());
+            return Self::load_gigaam(name.as_deref(), cfg.dir.clone(), cfg.vad.clone());
+        }
         let models = crate::cache_dir().join("models");
         let dir = cfg.dir.clone().unwrap_or_else(|| models.join("whisper").join("faster-whisper-large-v3-turbo"));
         anyhow::ensure!(dir.join("model.bin").is_file(), "no Whisper model in {} — voicy setup models", dir.display());
         let vad = cfg.vad.clone().or_else(|| Some(models.join("vad").join("silero_vad_v6.onnx")).filter(|p| p.is_file()));
-        Ok(Stt { engine: FasterWhisper::load(&dir, vad.as_deref(), crate::native::use_cuda(cfg.gpu), cfg.compute_type.as_deref())? })
+        Ok(Stt { engine: SttBackend::Whisper(FasterWhisper::load(&dir, vad.as_deref(), crate::native::use_cuda(cfg.gpu), cfg.compute_type.as_deref())?) })
+    }
+
+    /// Load lightweight Russian GigaAM-v3 INT8 ONNX model on CPU (~295 MB peak RAM).
+    pub fn load_gigaam(model_name: Option<&str>, dir: Option<PathBuf>, vad: Option<PathBuf>) -> anyhow::Result<Stt> {
+        let name = model_name.unwrap_or("v3_e2e_ctc");
+        let models = crate::cache_dir().join("models");
+        let gdir = dir.unwrap_or_else(|| models.join("gigaam"));
+        let model = gdir.join(format!("{name}.int8.onnx"));
+        let vocab_name = if name == "v3_ctc" { "v3_vocab.txt" } else { "v3_e2e_ctc_vocab.txt" };
+        let vocab = gdir.join(vocab_name);
+        anyhow::ensure!(model.is_file() && vocab.is_file(), "no GigaAM model in {} — voicy setup --stt-lite", gdir.display());
+        let vad = vad.or_else(|| Some(models.join("vad").join("silero_vad_v6.onnx")).filter(|p| p.is_file()));
+        Ok(Stt { engine: SttBackend::GigaAm(GigaAm::load(&model, &vocab, vad.as_deref(), name)?) })
     }
 
     pub fn device(&self) -> &str {
-        &self.engine.device
+        match &self.engine {
+            SttBackend::Whisper(e) => &e.device,
+            SttBackend::GigaAm(e) => &e.device,
+        }
     }
 
     pub fn compute_type(&self) -> &str {
-        &self.engine.compute_type
+        match &self.engine {
+            SttBackend::Whisper(e) => &e.compute_type,
+            SttBackend::GigaAm(_) => "int8",
+        }
     }
 
     /// 16 kHz mono samples → text.
@@ -158,8 +187,10 @@ impl Stt {
     /// opus, webm, mp4 — → text.
     pub fn transcribe_file(&self, bytes: &[u8], o: &TranscribeOptions) -> anyhow::Result<Transcript> {
         let mut samples = crate::audio::decode(bytes, STT_SAMPLE_RATE)?;
-        // как faster-whisper читает файл: через 16-битные отсчёты
-        fwhisper::through_s16(&mut samples);
+        if matches!(&self.engine, SttBackend::Whisper(_)) {
+            // как faster-whisper читает файл: через 16-битные отсчёты
+            fwhisper::through_s16(&mut samples);
+        }
         self.transcribe(&samples, o)
     }
 
@@ -179,7 +210,11 @@ impl Stt {
             live: o.live,
             draft: o.draft,
         };
-        match self.engine.transcribe(samples, &req, &mut on_segment)? {
+        let res = match &self.engine {
+            SttBackend::Whisper(e) => e.transcribe(samples, &req, &mut on_segment)?,
+            SttBackend::GigaAm(e) => e.transcribe(samples, &req, &mut on_segment)?,
+        };
+        match res {
             Some(v) => Ok(Some(serde_json::from_value(v)?)),
             None => Ok(None),
         }
