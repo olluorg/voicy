@@ -168,7 +168,7 @@ pub fn stress(text: &str) -> String {
         return text.to_string();
     };
     match a.mark(text) {
-        Ok(marked) => marked,
+        Ok(marked) => particle_stress(&marked),
         Err(e) => {
             log::warn!("разметка ударений не удалась ({e:#}) — фраза без знаков");
             text.to_string()
@@ -176,8 +176,97 @@ pub fn stress(text: &str) -> String {
     }
 }
 
-/// Everything before synthesis, in order: dictionary, legato, stress marks.
+/// «не бы́ло» → «не́ было»: with «был, было, были» the stress moves to the particle
+/// (but «не была́»), and RUAccent marks the verb. A one-vowel word otherwise
+/// carries no mark; this one does, since the norm puts the stress there. Whether
+/// the model follows a mark on «не» could not be measured: neither meter2 nor
+/// loudness tells «не́ было» from «не бы́ло» (experiments/29, speaker_ft_nebylo.py).
+fn particle_stress(marked: &str) -> String {
+    static NE_BYLO: OnceLock<Regex> = OnceLock::new();
+    let re = re(r"(?<![А-Яа-яЁё])([Нн]е)(\s+)(б\x{301}?ы\x{301}?л(?:[ои]\x{301}?)?)(?![А-Яа-яЁё\x{301}])", &NE_BYLO);
+    re.replace_all(marked, |c: &fancy_regex::Captures<str>| format!("{}\u{301}{}{}", &c[1], &c[2], c[3].replace('\u{301}', "")))
+        .into_owned()
+}
+
+/// Everything before synthesis, in order: dictionary, legato, ё, stress marks.
 pub fn for_speech(text: &str, use_dictionary: bool, use_legato: bool, use_stress: bool) -> String {
     let t = if use_dictionary || use_legato { prepared_text(text, use_dictionary, use_legato) } else { text.to_string() };
+    let t = yo(&t);
     if use_stress { stress(&t) } else { t }
+}
+
+#[cfg(test)]
+mod yo_tests {
+    #[test]
+    fn yo_safe_names_and_case() {
+        assert_eq!(super::yo("Федор Иваныч, ее нет. ЕЩЕ"), "Фёдор Иваныч, её нет. ЕЩЁ");
+        // имена из небезопасной части — только с заглавной; все/всё решает RUAccent
+        assert_eq!(super::yo("федор и все"), "федор и все");
+        assert_eq!(super::yo("Хрущев и Фёдор"), "Хрущёв и Фёдор");
+    }
+
+    #[test]
+    fn particle_takes_the_stress() {
+        assert_eq!(super::particle_stress("Её всё не бы́ло. Не бы́л, не бы́ли, не была́."),
+                   "Её всё не́ было. Не́ был, не́ были, не была́.");
+        assert_eq!(super::particle_stress("не бы́ло́ва"), "не бы́ло́ва");
+    }
+}
+
+// ------------------------------------------------------------ ё
+
+/// Words where е is read ё: assets/yo.txt, from eyo-kernel (MIT).
+pub const YO: &str = include_str!("../assets/yo.txt");
+
+/// е-form in lower case → (ё-form in lower case, only when capitalized in the text).
+fn yo_words() -> &'static std::collections::HashMap<String, (String, bool)> {
+    static WORDS: OnceLock<std::collections::HashMap<String, (String, bool)>> = OnceLock::new();
+    WORDS.get_or_init(|| {
+        let mut m = std::collections::HashMap::new();
+        for line in YO.lines().filter(|l| !l.is_empty() && !l.starts_with('#')) {
+            let (name, line) = match line.strip_prefix('@') { Some(l) => (true, l), None => (false, line) };
+            let (stem, ends) = match line.split_once('(') {
+                Some((s, e)) => (s, e.trim_end_matches(')').split('|').collect::<Vec<_>>()),
+                None => (line, vec![""]),
+            };
+            for end in ends {
+                let word = format!("{stem}{end}").to_lowercase();
+                m.insert(word.replace('ё', "е"), (word, name));
+            }
+        }
+        m
+    })
+}
+
+/// ё where the text has е and the word is always read with ё: «Федор» → «Фёдор»,
+/// «ее» → «её». Books and much of the web are typed without ё, and the model reads
+/// what it sees: a mark on «Фе́дор» makes it say е. RUAccent restores ё only from
+/// its own dictionary, which lacks names like Фёдор and surnames in -ёв; words
+/// where both readings exist (все/всё) are left to it, since it decides by context.
+pub fn yo(text: &str) -> String {
+    let cyr = |c: char| ('а'..='я').contains(&c) || ('А'..='Я').contains(&c) || c == 'ё' || c == 'Ё' || c == '-';
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    while i < chars.len() {
+        if !cyr(chars[i]) || chars[i] == '-' {
+            out.push(chars[i]);
+            i += 1;
+            continue;
+        }
+        let end = (i..chars.len()).find(|&k| !cyr(chars[k])).unwrap_or(chars.len());
+        let word = &chars[i..end];
+        let lower: String = word.iter().collect::<String>().to_lowercase();
+        let fix = yo_words().get(&lower).filter(|(_, name)| !name || word[0].is_uppercase());
+        match fix {
+            Some((with_yo, _)) if !lower.contains('ё') => {
+                for (c, y) in word.iter().zip(with_yo.chars()) {
+                    out.push(if y == 'ё' { if c.is_uppercase() { 'Ё' } else { 'ё' } } else { *c });
+                }
+            }
+            _ => out.extend(word),
+        }
+        i = end;
+    }
+    out
 }

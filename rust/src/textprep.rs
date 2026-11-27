@@ -11,8 +11,9 @@ pub async fn stress(text: &str) -> String {
         .unwrap_or_else(|_| text.to_string())
 }
 
-/// Everything before synthesis, in order: dictionary, legato, stress marks.
+/// Everything before synthesis, in order: dictionary, legato, ё, stress marks.
 pub async fn for_speech(text: &str, use_dictionary: bool, use_legato: bool, use_stress: bool) -> String {
     let t = if use_dictionary || use_legato { prepared_text(text, use_dictionary, use_legato) } else { text.to_string() };
+    let t = yo(&t);
     if use_stress { stress(&t).await } else { t }
 }

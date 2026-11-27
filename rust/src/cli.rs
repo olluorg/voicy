@@ -491,6 +491,16 @@ pub async fn up(url: &str, wait: f64, do_warm: bool, cpu: bool) -> anyhow::Resul
     {
         use std::os::windows::process::CommandExt;
         cmd.creation_flags(0x00000008 | 0x00000200); // DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        // CreateProcess отдаёт ребёнку все наследуемые дескрипторы, а не только заданные
+        // ему stdio: сервер держал бы канал, в который пишет эта команда, и тот, кто её
+        // читает (`| tail`, `$(voicy up)`, CI), ждал бы конца вывода, пока жив сервер
+        unsafe extern "system" {
+            fn GetStdHandle(n: u32) -> isize;
+            fn SetHandleInformation(h: isize, mask: u32, flags: u32) -> i32;
+        }
+        for n in [-10i32, -11, -12] { // STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE
+            unsafe { SetHandleInformation(GetStdHandle(n as u32), 1, 0) }; // HANDLE_FLAG_INHERIT
+        }
     }
     let mut child = cmd.spawn().context("не запускается сервер")?;
     std::fs::write(dir.join("server.pid"), child.id().to_string())?;

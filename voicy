@@ -213,7 +213,7 @@ def cmd_say(a) -> int:
 
     payload = {"input": text, "response_format": fmt, "speed": a.speed,
                "language": a.language, "prepare": a.prepare, "legato": a.legato,
-               "stress": not a.no_stress}
+               "stress": not a.no_stress, "verify": a.verify}
     if a.voice:
         payload["voice"] = a.voice
     if a.seed is not None:
@@ -622,6 +622,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--legato", action="store_true", help="убрать запятые внутри коротких фраз")
     s.add_argument("--no-stress", action="store_true",
                    help="без знаков ударения (по умолчанию их ставит сервер, если модель их понимает)")
+    s.add_argument("--verify", action="store_true",
+                   help="распознать готовый звук и дочитать хвост, если модель закончила раньше текста")
     s.add_argument("--detach", action="store_true",
                    help="не ждать: напечатать id задания и выйти")
     s.add_argument("--webhook", metavar="URL", help="POST сюда, когда готово (подразумевает --detach)")
